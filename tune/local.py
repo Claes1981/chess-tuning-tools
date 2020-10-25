@@ -318,19 +318,6 @@ def run_match(
         )
     )
 
-    if opening_file is None:
-        raise ValueError("Providing an opening file is required.")
-    opening_path = pathlib.Path(opening_file)
-    if not opening_path.exists():
-        raise FileNotFoundError(
-            f"Opening file the following path was not found: {opening_path}"
-        )
-    opening_format = opening_path.suffix
-    if opening_format not in {".epd", ".pgn"}:
-        raise ValueError(
-            "Unable to determine opening format. "
-            "Make sure to add .epd or .pgn to your filename."
-        )
     string_array.extend(
         (
             "-openings",
