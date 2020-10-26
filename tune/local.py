@@ -318,15 +318,6 @@ def run_match(
         )
     )
 
-    string_array.extend(
-        (
-            "-openings",
-            f"file={str(opening_path)}",
-            f"format={opening_format[1:]}",
-            "order=random",
-        )
-    )
-
     if adjudicate_draws:
         string_array.extend(
             (
