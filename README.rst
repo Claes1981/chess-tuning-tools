@@ -1,3 +1,9 @@
+This is a fork of Karlson "kiudee" Pfannschmidt's Chess Tuning Tools (https://github.com/kiudee/chess-tuning-tools). 
+
+The only differences from Kiudee's version are (at the time of writing) that this fork does not use an opening book, and the settings are included in the log when starting or resuming.
+
+---------------
+
 
 .. image:: https://raw.githubusercontent.com/kiudee/chess-tuning-tools/master/docs/_static/logo.png
 
