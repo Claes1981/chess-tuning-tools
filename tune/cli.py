@@ -283,7 +283,7 @@ def local(  # noqa: C901
     logging.debug(f"Got the following tuning settings:\n{json_dict}")
     
     root_logger.debug(f"Got the following tuning settings:\n{json_dict}")
-    root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Normalize_y: {normalize_y},Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
+    root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Normalize_y: {normalize_y}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
                 )
 
     # 1. Create seed sequence
