@@ -1,6 +1,10 @@
 This is a fork of Karlson "kiudee" Pfannschmidt's Chess Tuning Tools (https://github.com/kiudee/chess-tuning-tools). 
 
-The only differences from Kiudee's version are (at the time of writing) that this fork does not use an opening book, and the settings are included in the log when starting or resuming.
+The only differences from Kiudee's version are (at the time of writing) that this fork:
+
+* Does not use an opening book.
+* Lets the user set normalize_y of the optimizer to true or false through an option
+* Includes the current settings in the log when starting or resuming.
 
 ---------------
 

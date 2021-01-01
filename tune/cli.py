@@ -171,6 +171,13 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     show_default=True,
 )
 @click.option(
+    "--normalize-y/--no-normalize-y",
+     # TODO: Due to a bug in scikit-learn 0.23.2, we set normalize_y default to False
+    default=False,
+    show_default=True,
+    help="If True, the parameter normalize_y is set to True in the optimizer",
+)
+@click.option(
     "-l",
     "--logfile",
     default="log.txt",
@@ -244,6 +251,7 @@ def local(  # noqa: C901
     gp_samples=300,
     gp_initial_burnin=100,
     gp_initial_samples=300,
+    normalize_y=False,
     logfile="log.txt",
     n_initial_points=16,
     n_points=500,
@@ -275,7 +283,7 @@ def local(  # noqa: C901
     logging.debug(f"Got the following tuning settings:\n{json_dict}")
     
     root_logger.debug(f"Got the following tuning settings:\n{json_dict}")
-    root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
+    root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Normalize_y: {normalize_y},Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
                 )
 
     # 1. Create seed sequence
@@ -284,8 +292,7 @@ def local(  # noqa: C901
     # 3. Create optimizer
     random_state = np.random.RandomState(np.random.MT19937(ss.spawn(1)[0]))
     gp_kwargs = dict(
-        # TODO: Due to a bug in scikit-learn 0.23.2, we set normalize_y=False:
-        normalize_y=False,
+        normalize_y=settings.get("normalize_y", normalize_y),
         warp_inputs=settings.get("warp_inputs", warp_inputs),
     )
     opt = Optimizer(
@@ -349,6 +356,7 @@ def local(  # noqa: C901
                 X,
                 y,
                 noise_vector=noise,
+                #noise_vector=[i*0.01 for i in noise],
                 gp_burnin=settings.get("gp_initial_burnin", gp_initial_burnin),
                 gp_samples=settings.get("gp_initial_samples", gp_initial_samples),
                 n_samples=settings.get("n_samples", 1),
@@ -391,6 +399,7 @@ def local(  # noqa: C901
                     hdi_prob=confidence_val,
                     opt_samples=1000,
                     multimodal=False,
+                    #only_mean=False,
                 )
                 root_logger.info(
                     f"{confidence_val * 100}% confidence intervals of the parameters:"
