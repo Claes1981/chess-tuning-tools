@@ -171,6 +171,18 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     show_default=True,
 )
 @click.option(
+    "--kernel-lengthscale-prior-lower-bound",
+    default=0.1,
+    help="Lower bound of prior distribution of Kernel lengthscale.",
+    show_default=True,
+)
+@click.option(
+    "--kernel-lengthscale-prior-upper-bound",
+    default=0.6,
+    help="Upper bound of prior distribution of Kernel lengthscale.",
+    show_default=True,
+)
+@click.option(
     "--normalize-y/--no-normalize-y",
      # TODO: Due to a bug in scikit-learn 0.23.2, we set normalize_y default to False
     default=False,
@@ -251,6 +263,8 @@ def local(  # noqa: C901
     gp_samples=300,
     gp_initial_burnin=100,
     gp_initial_samples=300,
+    kernel_lengthscale_prior_lower_bound=0.1,
+    kernel_lengthscale_prior_upper_bound=0.6,
     normalize_y=False,
     logfile="log.txt",
     n_initial_points=16,
@@ -281,9 +295,9 @@ def local(  # noqa: C901
     console_logger.setFormatter(log_format)
     root_logger.addHandler(console_logger)
     logging.debug(f"Got the following tuning settings:\n{json_dict}")
-    
+
     root_logger.debug(f"Got the following tuning settings:\n{json_dict}")
-    root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Normalize_y: {normalize_y}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
+    root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Kernel lengthscale prior lower bound: {kernel_lengthscale_prior_lower_bound}, Kernel lengthscale prior upper bound: {kernel_lengthscale_prior_upper_bound}, Normalize_y: {normalize_y}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
                 )
 
     # 1. Create seed sequence
@@ -295,6 +309,14 @@ def local(  # noqa: C901
         normalize_y=settings.get("normalize_y", normalize_y),
         warp_inputs=settings.get("warp_inputs", warp_inputs),
     )
+    #priors = [
+        # Prior distribution for the signal variance:
+        #lambda x: halfnorm(scale=2.).logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0),
+        # Prior distribution for the length scale:
+        #lambda x: invgamma(a=9, scale=11).logpdf(np.exp(x)) + x,
+        # Prior distribution for the noise:
+        #lambda x: halfnorm(scale=2.).logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0)
+    #]
     opt = Optimizer(
         dimensions=list(param_ranges.values()),
         n_points=settings.get("n_points", n_points),
