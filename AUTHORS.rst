@@ -5,9 +5,10 @@ Credits
 Development Lead
 ----------------
 
-* Karlson Pfannschmidt <kiudee@mail.upb.de>
+* Karlson Pfannschmidt
 
 Contributors
 ------------
 
 * Alexis Olson
+* Claes Fransson
