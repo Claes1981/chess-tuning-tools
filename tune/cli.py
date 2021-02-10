@@ -387,6 +387,7 @@ def local(  # noqa: C901
                 progress=True,
             )
             root_logger.info("Importing finished.")
+            root_logger.debug(f"GP kernel: {opt.gp.kernel_}")
 
     # 4. Main optimization loop:
     while True:
