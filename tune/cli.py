@@ -190,6 +190,14 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     help="If True, the parameter normalize_y is set to True in the optimizer",
 )
 @click.option(
+    "--noise-multiplier",
+    default=1,
+    type=int,
+    help="Multiply the noise with this number."
+    "Set to 0 for uniform noise for all values."
+    show_default=True,
+)
+@click.option(
     "-l",
     "--logfile",
     default="log.txt",
@@ -266,6 +274,7 @@ def local(  # noqa: C901
     kernel_lengthscale_prior_lower_bound=0.1,
     kernel_lengthscale_prior_upper_bound=0.6,
     normalize_y=False,
+    noise_multiplier=1,
     logfile="log.txt",
     n_initial_points=16,
     n_points=500,
@@ -297,7 +306,7 @@ def local(  # noqa: C901
     logging.debug(f"Got the following tuning settings:\n{json_dict}")
 
     root_logger.debug(f"Got the following tuning settings:\n{json_dict}")
-    root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Normalize_y: {normalize_y}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
+    root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Normalize_y: {normalize_y}, Noise multiplier: {noise_multiplier}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
                 )
     #root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Kernel lengthscale prior lower bound: {kernel_lengthscale_prior_lower_bound}, Kernel lengthscale prior upper bound: {kernel_lengthscale_prior_upper_bound}, Normalize_y: {normalize_y}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
     #            )
@@ -379,8 +388,8 @@ def local(  # noqa: C901
             opt.tell(
                 X,
                 y,
-                noise_vector=noise,
-                #noise_vector=[i*0.01 for i in noise],
+                #noise_vector=noise,
+                noise_vector=[i*noise_multiplier for i in noise],
                 gp_burnin=settings.get("gp_initial_burnin", gp_initial_burnin),
                 gp_samples=settings.get("gp_initial_samples", gp_initial_samples),
                 n_samples=settings.get("n_samples", 1),
@@ -510,7 +519,8 @@ def local(  # noqa: C901
                 opt.tell(
                     point,
                     score,
-                    noise_vector=error_variance,
+                    #noise_vector=error_variance,
+                    noise_vector=noise_multiplier*error_variance,
                     n_samples=n_samples,
                     gp_samples=gp_samples,
                     gp_burnin=gp_burnin,
