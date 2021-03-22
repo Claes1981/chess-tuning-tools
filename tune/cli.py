@@ -184,8 +184,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 #)
 @click.option(
     "--normalize-y/--no-normalize-y",
-     # TODO: Due to a bug in scikit-learn 0.23.2, we set normalize_y default to False
-    default=False,
+    default=True,
     show_default=True,
     help="If True, the parameter normalize_y is set to True in the optimizer",
 )
@@ -336,7 +335,7 @@ def local(  # noqa: C901
         gp_kwargs=gp_kwargs,
         # gp_priors=priors,  # TODO: Let user pass in priors
         acq_func=settings.get("acq_function", acq_function),
-        acq_func_kwargs=dict(alpha="inf", n_thompson=20),
+        acq_func_kwargs=dict(alpha=1.96, n_thompson=500),
         random_state=random_state,
     )
     X = []

@@ -10,5 +10,6 @@ Development Lead
 Contributors
 ------------
 
+* Eugenio Bruno
 * Alexis Olson
 * Claes Fransson
