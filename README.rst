@@ -3,7 +3,9 @@ This is a fork of Karlson "kiudee" Pfannschmidt's Chess Tuning Tools (https://gi
 The only differences from Kiudee's version are (at the time of writing) that this fork:
 
 * Does not use an opening book.
-* Lets the user set normalize_y of the optimizer to true or false through an option
+* Lets the user set normalize_y of the optimizer to true or false through an option.
+* Lets the user multiply the noise of the observations by a coefficent, when sent to the optimizer, through an experimental option.
+  It is intended as an experimental attempt to work around the https://github.com/kiudee/chess-tuning-tools/issues/118 bug.
 * Includes the current settings in the log when starting or resuming.
 
 ---------------
