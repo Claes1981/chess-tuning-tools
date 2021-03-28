@@ -401,6 +401,22 @@ def local(  # noqa: C901
             root_logger.debug(f"GP alpha_: {opt.gp.alpha_}")
             root_logger.debug(f"GP y_train_std_: {opt.gp.y_train_std_}")
             root_logger.debug(f"GP y_train_mean_: {opt.gp.y_train_mean_}")
+            
+            if warp_inputs and hasattr(opt.gp, "warp_alphas_"):
+                    warp_params = dict(
+                        zip(
+                            param_ranges.keys(),
+                            zip(
+                                np.around(np.exp(opt.gp.warp_alphas_), 3),
+                                np.around(np.exp(opt.gp.warp_betas_), 3),
+                            ),
+                        )
+                    )
+                    root_logger.debug(
+                        f"Input warping was applied using the following parameters for "
+                        f"the beta distributions:\n"
+                        f"{warp_params}"
+                    )
 
     # 4. Main optimization loop:
     while True:
