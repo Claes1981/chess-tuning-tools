@@ -190,8 +190,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 )
 @click.option(
     "--noise-multiplier",
-    default=1,
-    type=int,
+    default=1.0,
     help="Multiply the noise with this number."
     "Set to 0 for uniform noise for all values."
     "Experimental option. Attempt to workaround flattening issue.",
