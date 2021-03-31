@@ -191,8 +191,8 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 @click.option(
     "--noise-multiplier",
     default=1.0,
-    help="Multiply the noise with this number."
-    "Set to 0 for uniform noise for all values."
+    help="Multiply the noise with this number. "
+    "Set to 0 for uniform noise for all values. "
     "Experimental option. Attempt to workaround flattening issue.",
     show_default=True,
 )
@@ -396,7 +396,7 @@ def local(  # noqa: C901
             )
             root_logger.info("Importing finished.")
             
-            root_logger.debug(f"GP kernel: {opt.gp.kernel_}")
+            root_logger.debug(f"GP kernel_: {opt.gp.kernel_}")
             root_logger.debug(f"GP X_train_: {opt.gp.X_train_}")
             root_logger.debug(f"GP alpha_: {opt.gp.alpha_}")
             root_logger.debug(f"GP y_train_std_: {opt.gp.y_train_std_}")
@@ -567,7 +567,7 @@ def local(  # noqa: C901
                 later = datetime.now()
                 difference = (later - now).total_seconds()
                 root_logger.info(f"GP sampling finished ({difference}s)")
-                root_logger.debug(f"GP kernel: {opt.gp.kernel_}")
+                root_logger.debug(f"GP kernel_: {opt.gp.kernel_}")
                 root_logger.debug(f"GP X_train_: {opt.gp.X_train_}")
                 root_logger.debug(f"GP alpha_: {opt.gp.alpha_}")
                 root_logger.debug(f"GP y_train_std_: {opt.gp.y_train_std_}")
