@@ -525,7 +525,27 @@ def local(  # noqa: C901
 
         score, error_variance = parse_experiment_result(out_exp, **settings)
         root_logger.info("Got Elo: {} +- {}".format(-score * 100, np.sqrt(error_variance) * 100))
-        root_logger.info("Updating model")
+        X.append(point)
+        y.append(score)
+        noise.append(error_variance)
+        with AtomicWriter(data_path, mode="wb", overwrite=True).open() as f:
+            np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
+        
+        root_logger.info("Generating new model")
+        #reset optimizer
+        del opt
+        opt = Optimizer(
+            dimensions=list(param_ranges.values()),
+            n_points=settings.get("n_points", n_points),
+            n_initial_points=settings.get("n_initial_points", n_initial_points),
+            # gp_kernel=kernel,  # TODO: Let user pass in different kernels
+            gp_kwargs=gp_kwargs,
+            # gp_priors=priors,  # TODO: Let user pass in priors
+            acq_func=settings.get("acq_function", acq_function),
+            acq_func_kwargs=dict(alpha=1.96, n_thompson=500),
+            random_state=random_state,
+            )
+        
         while True:
             try:
                 now = datetime.now()
@@ -533,14 +553,13 @@ def local(  # noqa: C901
                 n_samples = settings.get("acq_function_samples", acq_function_samples)
                 gp_burnin = settings.get("gp_burnin", gp_burnin)
                 gp_samples = settings.get("gp_samples", gp_samples)
-                if opt.gp.chain_ is None:
-                    gp_burnin = settings.get("gp_initial_burnin", gp_initial_burnin)
-                    gp_samples = settings.get("gp_initial_samples", gp_initial_samples)
+                #if opt.gp.chain_ is None:
+                    #gp_burnin = settings.get("gp_initial_burnin", gp_initial_burnin)
+                    #gp_samples = settings.get("gp_initial_samples", gp_initial_samples)
                 opt.tell(
-                    point,
-                    score,
-                    #noise_vector=error_variance,
-                    noise_vector=noise_multiplier*error_variance,
+                    X,
+                    y,
+                    noise_vector=[i*noise_multiplier for i in noise],
                     n_samples=n_samples,
                     gp_samples=gp_samples,
                     gp_burnin=gp_burnin,
@@ -576,14 +595,8 @@ def local(  # noqa: C901
                 opt.gp.sample(n_burnin=11, priors=opt.gp_priors)
             else:
                 break
-        X.append(point)
-        y.append(score)
-        noise.append(error_variance)
+        
         iteration = len(X)
-
-        with AtomicWriter(data_path, mode="wb", overwrite=True).open() as f:
-            np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
-
 
 if __name__ == "__main__":
     sys.exit(cli())  # pragma: no cover
