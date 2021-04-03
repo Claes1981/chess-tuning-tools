@@ -397,10 +397,10 @@ def local(  # noqa: C901
             root_logger.info("Importing finished.")
             
             root_logger.debug(f"GP kernel_: {opt.gp.kernel_}")
-            root_logger.debug(f"GP X_train_: {opt.gp.X_train_}")
-            root_logger.debug(f"GP alpha_: {opt.gp.alpha_}")
-            root_logger.debug(f"GP y_train_std_: {opt.gp.y_train_std_}")
-            root_logger.debug(f"GP y_train_mean_: {opt.gp.y_train_mean_}")
+            #root_logger.debug(f"GP X_train_: {opt.gp.X_train_}")
+            #root_logger.debug(f"GP alpha_: {opt.gp.alpha_}")
+            #root_logger.debug(f"GP y_train_std_: {opt.gp.y_train_std_}")
+            #root_logger.debug(f"GP y_train_mean_: {opt.gp.y_train_mean_}")
             
             if warp_inputs and hasattr(opt.gp, "warp_alphas_"):
                     warp_params = dict(
@@ -568,10 +568,10 @@ def local(  # noqa: C901
                 difference = (later - now).total_seconds()
                 root_logger.info(f"GP sampling finished ({difference}s)")
                 root_logger.debug(f"GP kernel_: {opt.gp.kernel_}")
-                root_logger.debug(f"GP X_train_: {opt.gp.X_train_}")
-                root_logger.debug(f"GP alpha_: {opt.gp.alpha_}")
-                root_logger.debug(f"GP y_train_std_: {opt.gp.y_train_std_}")
-                root_logger.debug(f"GP y_train_mean_: {opt.gp.y_train_mean_}")
+                #root_logger.debug(f"GP X_train_: {opt.gp.X_train_}")
+                #root_logger.debug(f"GP alpha_: {opt.gp.alpha_}")
+                #root_logger.debug(f"GP y_train_std_: {opt.gp.y_train_std_}")
+                #root_logger.debug(f"GP y_train_mean_: {opt.gp.y_train_mean_}")
                 if warp_inputs and hasattr(opt.gp, "warp_alphas_"):
                     warp_params = dict(
                         zip(
