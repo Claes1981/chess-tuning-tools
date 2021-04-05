@@ -4,6 +4,7 @@ These modifications are (at the time of writing):
 
 * It resets the optimizer object of Bayes-skopt, https://github.com/kiudee/bayes-skopt/blob/master/bask/optimizer.py, each iteration in an attempt to workaround https://github.com/kiudee/chess-tuning-tools/issues/118.
 * It does not use an opening book.
+* It displays the scales of the partial dependence contour plots. (Currently a bit messily.)
 * It lets the user set normalize_y of the optimizer to true or false through an option.
 * It lets the user, through an experimental option, multiply the noise of the observations by a coefficent when sent to the optimizer. 
   It is intended as an experimental attempt to work around the https://github.com/kiudee/chess-tuning-tools/issues/118 bug.
