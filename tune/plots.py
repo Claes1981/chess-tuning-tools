@@ -222,6 +222,7 @@ def plot_objective(
     space = result.space
     samples = np.asarray(result.x_iters)
     rvs_transformed = space.transform(space.rvs(n_samples=n_samples))
+    z_ranges = np.zeros((space.n_dims,space.n_dims))
 
     if zscale == "log":
         locator = LogLocator()
@@ -307,6 +308,8 @@ def plot_objective(
                     ax[i, j].scatter(
                         min_ucb[j], min_ucb[i], c=["xkcd:orange"], s=20, lw=0.0
                     )
+                z_ranges[i, j] = np.max(zi) - np.min(zi)
+                ax[i, j].text(0.5, 0.5, np.format_float_positional(z_ranges[i, j], precision=2, unique=False, fractional=False, trim='k'), horizontalalignment='center', verticalalignment='center', transform=ax[i,j].transAxes)
     # Get all dimensions.
     plot_dims = []
     for row in range(space.n_dims):
