@@ -298,8 +298,8 @@ def plot_objective(
                 xi, yi, zi = partial_dependence(
                     space, result.models[-1], i, j, rvs_transformed, n_points
                 )
-                cs = ax[i, j].contourf(xi, yi, zi, levels, locator=locator, cmap="viridis_r")
-                fig.colorbar(cs, ax=ax[i, j])
+                contour_plot = ax[i, j].contourf(xi, yi, zi, levels, locator=locator, cmap="viridis_r")
+                fig.colorbar(contour_plot, ax=ax[i, j])
                 ax[i, j].scatter(
                     samples[:, j], samples[:, i], c="k", s=10, lw=0.0, alpha=alpha
                 )
