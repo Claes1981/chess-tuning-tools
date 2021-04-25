@@ -341,6 +341,7 @@ def run_match(
             )
         string_array.extend(("-tb", str(tb_path_object)))
 
+    string_array.extend(("-each", "restart=on"))
     string_array.extend(("-rounds", f"{rounds}"))
     string_array.extend(("-games", "2"))
     string_array.append("-repeat")
