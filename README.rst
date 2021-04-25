@@ -6,7 +6,7 @@ These modifications are (at the time of writing):
 * It does not use an opening book.
 * It displays the scales (currently a bit messy) of the partial dependence contour plots, including the differences between the maximum and minimum values.
 * It lets the user set normalize_y of the optimizer to true or false through an option.
-* It restarts the engines between each game (Cutechess-cli option "-each restart=on")
+* It restarts the engines between each game. (Cutechess-cli option "-each restart=on")
 * It lets the user, through an experimental option, multiply the noise of the observations by a coefficent when sent to the optimizer. 
   It is intended as an experimental attempt to work around the https://github.com/kiudee/chess-tuning-tools/issues/118 bug.
 * It includes the current settings in the log when starting or resuming. 
