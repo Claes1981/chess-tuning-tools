@@ -2,7 +2,7 @@
 name = "chess-tuning-tools"
 version = "0.7.2"
 description = "A collection of tools for local and distributed tuning of chess engines."
-authors = ["Karlson Pfannschmidt"]
+authors = ["Karlson Pfannschmidt","Claes Fransson"]
 license = "Apache-2.0"
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -10,7 +10,7 @@ classifiers = [
     "Natural Language :: English"
 ]
 readme = "README.rst"
-repository = "https://github.com/kiudee/chess-tuning-tools"
+repository = "https://github.com/Claes1981/chess-tuning-tools"
 keywords = ["chess", "tuning", "optimization", "engine"]
 documentation = "https://chess-tuning-tools.readthedocs.io"
 packages = [
@@ -60,7 +60,7 @@ sphinx-autobuild = "^0.7.1"
 tune = "tune.cli:cli"
 
 [tool.poetry.urls]
-"Bug Tracker" = "https://github.com/kiudee/chess-tuning-tools/issues"
+"Bug Tracker" = "https://github.com/Claes1981/chess-tuning-tools/issues"
 
 [build-system]
 requires = ["poetry>=0.12"]
