@@ -317,6 +317,27 @@ def run_match(
             timemargin=timemargin,
         )
     )
+    
+    if opening_file is not None:
+        opening_path = pathlib.Path(opening_file)
+        if not opening_path.exists():
+            raise FileNotFoundError(
+                f"Opening file the following path was not found: {opening_path}"
+            )
+        opening_format = opening_path.suffix
+        if opening_format not in {".epd", ".pgn"}:
+            raise ValueError(
+                "Unable to determine opening format. "
+                "Make sure to add .epd or .pgn to your filename."
+            )
+        string_array.extend(
+            (
+                "-openings",
+                f"file={str(opening_path)}",
+                f"format={opening_format[1:]}",
+                "order=random",
+            )
+        )
 
     if adjudicate_draws:
         string_array.extend(
