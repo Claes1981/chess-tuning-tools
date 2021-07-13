@@ -331,7 +331,7 @@ def local(  # noqa: C901
     kernel_lengthscale_prior_upper_bound=0.5,
     kernel_lengthscale_prior_lower_steepness=2.0,
     kernel_lengthscale_prior_upper_steepness=1.0,
-    normalize_y=False,
+    normalize_y=True,
     noise_multiplier=1,
     logfile="log.txt",
     n_initial_points=16,
