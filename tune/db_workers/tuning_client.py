@@ -29,7 +29,15 @@ __all__ = ["TuningClient"]
 
 
 class TuningClient(object):
-    def __init__(self, dbconfig_path, terminate_after=0, clientconfig=None, **kwargs):
+    def __init__(
+        self,
+        dbconfig_path,
+        terminate_after=0,
+        clientconfig=None,
+        only_run_once=False,
+        skip_benchmark=False,
+        **kwargs,
+    ):
         self.end_time = None
         if terminate_after != 0:
             start_time = time()
@@ -39,6 +47,8 @@ class TuningClient(object):
         self.sf_benchmark = None
         signal.signal(signal.SIGINT, self.interrupt_handler)
         self.interrupt_pressed = False
+        self.only_run_once = only_run_once
+        self.skip_benchmark = skip_benchmark
         if os.path.isfile(dbconfig_path):
             with open(dbconfig_path, "r") as config_file:
                 config = config_file.read().replace("\n", "")
@@ -86,9 +96,11 @@ class TuningClient(object):
             "-engine",
             "conf=engine1",
             f"tc={time_control.to_strings()[0]}",
+            f"timemargin={cutechess_options.get('timemargin', 0)}",
             "-engine",
             "conf=engine2",
             f"tc={time_control.to_strings()[1]}",
+            f"timemargin={cutechess_options.get('timemargin', 0)}",
             "-openings",
             f"file={cutechess_options['opening_path']}",
             "format=pgn",
@@ -128,10 +140,9 @@ class TuningClient(object):
             self.logger.error(string)
             self.logger.error(err_string)
             sys.exit(1)
-        lines = string.split("\n")
         self.logger.debug(f"Cutechess result string:\n{string}")
-        last_output = lines[-4]
-        result = re.findall(r"[0-9]\s-\s[0-9]\s-\s[0-9]", last_output)[0]
+        self.logger.debug(f"Cutechess error string:\n{err_string}")
+        result = re.findall(r"Score of.*:\s*([0-9]+\s-\s[0-9]+\s-\s[0-9]+)", string)[-1]
         w, l, d = [float(x) for x in re.findall("[0-9]", result)]
         return MatchResult(wins=w, losses=l, draws=d)
 
@@ -293,11 +304,14 @@ class TuningClient(object):
                 rows = (
                     session.query(SqlJob, SqlResult)
                     .filter(
-                        SqlJob.id == SqlResult.job_id, SqlJob.active == True
-                    )  # noqa: E712
+                        SqlJob.id == SqlResult.job_id, SqlJob.active == True  # noqa
+                    )
                     .all()
                 )
                 if len(rows) == 0:
+                    if self.only_run_once:
+                        self.logger.warning("No job found. Terminating.")
+                        sys.exit(1)
                     sleep(30)  # TODO: maybe some sort of decay here
                     continue
 
@@ -326,29 +340,31 @@ class TuningClient(object):
                 with open("engines.json", "w") as file:
                     json.dump(engine_config, file, sort_keys=True, indent=4)
                 sleep(2)
-                # b) Adjust time control:
-                if self.lc0_benchmark is None:
-                    self.logger.info(
-                        "Running initial nodes/second benchmark to calibrate time "
-                        "controls. Ensure that your pc is idle to get a good reading."
+                orig_tc = time_control = sql_result.time_control.to_tuple()
+                if not self.skip_benchmark:
+                    # b) Adjust time control:
+                    if self.lc0_benchmark is None:
+                        self.logger.info(
+                            "Running initial nodes/second benchmark to calibrate time "
+                            "controls. Ensure that your pc is idle to get a good "
+                            "reading."
+                        )
+                        self.run_benchmark(config)
+                        self.logger.info(
+                            f"Benchmark complete. Results: lc0: {self.lc0_benchmark} "
+                            f"nps, sf: {self.sf_benchmark} nps"
+                        )
+                    else:
+                        self.logger.debug(
+                            f"Initial benchmark results: lc0: {self.lc0_benchmark} "
+                            f"nps, sf: {self.sf_benchmark} nps"
+                        )
+                    time_control = self.adjust_time_control(
+                        orig_tc, float(job.engine1_nps), float(job.engine2_nps),
                     )
-                    self.run_benchmark(config)
-                    self.logger.info(
-                        f"Benchmark complete. Results: lc0: {self.lc0_benchmark} nps, "
-                        f"sf: {self.sf_benchmark} nps"
-                    )
-                else:
                     self.logger.debug(
-                        f"Initial benchmark results: lc0: {self.lc0_benchmark} nps, "
-                        f"sf: {self.sf_benchmark} nps"
+                        f"Adjusted time control from {orig_tc} to {time_control}"
                     )
-                orig_tc = sql_result.time_control.to_tuple()
-                time_control = self.adjust_time_control(
-                    orig_tc, float(job.engine1_nps), float(job.engine2_nps),
-                )
-                self.logger.debug(
-                    f"Adjusted time control from {orig_tc} to {time_control}"
-                )
 
                 # 3. Run experiment (and block)
                 self.logger.info(f"Running match with time control\n{time_control}")
@@ -377,3 +393,7 @@ class TuningClient(object):
                 else:  # LL
                     q.update({"ll_count": SqlResult.ll_count + 1})
                 self.logger.info("Uploaded match result to database.\n")
+
+            if self.only_run_once:
+                self.logger.info("Shutting down after completing one job.")
+                sys.exit(0)

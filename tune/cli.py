@@ -7,6 +7,7 @@ import time
 from datetime import datetime
 
 import click
+import dill
 import matplotlib.pyplot as plt
 import numpy as np
 from atomicwrites import AtomicWriter
@@ -27,7 +28,7 @@ def cli():
     pass
 
 
-@cli.command(hidden=True, deprecated=True)
+@cli.command()
 @click.option(
     "--verbose", "-v", is_flag=True, default=False, help="Turn on debug output."
 )
@@ -36,10 +37,31 @@ def cli():
     "--terminate-after", default=0, help="Terminate the client after x minutes."
 )
 @click.option(
+    "--run-only-once",
+    default=False,
+    is_flag=True,
+    help="Terminate the client after one job has been completed or no job can be "
+    "found.",
+)
+@click.option(
+    "--skip-benchmark",
+    default=False,
+    is_flag=True,
+    help="Skip calibrating the time control by running a benchmark.",
+)
+@click.option(
     "--clientconfig", default=None, help="Path to the client configuration file."
 )
 @click.argument("dbconfig")
-def run_client(verbose, logfile, terminate_after, clientconfig, dbconfig):
+def run_client(
+    verbose,
+    logfile,
+    terminate_after,
+    run_only_once,
+    skip_benchmark,
+    clientconfig,
+    dbconfig,
+):
     """ Run the client to generate games for distributed tuning.
 
     In order to connect to the database you need to provide a valid DBCONFIG
@@ -57,11 +79,13 @@ def run_client(verbose, logfile, terminate_after, clientconfig, dbconfig):
         dbconfig_path=dbconfig,
         terminate_after=terminate_after,
         clientconfig=clientconfig,
+        only_run_once=run_only_once,
+        skip_benchmark=skip_benchmark,
     )
     tc.run()
 
 
-@cli.command(hidden=True, deprecated=True)
+@cli.command()
 @click.option(
     "--verbose", "-v", is_flag=True, default=False, help="Turn on debug output."
 )
@@ -252,6 +276,22 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     help="Let the optimizer resume, if it finds points it can use.",
     show_default=True,
 )
+@click.option(
+    "--fast-resume/--no-fast-resume",
+    default=False,
+    help="If set, resume the tuning process with the model in the file specified by"
+    " the --model-path. "
+    "Note, that a full reinitialization will be performed, if the parameter"
+    "ranges have been changed.",
+    show_default=True,
+)
+@click.option(
+    "--model-path",
+    default="model.pkl",
+    help="The current optimizer will be saved for fast resuming to this file.",
+    type=click.Path(exists=False),
+    show_default=True,
+)
 @click.option("--verbose", "-v", count=True, default=0, help="Turn on debug output.")
 @click.option(
     "--warp-inputs/--no-warp-inputs",
@@ -282,6 +322,8 @@ def local(  # noqa: C901
     random_seed=0,
     result_every=1,
     resume=True,
+    fast_resume=False,
+    model_path="model.pkl",
     verbose=0,
     warp_inputs=True,
 ):
@@ -314,6 +356,7 @@ def local(  # noqa: C901
     ss = np.random.SeedSequence(settings.get("random_seed", random_seed))
     # 2. Create kernel
     # 3. Create optimizer
+
     random_state = np.random.RandomState(np.random.MT19937(ss.spawn(1)[0]))
     gp_kwargs = dict(
         normalize_y=settings.get("normalize_y", normalize_y),
@@ -379,29 +422,52 @@ def local(  # noqa: C901
                 X = X_reduced
                 y = y_reduced
                 noise = noise_reduced
-
             iteration = len(X)
-            root_logger.info(
-                f"Importing {iteration} existing datapoints. This could take a while..."
-            )
-            opt.tell(
-                X,
-                y,
-                #noise_vector=noise,
-                noise_vector=[i*noise_multiplier for i in noise],
-                gp_burnin=settings.get("gp_initial_burnin", gp_initial_burnin),
-                gp_samples=settings.get("gp_initial_samples", gp_initial_samples),
-                n_samples=settings.get("n_samples", 1),
-                progress=True,
-            )
-            root_logger.info("Importing finished.")
-            
+
+            reinitialize = True
+            if fast_resume:
+                path = pathlib.Path(model_path)
+                if path.exists():
+                    with open(model_path, mode="rb") as model_file:
+                        old_opt = dill.load(model_file)
+                        root_logger.info(
+                            f"Resuming from existing optimizer in {model_path}."
+                        )
+                    if opt.space == old_opt.space:
+                        old_opt.acq_func = opt.acq_func
+                        old_opt.acq_func_kwargs = opt.acq_func_kwargs
+                        opt = old_opt
+                        reinitialize = False
+                    else:
+                        root_logger.info(
+                            "Parameter ranges have been changed and the "
+                            "existing optimizer instance is no longer "
+                            "valid. Reinitializing now."
+                        )
+
+            if reinitialize:
+                root_logger.info(
+                    f"Importing {iteration} existing datapoints. "
+                    f"This could take a while..."
+                )
+                opt.tell(
+                    X,
+                    y,
+                    #noise_vector=noise,
+                    noise_vector=[i*noise_multiplier for i in noise],
+                    gp_burnin=settings.get("gp_initial_burnin", gp_initial_burnin),
+                    gp_samples=settings.get("gp_initial_samples", gp_initial_samples),
+                    n_samples=settings.get("n_samples", 1),
+                    progress=True,
+                )
+                root_logger.info("Importing finished.")
+
             root_logger.debug(f"GP kernel_: {opt.gp.kernel_}")
             #root_logger.debug(f"GP X_train_: {opt.gp.X_train_}")
             #root_logger.debug(f"GP alpha_: {opt.gp.alpha_}")
             #root_logger.debug(f"GP y_train_std_: {opt.gp.y_train_std_}")
             #root_logger.debug(f"GP y_train_mean_: {opt.gp.y_train_mean_}")
-            
+
             if warp_inputs and hasattr(opt.gp, "warp_alphas_"):
                     warp_params = dict(
                         zip(
@@ -417,6 +483,7 @@ def local(  # noqa: C901
                         f"the beta distributions:\n"
                         f"{warp_params}"
                     )
+
 
     # 4. Main optimization loop:
     while True:
@@ -442,10 +509,16 @@ def local(  # noqa: C901
                 )
                 confidence_val = settings.get("confidence", confidence)
                 confidence_mult = erfinv(confidence_val) * np.sqrt(2)
+                lower_bound = np.around(
+                    -best_value * 100 - confidence_mult * best_std * 100, 4
+                ).item()
+                upper_bound = np.around(
+                    -best_value * 100 + confidence_mult * best_std * 100, 4
+                ).item()
                 root_logger.info(
                     f"{confidence_val * 100}% confidence interval of the Elo value: "
-                    f"({np.around(-best_value * 100 - confidence_mult * best_std * 100, 4).item()}, "
-                    f"{np.around(-best_value * 100 + confidence_mult * best_std * 100, 4).item()})"
+                    f"({lower_bound}, "
+                    f"{upper_bound})"
                 )
                 confidence_out = confidence_intervals(
                     optimizer=opt,
@@ -525,13 +598,17 @@ def local(  # noqa: C901
         root_logger.info(f"Experiment finished ({difference}s elapsed).")
 
         score, error_variance = parse_experiment_result(out_exp, **settings)
-        root_logger.info("Got Elo: {} +- {}".format(-score * 100, np.sqrt(error_variance) * 100))
+        root_logger.info(
+            "Got Elo: {} +- {}".format(-score * 100, np.sqrt(error_variance) * 100)
+        )
         X.append(point)
         y.append(score)
         noise.append(error_variance)
         with AtomicWriter(data_path, mode="wb", overwrite=True).open() as f:
             np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
-        
+        with AtomicWriter(model_path, mode="wb", overwrite=True).open() as f:
+            dill.dump(opt, f)
+
         root_logger.info("Generating new model")
         #reset optimizer
         del opt
@@ -546,7 +623,12 @@ def local(  # noqa: C901
             acq_func_kwargs=dict(alpha=1.96, n_thompson=500),
             random_state=random_state,
             )
-        
+
+        root_logger.info(
+            "Got Elo: {} +- {}".format(-score * 100, np.sqrt(error_variance) * 100)
+        )
+        root_logger.info("Updating model")
+
         while True:
             try:
                 now = datetime.now()
@@ -596,8 +678,7 @@ def local(  # noqa: C901
                 opt.gp.sample(n_burnin=11, priors=opt.gp_priors)
             else:
                 break
-        
+
         iteration = len(X)
 
-if __name__ == "__main__":
     sys.exit(cli())  # pragma: no cover

@@ -2,6 +2,37 @@
 History
 =======
 
+
+0.7.3 (2021-06-27)
+------------------
+
+Local tuner
+~~~~~~~~~~~
+
+* Add ``--fast-resume`` switch to the tuner, which allows instant resume
+  functionality from disk (new default).
+* Fix the match parser producing incorrect results, when concurrency > 1 is
+  used for playing matches.
+
+Distributed tuning framework
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+* The distributed tuning framework is no longer deprecated.
+* Add ``--run-only-once`` flag to distributed tuning client. If True, it will
+  terminate after completing one job or immediately if no job is found.
+* Add ``--skip-benchmark`` flag to distributed tuning client. If True, it will
+  skip the calibration of the time control, which involves running a benchmark
+  for both engines.
+* Tuning server of the distributed tuning framework will now also save the
+  optimizer object.
+* Tuning server now also uses the updated pentanomial model including
+  noise estimation.
+* ``warp_inputs`` can now be passed via database to the tuning server.
+* Fix the server for distributed tuning not sorting the data by job id causing
+  the model to be fit with randomly permuted scores.
+* Fix the server for distributed tuning trying to compute the current optimum
+  before a model has been fit.
+
+
 0.7.2 (2021-03-22)
 ------------------
 * Print user facing scores using the more common Elo scale, instead of negative
