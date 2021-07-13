@@ -6,13 +6,17 @@ import sys
 import time
 from datetime import datetime
 
+from watchpoints import watch
+
 import click
 import dill
 import matplotlib.pyplot as plt
 import numpy as np
 from atomicwrites import AtomicWriter
 from bask.optimizer import Optimizer
+from bask.priors import make_roundflat
 from scipy.special import erfinv
+from scipy.stats import halfnorm
 from skopt.utils import create_result
 
 from tune.db_workers import TuningClient, TuningServer
@@ -22,6 +26,7 @@ from tune.plots import plot_objective
 from tune.summary import confidence_intervals
 from tune.utils import expected_ucb
 
+watch.config(pdb=True)
 
 @click.group()
 def cli():
@@ -196,14 +201,26 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 )
 #@click.option(
 #    "--kernel-lengthscale-prior-lower-bound",
-#    default=0.1,
+#    default=0.05,
 #    help="Lower bound of prior distribution of Kernel lengthscale.",
 #    show_default=True,
 #)
 #@click.option(
 #    "--kernel-lengthscale-prior-upper-bound",
-#    default=0.6,
+#    default=0.5,
 #    help="Upper bound of prior distribution of Kernel lengthscale.",
+#    show_default=True,
+#)
+#@click.option(
+#    "--kernel-lengthscale-prior-lower-steepness",
+#    default=2.0,
+#    help="Lower steepness of prior distribution of Kernel lengthscale.",
+#    show_default=True,
+#)
+#@click.option(
+#    "--kernel-lengthscale-prior-upper-steepness",
+#    default=1.0,
+#    help="Upper steepness of prior distribution of Kernel lengthscale.",
 #    show_default=True,
 #)
 @click.option(
@@ -310,8 +327,10 @@ def local(  # noqa: C901
     gp_samples=300,
     gp_initial_burnin=100,
     gp_initial_samples=300,
-    kernel_lengthscale_prior_lower_bound=0.1,
-    kernel_lengthscale_prior_upper_bound=0.6,
+    kernel_lengthscale_prior_lower_bound=0.05,
+    kernel_lengthscale_prior_upper_bound=0.5,
+    kernel_lengthscale_prior_lower_steepness=2.0,
+    kernel_lengthscale_prior_upper_steepness=1.0,
     normalize_y=False,
     noise_multiplier=1,
     logfile="log.txt",
@@ -349,7 +368,7 @@ def local(  # noqa: C901
     root_logger.debug(f"Got the following tuning settings:\n{json_dict}")
     root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Normalize_y: {normalize_y}, Noise multiplier: {noise_multiplier}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
                 )
-    #root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Kernel lengthscale prior lower bound: {kernel_lengthscale_prior_lower_bound}, Kernel lengthscale prior upper bound: {kernel_lengthscale_prior_upper_bound}, Normalize_y: {normalize_y}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
+    #root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Kernel lengthscale prior lower bound: {kernel_lengthscale_prior_lower_bound}, Kernel lengthscale prior upper bound: {kernel_lengthscale_prior_upper_bound}, Kernel lengthscale prior lower steepness: {kernel_lengthscale_prior_lower_steepness}, Kernel lengthscale prior upper steepness: {kernel_lengthscale_prior_upper_steepness}, Normalize_y: {normalize_y}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
     #            )
 
     # 1. Create seed sequence
@@ -362,11 +381,18 @@ def local(  # noqa: C901
         normalize_y=settings.get("normalize_y", normalize_y),
         warp_inputs=settings.get("warp_inputs", warp_inputs),
     )
+    #roundflat = make_roundflat(
+                #lower_bound=settings.get("kernel_lengthscale_prior_lower_bound", kernel_lengthscale_prior_lower_bound),
+                #upper_bound=settings.get("kernel_lengthscale_prior_upper_bound", kernel_lengthscale_prior_upper_bound),
+                #lower_steepness=settings.get("kernel_lengthscale_prior_lower_steepness", kernel_lengthscale_prior_lower_steepness),
+                #upper_steepness=settings.get("kernel_lengthscale_prior_upper_steepness", kernel_lengthscale_prior_upper_steepness),,
+            #)
+    
     #priors = [
         # Prior distribution for the signal variance:
         #lambda x: halfnorm(scale=2.).logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0),
-        # Prior distribution for the length scale:
-        #lambda x: invgamma(a=9, scale=11).logpdf(np.exp(x)) + x,
+        # Prior distribution for the length scales:
+        #lambda x: roundflat(np.exp(x)) + x for _ in range(len(list(param_ranges.values()))),
         # Prior distribution for the noise:
         #lambda x: halfnorm(scale=2.).logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0)
     #]
@@ -462,9 +488,13 @@ def local(  # noqa: C901
                 )
                 root_logger.info("Importing finished.")
 
+            #root_logger.debug(f"noise_vector: {[i*noise_multiplier for i in noise]}")
             root_logger.debug(f"GP kernel_: {opt.gp.kernel_}")
+            #root_logger.debug(f"GP priors: {opt.gp_priors}")
             #root_logger.debug(f"GP X_train_: {opt.gp.X_train_}")
+            #root_logger.debug(f"GP alpha: {opt.gp.alpha}")
             #root_logger.debug(f"GP alpha_: {opt.gp.alpha_}")
+            #root_logger.debug(f"GP y_train_: {opt.gp.y_train_}")
             #root_logger.debug(f"GP y_train_std_: {opt.gp.y_train_std_}")
             #root_logger.debug(f"GP y_train_mean_: {opt.gp.y_train_mean_}")
 
@@ -495,6 +525,7 @@ def local(  # noqa: C901
             and opt.gp.chain_ is not None
         ):
             result_object = create_result(Xi=X, yi=y, space=opt.space, models=[opt.gp])
+            #root_logger.debug(f"result_object: {result_object}")
             try:
                 best_point, best_value = expected_ucb(result_object, alpha=0.0)
                 best_point_dict = dict(zip(param_ranges.keys(), best_point))
@@ -608,8 +639,10 @@ def local(  # noqa: C901
             np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
         with AtomicWriter(model_path, mode="wb", overwrite=True).open() as f:
             dill.dump(opt, f)
-
+        
+        #root_logger.info("Updating model")
         root_logger.info("Generating new model")
+        
         #reset optimizer
         del opt
         opt = Optimizer(
@@ -623,12 +656,7 @@ def local(  # noqa: C901
             acq_func_kwargs=dict(alpha=1.96, n_thompson=500),
             random_state=random_state,
             )
-
-        root_logger.info(
-            "Got Elo: {} +- {}".format(-score * 100, np.sqrt(error_variance) * 100)
-        )
-        root_logger.info("Updating model")
-
+        
         while True:
             try:
                 now = datetime.now()
@@ -642,6 +670,11 @@ def local(  # noqa: C901
                 opt.tell(
                     X,
                     y,
+                    #point,
+                    #score,
+                    #noise_vector=error_variance,
+                    #noise_vector=noise_multiplier*error_variance,
+                    #noise_vector=noise,
                     noise_vector=[i*noise_multiplier for i in noise],
                     n_samples=n_samples,
                     gp_samples=gp_samples,
@@ -652,7 +685,9 @@ def local(  # noqa: C901
                 root_logger.info(f"GP sampling finished ({difference}s)")
                 root_logger.debug(f"GP kernel_: {opt.gp.kernel_}")
                 #root_logger.debug(f"GP X_train_: {opt.gp.X_train_}")
+                #root_logger.debug(f"GP alpha: {opt.gp.alpha}")
                 #root_logger.debug(f"GP alpha_: {opt.gp.alpha_}")
+                #root_logger.debug(f"GP y_train_: {opt.gp.y_train_}")
                 #root_logger.debug(f"GP y_train_std_: {opt.gp.y_train_std_}")
                 #root_logger.debug(f"GP y_train_mean_: {opt.gp.y_train_mean_}")
                 if warp_inputs and hasattr(opt.gp, "warp_alphas_"):
@@ -678,7 +713,11 @@ def local(  # noqa: C901
                 opt.gp.sample(n_burnin=11, priors=opt.gp_priors)
             else:
                 break
-
+        #X.append(point)
+        #y.append(score)
+        #noise.append(error_variance)
         iteration = len(X)
+        #with AtomicWriter(data_path, mode="wb", overwrite=True).open() as f:
+            #np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
 
     sys.exit(cli())  # pragma: no cover
