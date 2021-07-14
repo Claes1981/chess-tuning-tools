@@ -6,7 +6,7 @@ import sys
 import time
 from datetime import datetime
 
-from watchpoints import watch
+#from watchpoints import watch
 
 import click
 import dill
@@ -26,7 +26,7 @@ from tune.plots import plot_objective
 from tune.summary import confidence_intervals
 from tune.utils import expected_ucb
 
-watch.config(pdb=True)
+#watch.config(pdb=True)
 
 @click.group()
 def cli():
