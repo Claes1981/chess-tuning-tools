@@ -199,30 +199,30 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     "Should be a multiple of 100.",
     show_default=True,
 )
-#@click.option(
-#    "--kernel-lengthscale-prior-lower-bound",
-#    default=0.05,
-#    help="Lower bound of prior distribution of Kernel lengthscale.",
-#    show_default=True,
-#)
-#@click.option(
-#    "--kernel-lengthscale-prior-upper-bound",
-#    default=0.5,
-#    help="Upper bound of prior distribution of Kernel lengthscale.",
-#    show_default=True,
-#)
-#@click.option(
-#    "--kernel-lengthscale-prior-lower-steepness",
-#    default=2.0,
-#    help="Lower steepness of prior distribution of Kernel lengthscale.",
-#    show_default=True,
-#)
-#@click.option(
-#    "--kernel-lengthscale-prior-upper-steepness",
-#    default=1.0,
-#    help="Upper steepness of prior distribution of Kernel lengthscale.",
-#    show_default=True,
-#)
+@click.option(
+    "--kernel-lengthscale-prior-lower-bound",
+    default=0.05,
+    help="Lower bound of prior distribution of Kernel lengthscale.",
+    show_default=True,
+)
+@click.option(
+    "--kernel-lengthscale-prior-upper-bound",
+    default=0.5,
+    help="Upper bound of prior distribution of Kernel lengthscale.",
+    show_default=True,
+)
+@click.option(
+    "--kernel-lengthscale-prior-lower-steepness",
+    default=2.0,
+    help="Lower steepness of prior distribution of Kernel lengthscale.",
+    show_default=True,
+)
+@click.option(
+    "--kernel-lengthscale-prior-upper-steepness",
+    default=1.0,
+    help="Upper steepness of prior distribution of Kernel lengthscale.",
+    show_default=True,
+)
 @click.option(
     "--normalize-y/--no-normalize-y",
     default=True,
@@ -366,10 +366,10 @@ def local(  # noqa: C901
     logging.debug(f"Got the following tuning settings:\n{json_dict}")
 
     root_logger.debug(f"Got the following tuning settings:\n{json_dict}")
-    root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Normalize_y: {normalize_y}, Noise multiplier: {noise_multiplier}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
-                )
-    #root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Kernel lengthscale prior lower bound: {kernel_lengthscale_prior_lower_bound}, Kernel lengthscale prior upper bound: {kernel_lengthscale_prior_upper_bound}, Kernel lengthscale prior lower steepness: {kernel_lengthscale_prior_lower_steepness}, Kernel lengthscale prior upper steepness: {kernel_lengthscale_prior_upper_steepness}, Normalize_y: {normalize_y}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
+    #root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Normalize_y: {normalize_y}, Noise multiplier: {noise_multiplier}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
     #            )
+    root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Kernel lengthscale prior lower bound: {kernel_lengthscale_prior_lower_bound}, Kernel lengthscale prior upper bound: {kernel_lengthscale_prior_upper_bound}, Kernel lengthscale prior lower steepness: {kernel_lengthscale_prior_lower_steepness}, Kernel lengthscale prior upper steepness: {kernel_lengthscale_prior_upper_steepness}, Normalize_y: {normalize_y}, Noise multiplier: {noise_multiplier}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
+                )
 
     # 1. Create seed sequence
     ss = np.random.SeedSequence(settings.get("random_seed", random_seed))
@@ -381,28 +381,28 @@ def local(  # noqa: C901
         normalize_y=settings.get("normalize_y", normalize_y),
         warp_inputs=settings.get("warp_inputs", warp_inputs),
     )
-    #roundflat = make_roundflat(
-                #lower_bound=settings.get("kernel_lengthscale_prior_lower_bound", kernel_lengthscale_prior_lower_bound),
-                #upper_bound=settings.get("kernel_lengthscale_prior_upper_bound", kernel_lengthscale_prior_upper_bound),
-                #lower_steepness=settings.get("kernel_lengthscale_prior_lower_steepness", kernel_lengthscale_prior_lower_steepness),
-                #upper_steepness=settings.get("kernel_lengthscale_prior_upper_steepness", kernel_lengthscale_prior_upper_steepness),,
-            #)
+    roundflat = make_roundflat(
+                lower_bound=settings.get("kernel_lengthscale_prior_lower_bound", kernel_lengthscale_prior_lower_bound),
+                upper_bound=settings.get("kernel_lengthscale_prior_upper_bound", kernel_lengthscale_prior_upper_bound),
+                lower_steepness=settings.get("kernel_lengthscale_prior_lower_steepness", kernel_lengthscale_prior_lower_steepness),
+                upper_steepness=settings.get("kernel_lengthscale_prior_upper_steepness", kernel_lengthscale_prior_upper_steepness),
+            )
     
-    #priors = [
+    priors = [
         # Prior distribution for the signal variance:
-        #lambda x: halfnorm(scale=2.).logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0),
+        lambda x: halfnorm(scale=2.).logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0),
         # Prior distribution for the length scales:
-        #lambda x: roundflat(np.exp(x)) + x for _ in range(len(list(param_ranges.values()))),
+        *[lambda x: roundflat(np.exp(x)) + x for _ in range(len(list(param_ranges.values())))],
         # Prior distribution for the noise:
-        #lambda x: halfnorm(scale=2.).logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0)
-    #]
+        lambda x: halfnorm(scale=2.).logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0)
+    ]
     opt = Optimizer(
         dimensions=list(param_ranges.values()),
         n_points=settings.get("n_points", n_points),
         n_initial_points=settings.get("n_initial_points", n_initial_points),
         # gp_kernel=kernel,  # TODO: Let user pass in different kernels
         gp_kwargs=gp_kwargs,
-        # gp_priors=priors,  # TODO: Let user pass in priors
+        gp_priors=priors,
         acq_func=settings.get("acq_function", acq_function),
         acq_func_kwargs=dict(alpha=1.96, n_thompson=500),
         random_state=random_state,
