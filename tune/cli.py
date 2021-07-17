@@ -720,4 +720,5 @@ def local(  # noqa: C901
         #with AtomicWriter(data_path, mode="wb", overwrite=True).open() as f:
             #np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
 
+if __name__ == "__main__":
     sys.exit(cli())  # pragma: no cover
