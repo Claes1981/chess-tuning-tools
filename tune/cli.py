@@ -295,7 +295,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 )
 @click.option(
     "--fast-resume/--no-fast-resume",
-    default=True,
+    default=False,
     help="If set, resume the tuning process with the model in the file specified by"
     " the --model-path. "
     "Note, that a full reinitialization will be performed, if the parameter"
@@ -311,7 +311,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 )
 @click.option(
     "--reset/--no-reset",
-    default=False,
+    default=True,
     help="Deletes the optimizer object and creates a new one each iteration. "
     "Same effect as stopping and resuming the program after every iteration. "
     "Experimental option. Attempt to workaround flattening issue.",
@@ -349,9 +349,9 @@ def local(  # noqa: C901
     random_seed=0,
     result_every=1,
     resume=True,
-    fast_resume=True,
+    fast_resume=False,
     model_path="model.pkl",
-    reset=False,
+    reset=True,
     verbose=0,
     warp_inputs=True,
 ):
