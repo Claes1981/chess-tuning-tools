@@ -309,6 +309,14 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     type=click.Path(exists=False),
     show_default=True,
 )
+@click.option(
+    "--reset/--no-reset",
+    default=False,
+    help="Deletes the optimizer object and creates a new one each iteration. "
+    "Same effect as stopping and resuming the program after every iteration. "
+    "Experimental option. Attempt to workaround flattening issue.",
+    show_default=True,
+)
 @click.option("--verbose", "-v", count=True, default=0, help="Turn on debug output.")
 @click.option(
     "--warp-inputs/--no-warp-inputs",
@@ -343,6 +351,7 @@ def local(  # noqa: C901
     resume=True,
     fast_resume=False,
     model_path="model.pkl",
+    reset=False,
     verbose=0,
     warp_inputs=True,
 ):
@@ -640,22 +649,23 @@ def local(  # noqa: C901
         with AtomicWriter(model_path, mode="wb", overwrite=True).open() as f:
             dill.dump(opt, f)
         
-        #root_logger.info("Updating model")
-        root_logger.info("Generating new model")
-        
-        #reset optimizer
-        del opt
-        opt = Optimizer(
-            dimensions=list(param_ranges.values()),
-            n_points=settings.get("n_points", n_points),
-            n_initial_points=settings.get("n_initial_points", n_initial_points),
-            # gp_kernel=kernel,  # TODO: Let user pass in different kernels
-            gp_kwargs=gp_kwargs,
-            gp_priors=priors,
-            acq_func=settings.get("acq_function", acq_function),
-            acq_func_kwargs=dict(alpha=1.96, n_thompson=500),
-            random_state=random_state,
-            )
+        if reset:
+                root_logger.info("Deleting the model and generating a new one.")
+                #reset optimizer
+                del opt
+                opt = Optimizer(
+                    dimensions=list(param_ranges.values()),
+                    n_points=settings.get("n_points", n_points),
+                    n_initial_points=settings.get("n_initial_points", n_initial_points),
+                    # gp_kernel=kernel,  # TODO: Let user pass in different kernels
+                    gp_kwargs=gp_kwargs,
+                    gp_priors=priors,
+                    acq_func=settings.get("acq_function", acq_function),
+                    acq_func_kwargs=dict(alpha=1.96, n_thompson=500),
+                    random_state=random_state,
+                )
+        else:
+                root_logger.info("Updating model.")
         
         while True:
             try:
@@ -664,22 +674,31 @@ def local(  # noqa: C901
                 n_samples = settings.get("acq_function_samples", acq_function_samples)
                 gp_burnin = settings.get("gp_burnin", gp_burnin)
                 gp_samples = settings.get("gp_samples", gp_samples)
-                #if opt.gp.chain_ is None:
-                    #gp_burnin = settings.get("gp_initial_burnin", gp_initial_burnin)
-                    #gp_samples = settings.get("gp_initial_samples", gp_initial_samples)
-                opt.tell(
-                    X,
-                    y,
-                    #point,
-                    #score,
-                    #noise_vector=error_variance,
-                    #noise_vector=noise_multiplier*error_variance,
-                    #noise_vector=noise,
-                    noise_vector=[i*noise_multiplier for i in noise],
-                    n_samples=n_samples,
-                    gp_samples=gp_samples,
-                    gp_burnin=gp_burnin,
-                )
+                if (not reset and opt.gp.chain_ is None):
+                    gp_burnin = settings.get("gp_initial_burnin", gp_initial_burnin)
+                    gp_samples = settings.get("gp_initial_samples", gp_initial_samples)
+
+                if reset:
+                    opt.tell(
+                        X,
+                        y,
+                        #noise_vector=noise,
+                        noise_vector=[i*noise_multiplier for i in noise],
+                        n_samples=n_samples,
+                        gp_samples=gp_samples,
+                        gp_burnin=gp_burnin,
+                     )
+                else:
+                     opt.tell(
+                        point,
+                        score,
+                        #noise_vector=error_variance,
+                        noise_vector=noise_multiplier*error_variance,
+                        n_samples=n_samples,
+                        gp_samples=gp_samples,
+                        gp_burnin=gp_burnin,
+                    )
+                
                 later = datetime.now()
                 difference = (later - now).total_seconds()
                 root_logger.info(f"GP sampling finished ({difference}s)")
