@@ -295,7 +295,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 )
 @click.option(
     "--fast-resume/--no-fast-resume",
-    default=False,
+    default=True,
     help="If set, resume the tuning process with the model in the file specified by"
     " the --model-path. "
     "Note, that a full reinitialization will be performed, if the parameter"
@@ -349,7 +349,7 @@ def local(  # noqa: C901
     random_seed=0,
     result_every=1,
     resume=True,
-    fast_resume=False,
+    fast_resume=True,
     model_path="model.pkl",
     reset=False,
     verbose=0,
