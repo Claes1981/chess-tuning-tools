@@ -230,11 +230,11 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     help="If True, the parameter normalize_y is set to True in the optimizer",
 )
 @click.option(
-    "--noise-multiplier",
+    "--noise-scaling-coefficient",
     default=1.0,
-    help="Multiply the noise with this number. "
+    help="Scale the noise of the observations by multiplying it with this coefficient. "
     "Set to 0 for uniform noise for all values. "
-    "Experimental option. Attempt to workaround flattening issue.",
+    "Experimental option. Attempt to workaround flattening issue, where the signal variance decreases each iteration.",
     show_default=True,
 )
 @click.option(
@@ -340,7 +340,7 @@ def local(  # noqa: C901
     kernel_lengthscale_prior_lower_steepness=2.0,
     kernel_lengthscale_prior_upper_steepness=1.0,
     normalize_y=True,
-    noise_multiplier=1,
+    noise_scaling_coefficient=1,
     logfile="log.txt",
     n_initial_points=16,
     n_points=500,
@@ -375,9 +375,9 @@ def local(  # noqa: C901
     logging.debug(f"Got the following tuning settings:\n{json_dict}")
 
     root_logger.debug(f"Got the following tuning settings:\n{json_dict}")
-    #root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Normalize_y: {normalize_y}, Noise multiplier: {noise_multiplier}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
+    #root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Normalize_y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
     #            )
-    root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Kernel lengthscale prior lower bound: {kernel_lengthscale_prior_lower_bound}, Kernel lengthscale prior upper bound: {kernel_lengthscale_prior_upper_bound}, Kernel lengthscale prior lower steepness: {kernel_lengthscale_prior_lower_steepness}, Kernel lengthscale prior upper steepness: {kernel_lengthscale_prior_upper_steepness}, Normalize_y: {normalize_y}, Noise multiplier: {noise_multiplier}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
+    root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Kernel lengthscale prior lower bound: {kernel_lengthscale_prior_lower_bound}, Kernel lengthscale prior upper bound: {kernel_lengthscale_prior_upper_bound}, Kernel lengthscale prior lower steepness: {kernel_lengthscale_prior_lower_steepness}, Kernel lengthscale prior upper steepness: {kernel_lengthscale_prior_upper_steepness}, Normalize_y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
                 )
 
     # 1. Create seed sequence
@@ -489,7 +489,7 @@ def local(  # noqa: C901
                     X,
                     y,
                     #noise_vector=noise,
-                    noise_vector=[i*noise_multiplier for i in noise],
+                    noise_vector=[i*noise_scaling_coefficient for i in noise],
                     gp_burnin=settings.get("gp_initial_burnin", gp_initial_burnin),
                     gp_samples=settings.get("gp_initial_samples", gp_initial_samples),
                     n_samples=settings.get("n_samples", 1),
@@ -497,7 +497,7 @@ def local(  # noqa: C901
                 )
                 root_logger.info("Importing finished.")
 
-            #root_logger.debug(f"noise_vector: {[i*noise_multiplier for i in noise]}")
+            #root_logger.debug(f"noise_vector: {[i*noise_scaling_coefficient for i in noise]}")
             root_logger.debug(f"GP kernel_: {opt.gp.kernel_}")
             #root_logger.debug(f"GP priors: {opt.gp_priors}")
             #root_logger.debug(f"GP X_train_: {opt.gp.X_train_}")
@@ -683,7 +683,7 @@ def local(  # noqa: C901
                         X,
                         y,
                         #noise_vector=noise,
-                        noise_vector=[i*noise_multiplier for i in noise],
+                        noise_vector=[i*noise_scaling_coefficient for i in noise],
                         n_samples=n_samples,
                         gp_samples=gp_samples,
                         gp_burnin=gp_burnin,
@@ -693,7 +693,7 @@ def local(  # noqa: C901
                         point,
                         score,
                         #noise_vector=error_variance,
-                        noise_vector=noise_multiplier*error_variance,
+                        noise_vector=noise_scaling_coefficient*error_variance,
                         n_samples=n_samples,
                         gp_samples=gp_samples,
                         gp_burnin=gp_burnin,
