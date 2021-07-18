@@ -651,7 +651,7 @@ def local(  # noqa: C901
             n_initial_points=settings.get("n_initial_points", n_initial_points),
             # gp_kernel=kernel,  # TODO: Let user pass in different kernels
             gp_kwargs=gp_kwargs,
-            # gp_priors=priors,  # TODO: Let user pass in priors
+            gp_priors=priors,
             acq_func=settings.get("acq_function", acq_function),
             acq_func_kwargs=dict(alpha=1.96, n_thompson=500),
             random_state=random_state,
