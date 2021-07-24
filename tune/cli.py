@@ -629,7 +629,7 @@ def local(  # noqa: C901
             "debug_mode", False if verbose <= 1 else True
         )
         out_exp = []
-        for output_line in run_match(**settings):
+        for output_line in run_match(**settings,tuning_config_name=tuning_config.name):
             root_logger.debug(output_line.rstrip())
             out_exp.append(output_line)
         out_exp = "".join(out_exp)
