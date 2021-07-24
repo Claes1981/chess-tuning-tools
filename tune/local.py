@@ -252,6 +252,7 @@ def run_match(
     engine2_ponder=False,
     timemargin=None,
     opening_file=None,
+    tuning_config_name=None,
     adjudicate_draws=False,
     draw_movenumber=1,
     draw_movecount=10,
@@ -299,6 +300,8 @@ def run_match(
         Path to the file containing the openings. Can be .epd or .pgn.
         Make sure that the file explicitly has the .epd or .pgn suffix, as it
         is used to detect the format.
+    tuning_config_name : str, default=None
+        Filename of the tuning configuration.
     adjudicate_draws : bool, default=False
         Specify, if cutechess-cli is allowed to adjudicate draws, if the
         scores of both engines drop below draw_score for draw_movecount number
@@ -423,7 +426,7 @@ def run_match(
     string_array.append("-recover")
     if debug_mode:
         string_array.append("-debug")
-    string_array.extend(("-pgnout", "out.pgn"))
+    string_array.extend(("-pgnout", f"{pathlib.Path(tuning_config_name).with_suffix('.pgn')}"))
 
     with subprocess.Popen(
         string_array, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
