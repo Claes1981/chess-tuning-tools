@@ -11,7 +11,7 @@ These modifications are (at the time of writing):
 * It restarts the engines between each game. (Cutechess-cli option "-each restart=on")
 * It lets the user, through an experimental option, multiply the noise of the observations by a coefficent when sent to the optimizer. 
   It is intended as an experimental attempt to work around the https://github.com/kiudee/chess-tuning-tools/issues/118 bug.
-* It includes the current settings in the log when starting or resuming.
+* It includes the current settings in the log when starting or resuming, and it saves the games in separate PGN files for different tuning configuration files.
 * It allows using the latest 0.24.* version of Scikit-learn.
 
 ---------------
