@@ -636,11 +636,13 @@ def local(  # noqa: C901
             out_exp = "".join(out_exp)
             match_score, match_error_variance,match_counts_array = parse_experiment_result(out_exp, **settings)
 
+            counts_array += match_counts_array
+
         later = datetime.now()
         difference = (later - now).total_seconds()
         root_logger.info(f"Experiment finished ({difference}s elapsed).")
 
-        score, error_variance = parse_experiment_result(out_exp, **settings)
+        score, error_variance = counts_to_penta(counts=counts_array)
         root_logger.info(
             "Got Elo: {} +- {}".format(-score * 100, np.sqrt(error_variance) * 100)
         )
