@@ -208,7 +208,7 @@ def parse_experiment_result(
         score_scale=score_scale,
         random_state=random_state,
         **kwargs,
-    )
+    ),counts_array
 
 
 def _construct_engine_conf(
@@ -374,7 +374,7 @@ def run_match(
             timemargin=timemargin,
         )
     )
-    
+
     if opening_file is not None:
         opening_path = pathlib.Path(opening_file)
         if not opening_path.exists():

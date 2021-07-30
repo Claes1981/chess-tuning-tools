@@ -634,7 +634,7 @@ def local(  # noqa: C901
                 root_logger.debug(output_line.rstrip())
                 out_exp.append(output_line)
             out_exp = "".join(out_exp)
-            score, error_variance = parse_experiment_result(out_exp, **settings)
+            match_score, match_error_variance,match_counts_array = parse_experiment_result(out_exp, **settings)
 
         later = datetime.now()
         difference = (later - now).total_seconds()
