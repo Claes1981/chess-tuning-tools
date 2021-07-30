@@ -241,7 +241,7 @@ def _construct_engine_conf(
 
 
 def run_match(
-    rounds=10,
+    rounds=1,
     engine1_tc=None,
     engine2_tc=None,
     engine1_st=None,
@@ -270,7 +270,7 @@ def run_match(
 
     Parameters
     ----------
-    rounds : int, default=10
+    rounds : int, default=1
         Number of rounds to play in the match (each round consists of 2 games).
     engine1_tc : str or TimeControl object, default=None
         Time control to use for the first engine. If str, it can be a
@@ -420,7 +420,7 @@ def run_match(
         string_array.extend(("-tb", str(tb_path_object)))
 
     string_array.extend(("-each", "restart=on"))
-    string_array.extend(("-rounds", f"{rounds}"))
+    string_array.extend(("-rounds", "1"))
     string_array.extend(("-games", "2"))
     string_array.append("-repeat")
     string_array.append("-recover")
