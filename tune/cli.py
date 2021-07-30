@@ -396,7 +396,7 @@ def local(  # noqa: C901
                 lower_steepness=settings.get("kernel_lengthscale_prior_lower_steepness", kernel_lengthscale_prior_lower_steepness),
                 upper_steepness=settings.get("kernel_lengthscale_prior_upper_steepness", kernel_lengthscale_prior_upper_steepness),
             )
-    
+
     priors = [
         # Prior distribution for the signal variance:
         lambda x: halfnorm(scale=2.).logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0),
@@ -628,11 +628,14 @@ def local(  # noqa: C901
         settings["debug_mode"] = settings.get(
             "debug_mode", False if verbose <= 1 else True
         )
-        out_exp = []
-        for output_line in run_match(**settings,tuning_config_name=tuning_config.name):
-            root_logger.debug(output_line.rstrip())
-            out_exp.append(output_line)
-        out_exp = "".join(out_exp)
+        for round in range(settings.get("rounds", rounds)):
+            out_exp = []
+            for output_line in run_match(**settings,tuning_config_name=tuning_config.name):
+                root_logger.debug(output_line.rstrip())
+                out_exp.append(output_line)
+            out_exp = "".join(out_exp)
+            score, error_variance = parse_experiment_result(out_exp, **settings)
+
         later = datetime.now()
         difference = (later - now).total_seconds()
         root_logger.info(f"Experiment finished ({difference}s elapsed).")
@@ -648,7 +651,7 @@ def local(  # noqa: C901
             np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
         with AtomicWriter(model_path, mode="wb", overwrite=True).open() as f:
             dill.dump(opt, f)
-        
+
         if reset:
                 root_logger.info("Deleting the model and generating a new one.")
                 #reset optimizer
@@ -666,7 +669,7 @@ def local(  # noqa: C901
                 )
         else:
                 root_logger.info("Updating model.")
-        
+
         while True:
             try:
                 now = datetime.now()
@@ -698,7 +701,7 @@ def local(  # noqa: C901
                         gp_samples=gp_samples,
                         gp_burnin=gp_burnin,
                     )
-                
+
                 later = datetime.now()
                 difference = (later - now).total_seconds()
                 root_logger.info(f"GP sampling finished ({difference}s)")
