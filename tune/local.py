@@ -201,14 +201,15 @@ def parse_experiment_result(
         else:
             counts["LL"] += 1
     counts_array = np.array(list(counts.values()))
-    return counts_to_penta(
+    score, error = counts_to_penta(
         counts=counts_array,
         prior_counts=prior_counts,
         n_dirichlet_samples=n_dirichlet_samples,
         score_scale=score_scale,
         random_state=random_state,
         **kwargs,
-    ),counts_array
+        )
+    return score, error, counts_array
 
 
 def _construct_engine_conf(

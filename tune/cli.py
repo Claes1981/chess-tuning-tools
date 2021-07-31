@@ -21,7 +21,7 @@ from skopt.utils import create_result
 
 from tune.db_workers import TuningClient, TuningServer
 from tune.io import load_tuning_config, prepare_engines_json, write_engines_json
-from tune.local import parse_experiment_result, reduce_ranges, run_match
+from tune.local import parse_experiment_result, reduce_ranges, run_match, counts_to_penta
 from tune.plots import plot_objective
 from tune.summary import confidence_intervals
 from tune.utils import expected_ucb
@@ -354,6 +354,7 @@ def local(  # noqa: C901
     reset=True,
     verbose=0,
     warp_inputs=True,
+    rounds=10,
 ):
     """Run a local tune.
 
@@ -628,15 +629,18 @@ def local(  # noqa: C901
         settings["debug_mode"] = settings.get(
             "debug_mode", False if verbose <= 1 else True
         )
+        counts_array = np.array([0, 0, 0, 0, 0])
         for round in range(settings.get("rounds", rounds)):
+            root_logger.debug(f"Round: {round+1}")
             out_exp = []
             for output_line in run_match(**settings,tuning_config_name=tuning_config.name):
                 root_logger.debug(output_line.rstrip())
                 out_exp.append(output_line)
             out_exp = "".join(out_exp)
-            match_score, match_error_variance,match_counts_array = parse_experiment_result(out_exp, **settings)
+            match_score, match_error_variance, match_counts_array = parse_experiment_result(out_exp, **settings)
 
             counts_array += match_counts_array
+            root_logger.debug(f"WW, WD, WL/DD, LD, LL counts_array: {counts_array}")
 
         later = datetime.now()
         difference = (later - now).total_seconds()
