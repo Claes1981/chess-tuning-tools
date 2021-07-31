@@ -670,6 +670,8 @@ def local(  # noqa: C901
             dill.dump(opt, f)
         round=0
         counts_array = np.array([0, 0, 0, 0, 0])
+        with AtomicWriter(intermediate_data_path, mode="wb", overwrite=True).open() as f:
+                np.savez_compressed(f, np.array(round), counts_array)
 
         if reset:
                 root_logger.info("Deleting the model and generating a new one.")
