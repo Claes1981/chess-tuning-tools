@@ -421,10 +421,13 @@ def local(  # noqa: C901
     y = []
     noise = []
     iteration = 0
+    round = 0
+    counts_array = np.array([0, 0, 0, 0, 0])
 
     # 3.1 Resume from existing data:
     if data_path is None:
         data_path = "data.npz"
+    intermediate_data_path=data_path.replace(".",f"_intermediate.",1)
     if resume:
         path = pathlib.Path(data_path)
         if path.exists():
@@ -459,6 +462,11 @@ def local(  # noqa: C901
                 y = y_reduced
                 noise = noise_reduced
             iteration = len(X)
+            intermediate_path = pathlib.Path(intermediate_data_path)
+            if intermediate_path.exists():
+                with np.load(intermediate_path) as importa:
+                    round = importa["arr_0"]
+                    counts_array = importa["arr_1"]
 
             reinitialize = True
             if fast_resume:
@@ -629,9 +637,10 @@ def local(  # noqa: C901
         settings["debug_mode"] = settings.get(
             "debug_mode", False if verbose <= 1 else True
         )
-        counts_array = np.array([0, 0, 0, 0, 0])
-        for round in range(settings.get("rounds", rounds)):
-            root_logger.debug(f"Round: {round+1}")
+        #counts_array = np.array([0, 0, 0, 0, 0])
+        while round < settings.get("rounds", rounds):
+            round += 1
+            root_logger.debug(f"Round: {round}")
             out_exp = []
             for output_line in run_match(**settings,tuning_config_name=tuning_config.name):
                 root_logger.debug(output_line.rstrip())
@@ -641,6 +650,8 @@ def local(  # noqa: C901
 
             counts_array += match_counts_array
             root_logger.debug(f"WW, WD, WL/DD, LD, LL counts_array: {counts_array}")
+            with AtomicWriter(intermediate_data_path, mode="wb", overwrite=True).open() as f:
+                np.savez_compressed(f, np.array(round), counts_array)
 
         later = datetime.now()
         difference = (later - now).total_seconds()
@@ -657,6 +668,8 @@ def local(  # noqa: C901
             np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
         with AtomicWriter(model_path, mode="wb", overwrite=True).open() as f:
             dill.dump(opt, f)
+        round=0
+        counts_array = np.array([0, 0, 0, 0, 0])
 
         if reset:
                 root_logger.info("Deleting the model and generating a new one.")
