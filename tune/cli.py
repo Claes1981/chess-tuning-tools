@@ -21,7 +21,7 @@ from skopt.utils import create_result
 
 from tune.db_workers import TuningClient, TuningServer
 from tune.io import load_tuning_config, prepare_engines_json, write_engines_json
-from tune.local import parse_experiment_result, reduce_ranges, run_match
+from tune.local import parse_experiment_result, reduce_ranges, run_match, counts_to_penta
 from tune.plots import plot_objective
 from tune.summary import confidence_intervals
 from tune.utils import expected_ucb
@@ -354,6 +354,7 @@ def local(  # noqa: C901
     reset=True,
     verbose=0,
     warp_inputs=True,
+    rounds=10,
 ):
     """Run a local tune.
 
@@ -396,7 +397,7 @@ def local(  # noqa: C901
                 lower_steepness=settings.get("kernel_lengthscale_prior_lower_steepness", kernel_lengthscale_prior_lower_steepness),
                 upper_steepness=settings.get("kernel_lengthscale_prior_upper_steepness", kernel_lengthscale_prior_upper_steepness),
             )
-    
+
     priors = [
         # Prior distribution for the signal variance:
         lambda x: halfnorm(scale=2.).logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0),
@@ -420,10 +421,13 @@ def local(  # noqa: C901
     y = []
     noise = []
     iteration = 0
+    round = 0
+    counts_array = np.array([0, 0, 0, 0, 0])
 
     # 3.1 Resume from existing data:
     if data_path is None:
         data_path = "data.npz"
+    intermediate_data_path=data_path.replace(".",f"_intermediate.",1)
     if resume:
         path = pathlib.Path(data_path)
         if path.exists():
@@ -458,6 +462,11 @@ def local(  # noqa: C901
                 y = y_reduced
                 noise = noise_reduced
             iteration = len(X)
+            intermediate_path = pathlib.Path(intermediate_data_path)
+            if intermediate_path.exists():
+                with np.load(intermediate_path) as importa:
+                    round = importa["arr_0"]
+                    counts_array = importa["arr_1"]
 
             reinitialize = True
             if fast_resume:
@@ -619,25 +628,36 @@ def local(  # noqa: C901
         point_dict = dict(zip(param_ranges.keys(), point))
         root_logger.info("Testing {}".format(point_dict))
 
-        settings, commands, fixed_params, param_ranges = load_tuning_config(json_dict)
-        engine_json = prepare_engines_json(commands=commands, fixed_params=fixed_params)
-        root_logger.debug(f"engines.json is prepared:\n{engine_json}")
-        write_engines_json(engine_json, point_dict)
         root_logger.info("Start experiment")
         now = datetime.now()
         settings["debug_mode"] = settings.get(
             "debug_mode", False if verbose <= 1 else True
         )
-        out_exp = []
-        for output_line in run_match(**settings,tuning_config_name=tuning_config.name):
-            root_logger.debug(output_line.rstrip())
-            out_exp.append(output_line)
-        out_exp = "".join(out_exp)
+        #counts_array = np.array([0, 0, 0, 0, 0])
+        while round < settings.get("rounds", rounds):
+            round += 1
+            root_logger.debug(f"Round: {round}")
+            settings, commands, fixed_params, param_ranges = load_tuning_config(json_dict)
+            engine_json = prepare_engines_json(commands=commands, fixed_params=fixed_params)
+            root_logger.debug(f"engines.json is prepared:\n{engine_json}")
+            write_engines_json(engine_json, point_dict)
+            out_exp = []
+            for output_line in run_match(**settings,tuning_config_name=tuning_config.name):
+                root_logger.debug(output_line.rstrip())
+                out_exp.append(output_line)
+            out_exp = "".join(out_exp)
+            match_score, match_error_variance, match_counts_array = parse_experiment_result(out_exp, **settings)
+
+            counts_array += match_counts_array
+            root_logger.debug(f"WW, WD, WL/DD, LD, LL counts_array: {counts_array}")
+            with AtomicWriter(intermediate_data_path, mode="wb", overwrite=True).open() as f:
+                np.savez_compressed(f, np.array(round), counts_array)
+
         later = datetime.now()
         difference = (later - now).total_seconds()
         root_logger.info(f"Experiment finished ({difference}s elapsed).")
 
-        score, error_variance = parse_experiment_result(out_exp, **settings)
+        score, error_variance = counts_to_penta(counts=counts_array)
         root_logger.info(
             "Got Elo: {} +- {}".format(-score * 100, np.sqrt(error_variance) * 100)
         )
@@ -648,7 +668,9 @@ def local(  # noqa: C901
             np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
         with AtomicWriter(model_path, mode="wb", overwrite=True).open() as f:
             dill.dump(opt, f)
-        
+        round=0
+        counts_array = np.array([0, 0, 0, 0, 0])
+
         if reset:
                 root_logger.info("Deleting the model and generating a new one.")
                 #reset optimizer
@@ -666,7 +688,7 @@ def local(  # noqa: C901
                 )
         else:
                 root_logger.info("Updating model.")
-        
+
         while True:
             try:
                 now = datetime.now()
@@ -698,7 +720,7 @@ def local(  # noqa: C901
                         gp_samples=gp_samples,
                         gp_burnin=gp_burnin,
                     )
-                
+
                 later = datetime.now()
                 difference = (later - now).total_seconds()
                 root_logger.info(f"GP sampling finished ({difference}s)")
