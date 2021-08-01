@@ -634,17 +634,17 @@ def local(  # noqa: C901
         settings["debug_mode"] = settings.get(
             "debug_mode", False if verbose <= 1 else True
         )
-        
+
         while round < settings.get("rounds", rounds):
             round += 1
-            
+
             if round > 1:
                 root_logger.debug(f"WW, WD, WL/DD, LD, LL experiment counts: {counts_array}")
                 score, error_variance = counts_to_penta(counts=counts_array)
                 root_logger.info(
-                    "Round Elo so far: {} +- {}".format(-score * 100, np.sqrt(error_variance) * 100)
+                    "Experiment Elo so far: {} +- {}".format(-score * 100, np.sqrt(error_variance) * 100)
                 )
-            
+
             root_logger.debug(f"Round: {round}")
             settings, commands, fixed_params, param_ranges = load_tuning_config(json_dict)
             engine_json = prepare_engines_json(commands=commands, fixed_params=fixed_params)
@@ -664,7 +664,7 @@ def local(  # noqa: C901
         later = datetime.now()
         difference = (later - now).total_seconds()
         root_logger.info(f"Experiment finished ({difference}s elapsed).")
-        
+
         root_logger.debug(f"WW, WD, WL/DD, LD, LL experiment counts: {counts_array}")
         score, error_variance = counts_to_penta(counts=counts_array)
         root_logger.info(
