@@ -376,8 +376,6 @@ def local(  # noqa: C901
     logging.debug(f"Got the following tuning settings:\n{json_dict}")
 
     root_logger.debug(f"Got the following tuning settings:\n{json_dict}")
-    #root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Normalize_y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
-    #            )
     root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Kernel lengthscale prior lower bound: {kernel_lengthscale_prior_lower_bound}, Kernel lengthscale prior upper bound: {kernel_lengthscale_prior_upper_bound}, Kernel lengthscale prior lower steepness: {kernel_lengthscale_prior_lower_steepness}, Kernel lengthscale prior upper steepness: {kernel_lengthscale_prior_upper_steepness}, Normalize_y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
                 )
 
@@ -628,14 +626,25 @@ def local(  # noqa: C901
         point_dict = dict(zip(param_ranges.keys(), point))
         root_logger.info("Testing {}".format(point_dict))
 
-        root_logger.info("Start experiment")
+        if round == 0:
+            root_logger.info("Start experiment")
+        else:
+            root_logger.info("Continue experiment")
         now = datetime.now()
         settings["debug_mode"] = settings.get(
             "debug_mode", False if verbose <= 1 else True
         )
-        #counts_array = np.array([0, 0, 0, 0, 0])
+        
         while round < settings.get("rounds", rounds):
             round += 1
+            
+            if round > 1:
+                root_logger.debug(f"WW, WD, WL/DD, LD, LL experiment counts: {counts_array}")
+                score, error_variance = counts_to_penta(counts=counts_array)
+                root_logger.info(
+                    "Round Elo so far: {} +- {}".format(-score * 100, np.sqrt(error_variance) * 100)
+                )
+            
             root_logger.debug(f"Round: {round}")
             settings, commands, fixed_params, param_ranges = load_tuning_config(json_dict)
             engine_json = prepare_engines_json(commands=commands, fixed_params=fixed_params)
@@ -649,14 +658,14 @@ def local(  # noqa: C901
             match_score, match_error_variance, match_counts_array = parse_experiment_result(out_exp, **settings)
 
             counts_array += match_counts_array
-            root_logger.debug(f"WW, WD, WL/DD, LD, LL counts_array: {counts_array}")
             with AtomicWriter(intermediate_data_path, mode="wb", overwrite=True).open() as f:
                 np.savez_compressed(f, np.array(round), counts_array)
 
         later = datetime.now()
         difference = (later - now).total_seconds()
         root_logger.info(f"Experiment finished ({difference}s elapsed).")
-
+        
+        root_logger.debug(f"WW, WD, WL/DD, LD, LL experiment counts: {counts_array}")
         score, error_variance = counts_to_penta(counts=counts_array)
         root_logger.info(
             "Got Elo: {} +- {}".format(-score * 100, np.sqrt(error_variance) * 100)
