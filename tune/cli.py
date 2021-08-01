@@ -533,7 +533,11 @@ def local(  # noqa: C901
 
     # 4. Main optimization loop:
     while True:
-        root_logger.info("Starting iteration {}".format(iteration))
+        if round == 0:
+            root_logger.info("Starting iteration {}".format(iteration))
+        else:
+            root_logger.info("Resuming iteration {}".format(iteration))
+
         result_every_n = settings.get("result_every", result_every)
         if (
             result_every_n > 0
