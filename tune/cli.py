@@ -351,6 +351,7 @@ def local(  # noqa: C901
     resume=True,
     fast_resume=False,
     model_path="model.pkl",
+    point=None,
     reset=True,
     verbose=0,
     warp_inputs=True,
@@ -465,6 +466,7 @@ def local(  # noqa: C901
                 with np.load(intermediate_path) as importa:
                     round = importa["arr_0"]
                     counts_array = importa["arr_1"]
+                    point = importa["arr_2"]
 
             reinitialize = True
             if fast_resume:
@@ -626,13 +628,19 @@ def local(  # noqa: C901
                 )
                 root_logger.info(f"Saving a plot to {full_plotpath}.")
                 plt.close(fig)
-        point = opt.ask()
-        point_dict = dict(zip(param_ranges.keys(), point))
-        root_logger.info("Testing {}".format(point_dict))
+        
+        if point is None:
+            round = 0                                   #If previous tested point is not present, start over iteration
+            counts_array = np.array([0, 0, 0, 0, 0])
 
         if round == 0:
+            point = opt.ask()
+            point_dict = dict(zip(param_ranges.keys(), point))
+            root_logger.info("Testing {}".format(point_dict))
             root_logger.info("Start experiment")
         else:
+            point_dict = dict(zip(param_ranges.keys(), point))
+            root_logger.info("Testing {}".format(point_dict))
             root_logger.info("Continue experiment")
         now = datetime.now()
         settings["debug_mode"] = settings.get(
@@ -663,7 +671,7 @@ def local(  # noqa: C901
 
             counts_array += match_counts_array
             with AtomicWriter(intermediate_data_path, mode="wb", overwrite=True).open() as f:
-                np.savez_compressed(f, np.array(round), counts_array)
+                np.savez_compressed(f, np.array(round), counts_array, point)
 
         later = datetime.now()
         difference = (later - now).total_seconds()
@@ -684,7 +692,7 @@ def local(  # noqa: C901
         round=0
         counts_array = np.array([0, 0, 0, 0, 0])
         with AtomicWriter(intermediate_data_path, mode="wb", overwrite=True).open() as f:
-                np.savez_compressed(f, np.array(round), counts_array)
+                np.savez_compressed(f, np.array(round), counts_array, point)
 
         if reset:
                 root_logger.info("Deleting the model and generating a new one.")
