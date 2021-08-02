@@ -466,7 +466,7 @@ def local(  # noqa: C901
                 with np.load(intermediate_path) as importa:
                     round = importa["arr_0"]
                     counts_array = importa["arr_1"]
-                    point = importa["arr_2"]
+                    point = importa["arr_2"].tolist()
 
             reinitialize = True
             if fast_resume:
@@ -531,7 +531,6 @@ def local(  # noqa: C901
                         f"the beta distributions:\n"
                         f"{warp_params}"
                     )
-
 
     # 4. Main optimization loop:
     while True:
