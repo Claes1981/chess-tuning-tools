@@ -782,6 +782,8 @@ def local(  # noqa: C901
         iteration = len(X)
         #with AtomicWriter(data_path, mode="wb", overwrite=True).open() as f:
             #np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
+        with AtomicWriter(model_path, mode="wb", overwrite=True).open() as f:
+            dill.dump(opt, f)
 
 if __name__ == "__main__":
     sys.exit(cli())  # pragma: no cover
