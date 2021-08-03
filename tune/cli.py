@@ -429,6 +429,12 @@ def local(  # noqa: C901
     intermediate_data_path=data_path.replace(".",f"_intermediate.",1)
     if resume:
         path = pathlib.Path(data_path)
+        intermediate_path = pathlib.Path(intermediate_data_path)
+        if intermediate_path.exists():
+            with np.load(intermediate_path) as importa:
+                round = importa["arr_0"]
+                counts_array = importa["arr_1"]
+                point = importa["arr_2"].tolist()
         if path.exists():
             with np.load(path) as importa:
                 X = importa["arr_0"].tolist()
@@ -461,13 +467,7 @@ def local(  # noqa: C901
                 y = y_reduced
                 noise = noise_reduced
             iteration = len(X)
-            intermediate_path = pathlib.Path(intermediate_data_path)
-            if intermediate_path.exists():
-                with np.load(intermediate_path) as importa:
-                    round = importa["arr_0"]
-                    counts_array = importa["arr_1"]
-                    point = importa["arr_2"].tolist()
-
+        
             reinitialize = True
             if fast_resume:
                 path = pathlib.Path(model_path)
