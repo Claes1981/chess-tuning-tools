@@ -1,30 +1,32 @@
 """Console script for chess_tuning_tools."""
 import json
 import logging
-import pathlib
 import sys
-import time
 from datetime import datetime
 
 #from watchpoints import watch
 
 import click
 import dill
-import matplotlib.pyplot as plt
 import numpy as np
 from atomicwrites import AtomicWriter
-from bask.optimizer import Optimizer
-from bask.priors import make_roundflat
-from scipy.special import erfinv
-from scipy.stats import halfnorm
+
 from skopt.utils import create_result
 
 from tune.db_workers import TuningClient, TuningServer
 from tune.io import load_tuning_config, prepare_engines_json, write_engines_json
-from tune.local import parse_experiment_result, reduce_ranges, run_match, counts_to_penta
-from tune.plots import plot_objective
-from tune.summary import confidence_intervals
-from tune.utils import expected_ucb
+
+from tune.local import (
+    counts_to_penta,
+    initialize_data,
+    initialize_optimizer,
+    parse_experiment_result,
+    plot_results,
+    print_results,
+    run_match,
+    setup_logger,
+    update_model,
+)
 
 #watch.config(pdb=True)
 
@@ -363,181 +365,67 @@ def local(  # noqa: C901
     """
     json_dict = json.load(tuning_config)
     settings, commands, fixed_params, param_ranges = load_tuning_config(json_dict)
-    log_level = logging.DEBUG if verbose > 0 else logging.INFO
-    log_format = logging.Formatter("%(asctime)s %(levelname)-8s %(message)s")
-    root_logger = logging.getLogger("ChessTuner")
-    root_logger.setLevel(log_level)
-    root_logger.propagate = False
-    file_logger = logging.FileHandler(settings.get("logfile", logfile))
-    file_logger.setFormatter(log_format)
-    root_logger.addHandler(file_logger)
-    console_logger = logging.StreamHandler(sys.stdout)
-    console_logger.setFormatter(log_format)
-    root_logger.addHandler(console_logger)
-    logging.debug(f"Got the following tuning settings:\n{json_dict}")
-
+    root_logger = setup_logger(
+        verbose=verbose, logfile=settings.get("logfile", logfile)
+    )
     root_logger.debug(f"Got the following tuning settings:\n{json_dict}")
     root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Kernel lengthscale prior lower bound: {kernel_lengthscale_prior_lower_bound}, Kernel lengthscale prior upper bound: {kernel_lengthscale_prior_upper_bound}, Kernel lengthscale prior lower steepness: {kernel_lengthscale_prior_lower_steepness}, Kernel lengthscale prior upper steepness: {kernel_lengthscale_prior_upper_steepness}, Normalize_y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
                 )
 
-    # 1. Create seed sequence
-    ss = np.random.SeedSequence(settings.get("random_seed", random_seed))
-    # 2. Create kernel
-    # 3. Create optimizer
-
-    random_state = np.random.RandomState(np.random.MT19937(ss.spawn(1)[0]))
-    gp_kwargs = dict(
-        normalize_y=settings.get("normalize_y", normalize_y),
-        warp_inputs=settings.get("warp_inputs", warp_inputs),
-    )
-    roundflat = make_roundflat(
-                lower_bound=settings.get("kernel_lengthscale_prior_lower_bound", kernel_lengthscale_prior_lower_bound),
-                upper_bound=settings.get("kernel_lengthscale_prior_upper_bound", kernel_lengthscale_prior_upper_bound),
-                lower_steepness=settings.get("kernel_lengthscale_prior_lower_steepness", kernel_lengthscale_prior_lower_steepness),
-                upper_steepness=settings.get("kernel_lengthscale_prior_upper_steepness", kernel_lengthscale_prior_upper_steepness),
-            )
-
-    priors = [
-        # Prior distribution for the signal variance:
-        lambda x: halfnorm(scale=2.).logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0),
-        # Prior distribution for the length scales:
-        *[lambda x: roundflat(np.exp(x)) + x for _ in range(len(list(param_ranges.values())))],
-        # Prior distribution for the noise:
-        lambda x: halfnorm(scale=2.).logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0)
-    ]
-    opt = Optimizer(
-        dimensions=list(param_ranges.values()),
-        n_points=settings.get("n_points", n_points),
-        n_initial_points=settings.get("n_initial_points", n_initial_points),
-        # gp_kernel=kernel,  # TODO: Let user pass in different kernels
-        gp_kwargs=gp_kwargs,
-        gp_priors=priors,
-        acq_func=settings.get("acq_function", acq_function),
-        acq_func_kwargs=dict(alpha=1.96, n_thompson=500),
-        random_state=random_state,
-    )
-    X = []
-    y = []
-    noise = []
-    iteration = 0
-    round = 0
-    counts_array = np.array([0, 0, 0, 0, 0])
-
-    # 3.1 Resume from existing data:
+    # Initialize/import data structures:
     if data_path is None:
         data_path = "data.npz"
     intermediate_data_path=data_path.replace(".",f"_intermediate.",1)
-    if resume:
-        path = pathlib.Path(data_path)
-        intermediate_path = pathlib.Path(intermediate_data_path)
-        if intermediate_path.exists():
-            with np.load(intermediate_path) as importa:
-                round = importa["arr_0"]
-                counts_array = importa["arr_1"]
-                point = importa["arr_2"].tolist()
-        if path.exists():
-            with np.load(path) as importa:
-                X = importa["arr_0"].tolist()
-                y = importa["arr_1"].tolist()
-                noise = importa["arr_2"].tolist()
-            if len(X[0]) != opt.space.n_dims:
-                root_logger.error(
-                    "The number of parameters are not matching the number of "
-                    "dimensions. Rename the existing data file or ensure that the "
-                    "parameter ranges are correct."
-                )
-                sys.exit(1)
-            reduction_needed, X_reduced, y_reduced, noise_reduced = reduce_ranges(
-                X, y, noise, opt.space
-            )
-            if reduction_needed:
-                backup_path = path.parent / (
-                    path.stem + f"_backup_{int(time.time())}" + path.suffix
-                )
-                root_logger.warning(
-                    f"The parameter ranges are smaller than the existing data. "
-                    f"Some points will have to be discarded. "
-                    f"The original {len(X)} data points will be saved to "
-                    f"{backup_path}"
-                )
-                np.savez_compressed(
-                    backup_path, np.array(X), np.array(y), np.array(noise)
-                )
-                X = X_reduced
-                y = y_reduced
-                noise = noise_reduced
-            iteration = len(X)
-        
-            reinitialize = True
-            if fast_resume:
-                path = pathlib.Path(model_path)
-                if path.exists():
-                    with open(model_path, mode="rb") as model_file:
-                        old_opt = dill.load(model_file)
-                        root_logger.info(
-                            f"Resuming from existing optimizer in {model_path}."
-                        )
-                    if opt.space == old_opt.space:
-                        old_opt.acq_func = opt.acq_func
-                        old_opt.acq_func_kwargs = opt.acq_func_kwargs
-                        opt = old_opt
-                        reinitialize = False
-                    else:
-                        root_logger.info(
-                            "Parameter ranges have been changed and the "
-                            "existing optimizer instance is no longer "
-                            "valid. Reinitializing now."
-                        )
+    try:
+        X, y, noise, iteration = initialize_data(
+            parameter_ranges=list(param_ranges.values()),
+            resume=resume,
+            data_path=data_path,
+        )
+    except ValueError:
+        root_logger.error(
+            "The number of parameters are not matching the number of "
+            "dimensions. Rename the existing data file or ensure that the "
+            "parameter ranges are correct."
+        )
+        sys.exit(1)
 
-            if reinitialize:
-                root_logger.info(
-                    f"Importing {iteration} existing datapoints. "
-                    f"This could take a while..."
-                )
-                opt.tell(
-                    X,
-                    y,
-                    #noise_vector=noise,
-                    noise_vector=[i*noise_scaling_coefficient for i in noise],
-                    gp_burnin=settings.get("gp_initial_burnin", gp_initial_burnin),
-                    gp_samples=settings.get("gp_initial_samples", gp_initial_samples),
-                    n_samples=settings.get("n_samples", 1),
-                    progress=True,
-                )
-                root_logger.info("Importing finished.")
+    # Initialize Optimizer object and if applicable, resume from existing
+    # data/optimizer:
+    opt = initialize_optimizer(
+        X=X,
+        y=y,
+        noise=noise,
+        noise_scaling_coefficient=noise_scaling_coefficient,
+        parameter_ranges=list(param_ranges.values()),
+        random_seed=settings.get("random_seed", random_seed),
+        warp_inputs=settings.get("warp_inputs", warp_inputs),
+        normalize_y=settings.get("normalize_y", normalize_y),
+        kernel_lengthscale_prior_lower_bound=settings.get("kernel_lengthscale_prior_lower_bound", kernel_lengthscale_prior_lower_bound),
+        kernel_lengthscale_prior_upper_bound=settings.get("kernel_lengthscale_prior_upper_bound", kernel_lengthscale_prior_upper_bound),
+        kernel_lengthscale_prior_lower_steepness=settings.get("kernel_lengthscale_prior_lower_steepness", kernel_lengthscale_prior_lower_steepness),
+        kernel_lengthscale_prior_upper_steepness=settings.get("kernel_lengthscale_prior_upper_steepness", kernel_lengthscale_prior_upper_steepness),
+        n_points=settings.get("n_points", n_points),
+        n_initial_points=settings.get("n_initial_points", n_initial_points),
+        acq_function=settings.get("acq_function", acq_function),
+        acq_function_samples=settings.get("acq_function_samples", acq_function_samples),
+        resume=resume,
+        fast_resume=fast_resume,
+        model_path=model_path,
+        gp_initial_burnin=settings.get("gp_initial_burnin", gp_initial_burnin),
+        gp_initial_samples=settings.get("gp_initial_samples", gp_initial_samples),
+    )
 
-            #root_logger.debug(f"noise_vector: {[i*noise_scaling_coefficient for i in noise]}")
-            root_logger.debug(f"GP kernel_: {opt.gp.kernel_}")
-            #root_logger.debug(f"GP priors: {opt.gp_priors}")
-            #root_logger.debug(f"GP X_train_: {opt.gp.X_train_}")
-            #root_logger.debug(f"GP alpha: {opt.gp.alpha}")
-            #root_logger.debug(f"GP alpha_: {opt.gp.alpha_}")
-            #root_logger.debug(f"GP y_train_: {opt.gp.y_train_}")
-            #root_logger.debug(f"GP y_train_std_: {opt.gp.y_train_std_}")
-            #root_logger.debug(f"GP y_train_mean_: {opt.gp.y_train_mean_}")
-
-            if warp_inputs and hasattr(opt.gp, "warp_alphas_"):
-                    warp_params = dict(
-                        zip(
-                            param_ranges.keys(),
-                            zip(
-                                np.around(np.exp(opt.gp.warp_alphas_), 3),
-                                np.around(np.exp(opt.gp.warp_betas_), 3),
-                            ),
-                        )
-                    )
-                    root_logger.debug(
-                        f"Input warping was applied using the following parameters for "
-                        f"the beta distributions:\n"
-                        f"{warp_params}"
-                    )
-
-    # 4. Main optimization loop:
+    # Main optimization loop:
     while True:
         if round == 0:
             root_logger.info("Starting iteration {}".format(iteration))
         else:
             root_logger.info("Resuming iteration {}".format(iteration))
+
+        # Print/plot results so far:
+        result_object = create_result(Xi=X, yi=y, space=opt.space, models=[opt.gp])
+        #root_logger.debug(f"result_object: {result_object}")
 
         result_every_n = settings.get("result_every", result_every)
         if (
@@ -545,95 +433,31 @@ def local(  # noqa: C901
             and iteration % result_every_n == 0
             and opt.gp.chain_ is not None
         ):
-            result_object = create_result(Xi=X, yi=y, space=opt.space, models=[opt.gp])
-            #root_logger.debug(f"result_object: {result_object}")
-            try:
-                best_point, best_value = expected_ucb(result_object, alpha=0.0)
-                best_point_dict = dict(zip(param_ranges.keys(), best_point))
-                with opt.gp.noise_set_to_zero():
-                    _, best_std = opt.gp.predict(
-                        opt.space.transform([best_point]), return_std=True
-                    )
-                root_logger.info(f"Current optimum:\n{best_point_dict}")
-                root_logger.info(
-                    f"Estimated Elo: {np.around(-best_value * 100, 4)} +- "
-                    f"{np.around(best_std * 100, 4).item()}"
-                )
-                confidence_val = settings.get("confidence", confidence)
-                confidence_mult = erfinv(confidence_val) * np.sqrt(2)
-                lower_bound = np.around(
-                    -best_value * 100 - confidence_mult * best_std * 100, 4
-                ).item()
-                upper_bound = np.around(
-                    -best_value * 100 + confidence_mult * best_std * 100, 4
-                ).item()
-                root_logger.info(
-                    f"{confidence_val * 100}% confidence interval of the Elo value: "
-                    f"({lower_bound}, "
-                    f"{upper_bound})"
-                )
-                confidence_out = confidence_intervals(
-                    optimizer=opt,
-                    param_names=list(param_ranges.keys()),
-                    hdi_prob=confidence_val,
-                    opt_samples=1000,
-                    multimodal=False,
-                    #only_mean=False,
-                )
-                root_logger.info(
-                    f"{confidence_val * 100}% confidence intervals of the parameters:"
-                    f"\n{confidence_out}"
-                )
-            except ValueError:
-                root_logger.info(
-                    "Computing current optimum was not successful. "
-                    "This can happen in rare cases and running the "
-                    "tuner again usually works."
-                )
+            print_results(
+                optimizer=opt,
+                result_object=result_object,
+                parameter_names=list(param_ranges.keys()),
+                confidence=settings.get("confidence", confidence),
+            )
+
         plot_every_n = settings.get("plot_every", plot_every)
         if (
             plot_every_n > 0
             and iteration % plot_every_n == 0
             and opt.gp.chain_ is not None
         ):
-            if opt.space.n_dims == 1:
-                root_logger.warning(
-                    "Plotting for only 1 parameter is not supported yet."
-                )
-            else:
-                root_logger.debug("Starting to compute the next plot.")
-                result_object = create_result(
-                    Xi=X, yi=y, space=opt.space, models=[opt.gp]
-                )
-                plt.style.use("dark_background")
-                fig, ax = plt.subplots(
-                    nrows=opt.space.n_dims,
-                    ncols=opt.space.n_dims,
-                    figsize=(3 * opt.space.n_dims, 3 * opt.space.n_dims),
-                )
-                fig.patch.set_facecolor("#36393f")
-                for i in range(opt.space.n_dims):
-                    for j in range(opt.space.n_dims):
-                        ax[i, j].set_facecolor("#36393f")
-                timestr = time.strftime("%Y%m%d-%H%M%S")
-                plot_objective(
-                    result_object, dimensions=list(param_ranges.keys()), fig=fig, ax=ax
-                )
-                plotpath = pathlib.Path(settings.get("plot_path", plot_path))
-                plotpath.mkdir(parents=True, exist_ok=True)
-                full_plotpath = plotpath / f"{timestr}-{iteration}.png"
-                plt.savefig(
-                    full_plotpath, dpi=300, facecolor="#36393f",
-                )
-                root_logger.info(f"Saving a plot to {full_plotpath}.")
-                plt.close(fig)
-        
+            plot_results(
+                optimizer=opt,
+                result_object=result_object,
+                plot_path=settings.get("plot_path", plot_path),
+                parameter_names=list(param_ranges.keys()),
+            )
+
         if point is None:
             round = 0                                   #If previous tested point is not present, start over iteration
             counts_array = np.array([0, 0, 0, 0, 0])
-
         if round == 0:
-            point = opt.ask()
+            point = opt.ask()                           # Ask optimizer for next point
             point_dict = dict(zip(param_ranges.keys(), point))
             root_logger.info("Testing {}".format(point_dict))
             root_logger.info("Start experiment")
@@ -641,6 +465,14 @@ def local(  # noqa: C901
             point_dict = dict(zip(param_ranges.keys(), point))
             root_logger.info("Testing {}".format(point_dict))
             root_logger.info("Continue experiment")
+
+
+        # Prepare engines.json file for cutechess-cli:
+        engine_json = prepare_engines_json(commands=commands, fixed_params=fixed_params)
+        root_logger.debug(f"engines.json is prepared:\n{engine_json}")
+        write_engines_json(engine_json, point_dict)
+
+        # Run experiment:
         now = datetime.now()
         settings["debug_mode"] = settings.get(
             "debug_mode", False if verbose <= 1 else True
@@ -676,6 +508,7 @@ def local(  # noqa: C901
         difference = (later - now).total_seconds()
         root_logger.info(f"Experiment finished ({difference}s elapsed).")
 
+        # Parse cutechess-cli output and report results (Elo and standard deviation):
         root_logger.debug(f"WW, WD, WL/DD, LD, LL experiment counts: {counts_array}")
         score, error_variance = counts_to_penta(counts=counts_array)
         root_logger.info(
@@ -684,6 +517,8 @@ def local(  # noqa: C901
         X.append(point)
         y.append(score)
         noise.append(error_variance)
+
+        # Update data structures and persist to disk:
         with AtomicWriter(data_path, mode="wb", overwrite=True).open() as f:
             np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
         with AtomicWriter(model_path, mode="wb", overwrite=True).open() as f:
@@ -693,92 +528,51 @@ def local(  # noqa: C901
         with AtomicWriter(intermediate_data_path, mode="wb", overwrite=True).open() as f:
                 np.savez_compressed(f, np.array(round), counts_array, point)
 
+        # Update model with the new data:
         if reset:
-                root_logger.info("Deleting the model and generating a new one.")
-                #reset optimizer
-                del opt
-                opt = Optimizer(
-                    dimensions=list(param_ranges.values()),
-                    n_points=settings.get("n_points", n_points),
-                    n_initial_points=settings.get("n_initial_points", n_initial_points),
-                    # gp_kernel=kernel,  # TODO: Let user pass in different kernels
-                    gp_kwargs=gp_kwargs,
-                    gp_priors=priors,
-                    acq_func=settings.get("acq_function", acq_function),
-                    acq_func_kwargs=dict(alpha=1.96, n_thompson=500),
-                    random_state=random_state,
-                )
+            root_logger.info("Deleting the model and generating a new one.")
+            #reset optimizer
+            del opt
+            opt = initialize_optimizer(
+                X=X,
+                y=y,
+                noise=noise,
+                noise_scaling_coefficient=noise_scaling_coefficient,
+                parameter_ranges=list(param_ranges.values()),
+                random_seed=settings.get("random_seed", random_seed),
+                warp_inputs=settings.get("warp_inputs", warp_inputs),
+                normalize_y=settings.get("normalize_y", normalize_y),
+                kernel_lengthscale_prior_lower_bound=settings.get("kernel_lengthscale_prior_lower_bound", kernel_lengthscale_prior_lower_bound),
+                kernel_lengthscale_prior_upper_bound=settings.get("kernel_lengthscale_prior_upper_bound", kernel_lengthscale_prior_upper_bound),
+                kernel_lengthscale_prior_lower_steepness=settings.get("kernel_lengthscale_prior_lower_steepness", kernel_lengthscale_prior_lower_steepness),
+                kernel_lengthscale_prior_upper_steepness=settings.get("kernel_lengthscale_prior_upper_steepness", kernel_lengthscale_prior_upper_steepness),
+                n_points=settings.get("n_points", n_points),
+                n_initial_points=settings.get("n_initial_points", n_initial_points),
+                acq_function=settings.get("acq_function", acq_function),
+                acq_function_samples=settings.get("acq_function_samples", acq_function_samples),
+                resume=True,
+                fast_resume=False,
+                model_path=none,
+                gp_initial_burnin=settings.get("gp_burnin", gp_burnin),
+                gp_initial_samples=settings.get("gp_samples", gp_samples),
+            )
         else:
-                root_logger.info("Updating model.")
+            root_logger.info("Updating model.")
+            update_model(
+                optimizer=opt,
+                point=point,
+                score=score,
+                variance=error_variance,
+                noise_scaling_coefficient=noise_scaling_coefficient,
+                acq_function_samples=settings.get(
+                    "acq_function_samples", acq_function_samples
+                ),
+                gp_burnin=settings.get("gp_burnin", gp_burnin),
+                gp_samples=settings.get("gp_samples", gp_samples),
+                gp_initial_burnin=settings.get("gp_initial_burnin", gp_initial_burnin),
+                gp_initial_samples=settings.get("gp_initial_samples", gp_initial_samples),
+        )
 
-        while True:
-            try:
-                now = datetime.now()
-                # We fetch kwargs manually here to avoid collisions:
-                n_samples = settings.get("acq_function_samples", acq_function_samples)
-                gp_burnin = settings.get("gp_burnin", gp_burnin)
-                gp_samples = settings.get("gp_samples", gp_samples)
-                if (not reset and opt.gp.chain_ is None):
-                    gp_burnin = settings.get("gp_initial_burnin", gp_initial_burnin)
-                    gp_samples = settings.get("gp_initial_samples", gp_initial_samples)
-
-                if reset:
-                    opt.tell(
-                        X,
-                        y,
-                        #noise_vector=noise,
-                        noise_vector=[i*noise_scaling_coefficient for i in noise],
-                        n_samples=n_samples,
-                        gp_samples=gp_samples,
-                        gp_burnin=gp_burnin,
-                     )
-                else:
-                     opt.tell(
-                        point,
-                        score,
-                        #noise_vector=error_variance,
-                        noise_vector=noise_scaling_coefficient*error_variance,
-                        n_samples=n_samples,
-                        gp_samples=gp_samples,
-                        gp_burnin=gp_burnin,
-                    )
-
-                later = datetime.now()
-                difference = (later - now).total_seconds()
-                root_logger.info(f"GP sampling finished ({difference}s)")
-                root_logger.debug(f"GP kernel_: {opt.gp.kernel_}")
-                #root_logger.debug(f"GP X_train_: {opt.gp.X_train_}")
-                #root_logger.debug(f"GP alpha: {opt.gp.alpha}")
-                #root_logger.debug(f"GP alpha_: {opt.gp.alpha_}")
-                #root_logger.debug(f"GP y_train_: {opt.gp.y_train_}")
-                #root_logger.debug(f"GP y_train_std_: {opt.gp.y_train_std_}")
-                #root_logger.debug(f"GP y_train_mean_: {opt.gp.y_train_mean_}")
-                if warp_inputs and hasattr(opt.gp, "warp_alphas_"):
-                    warp_params = dict(
-                        zip(
-                            param_ranges.keys(),
-                            zip(
-                                np.around(np.exp(opt.gp.warp_alphas_), 3),
-                                np.around(np.exp(opt.gp.warp_betas_), 3),
-                            ),
-                        )
-                    )
-                    root_logger.debug(
-                        f"Input warping was applied using the following parameters for "
-                        f"the beta distributions:\n"
-                        f"{warp_params}"
-                    )
-            except ValueError:
-                root_logger.warning(
-                    "Error encountered during fitting. Trying to sample chain a bit. "
-                    "If this problem persists, restart the tuner to reinitialize."
-                )
-                opt.gp.sample(n_burnin=11, priors=opt.gp_priors)
-            else:
-                break
-        #X.append(point)
-        #y.append(score)
-        #noise.append(error_variance)
         iteration = len(X)
         #with AtomicWriter(data_path, mode="wb", overwrite=True).open() as f:
             #np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
