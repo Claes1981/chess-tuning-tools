@@ -468,17 +468,17 @@ def initialize_optimizer(
             warp_params = dict(
                 zip(
                     param_ranges.keys(),
-                        zip(
-                            np.around(np.exp(opt.gp.warp_alphas_), 3),
-                            np.around(np.exp(opt.gp.warp_betas_), 3),
-                        ),
-                    )
+                    zip(
+                        np.around(np.exp(opt.gp.warp_alphas_), 3),
+                        np.around(np.exp(opt.gp.warp_betas_), 3),
+                    ),
                 )
-                logger.debug(
-                    f"Input warping was applied using the following parameters for "
-                    f"the beta distributions:\n"
-                    f"{warp_params}"
-                )
+            )
+            logger.debug(
+                f"Input warping was applied using the following parameters for "
+                f"the beta distributions:\n"
+                f"{warp_params}"
+            )
 
     return opt
 
@@ -883,7 +883,7 @@ def update_model(
     optimizer: Optimizer,
     point: list,
     score: float,
-    noise_scaling_coefficient: float = 1.0,,
+    noise_scaling_coefficient: float = 1.0,
     variance: float,
     acq_function_samples: int = 1,
     gp_burnin: int = 5,
