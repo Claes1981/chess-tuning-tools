@@ -377,7 +377,7 @@ def local(  # noqa: C901
         data_path = "data.npz"
     intermediate_data_path=data_path.replace(".",f"_intermediate.",1)
     try:
-        X, y, noise, iteration = initialize_data(
+        X, y, noise, iteration, round, counts_array, point = initialize_data(
             parameter_ranges=list(param_ranges.values()),
             resume=resume,
             data_path=data_path,

@@ -253,6 +253,7 @@ def initialize_data(
     iteration = 0
     round = 0
     counts_array = np.array([0, 0, 0, 0, 0])
+    intermediate_data_path=data_path.replace(".",f"_intermediate.",1)
 
     if data_path is not None and resume:
         space = normalize_dimensions(parameter_ranges)
@@ -384,6 +385,7 @@ def initialize_optimizer(
     logger = logging.getLogger(LOGGER)
     # Create random generator:
     random_state = setup_random_state(random_seed)
+    space = normalize_dimensions(parameter_ranges)
 
     gp_kwargs = dict(
         normalize_y=normalize_y,
@@ -400,7 +402,7 @@ def initialize_optimizer(
         # Prior distribution for the signal variance:
         lambda x: halfnorm(scale=2.).logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0),
         # Prior distribution for the length scales:
-        *[lambda x: roundflat(np.exp(x)) + x for _ in range(len(list(param_ranges.values())))],
+        *[lambda x: roundflat(np.exp(x)) + x for _ in range(space.n_dims)],
         # Prior distribution for the noise:
         lambda x: halfnorm(scale=2.).logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0)
         ]
@@ -464,21 +466,21 @@ def initialize_optimizer(
         #logger.debug(f"GP y_train_std_: {opt.gp.y_train_std_}")
         #logger.debug(f"GP y_train_mean_: {opt.gp.y_train_mean_}")
 
-        if warp_inputs and hasattr(opt.gp, "warp_alphas_"):
-            warp_params = dict(
-                zip(
-                    param_ranges.keys(),
-                    zip(
-                        np.around(np.exp(opt.gp.warp_alphas_), 3),
-                        np.around(np.exp(opt.gp.warp_betas_), 3),
-                    ),
-                )
-            )
-            logger.debug(
-                f"Input warping was applied using the following parameters for "
-                f"the beta distributions:\n"
-                f"{warp_params}"
-            )
+        #if warp_inputs and hasattr(opt.gp, "warp_alphas_"):
+            #warp_params = dict(
+                #zip(
+                    #parameter_ranges.keys(),
+                    #zip(
+                        #np.around(np.exp(opt.gp.warp_alphas_), 3),
+                        #np.around(np.exp(opt.gp.warp_betas_), 3),
+                    #),
+                #)
+            #)
+            #logger.debug(
+                #f"Input warping was applied using the following parameters for "
+                #f"the beta distributions:\n"
+                #f"{warp_params}"
+            #)
 
     return opt
 
