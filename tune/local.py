@@ -249,7 +249,7 @@ def initialize_data(
         parameters in the data.
     """
     logger = logging.getLogger()
-    X = y = noise = []
+    X = y = noise = point = []
     iteration = 0
     round = 0
     counts_array = np.array([0, 0, 0, 0, 0])

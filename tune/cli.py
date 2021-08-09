@@ -424,7 +424,7 @@ def local(  # noqa: C901
             root_logger.info("Resuming iteration {}".format(iteration))
 
         # Print/plot results so far:
-        result_object = create_result(Xi=X, yi=y, space=opt.space, models=[opt.gp])
+        #result_object = create_result(Xi=X, yi=y, space=opt.space, models=[opt.gp])
         #root_logger.debug(f"result_object: {result_object}")
 
         result_every_n = settings.get("result_every", result_every)
@@ -433,6 +433,7 @@ def local(  # noqa: C901
             and iteration % result_every_n == 0
             and opt.gp.chain_ is not None
         ):
+            result_object = create_result(Xi=X, yi=y, space=opt.space, models=[opt.gp])
             print_results(
                 optimizer=opt,
                 result_object=result_object,
