@@ -12,6 +12,7 @@ import numpy as np
 from atomicwrites import AtomicWriter
 
 from skopt.utils import create_result
+from scipy.stats import halfnorm
 
 from tune.db_workers import TuningClient, TuningServer
 from tune.io import load_tuning_config, prepare_engines_json, write_engines_json
