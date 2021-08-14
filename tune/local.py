@@ -249,7 +249,10 @@ def initialize_data(
         parameters in the data.
     """
     logger = logging.getLogger()
-    X = y = noise = point = []
+    X = []
+    y = []
+    noise = []
+    point = []
     iteration = 0
     round = 0
     counts_array = np.array([0, 0, 0, 0, 0])
@@ -441,7 +444,7 @@ def initialize_optimizer(
                     "valid. Reinitializing now."
                 )
 
-    if reinitialize:
+    if reinitialize and len(X) > 0:
         logger.info(
             f"Importing {len(X)} existing datapoints. " f"This could take a while..."
         )
