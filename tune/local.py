@@ -461,31 +461,31 @@ def initialize_optimizer(
             progress=True,
         )
         logger.info("Importing finished.")
-                    #root_logger.debug(f"noise_vector: {[i*noise_scaling_coefficient for i in noise]}")
-        logger.debug(f"GP kernel_: {opt.gp.kernel_}")
-        #logger.debug(f"GP priors: {opt.gp_priors}")
-        #logger.debug(f"GP X_train_: {opt.gp.X_train_}")
-        #logger.debug(f"GP alpha: {opt.gp.alpha}")
-        #logger.debug(f"GP alpha_: {opt.gp.alpha_}")
-        #logger.debug(f"GP y_train_: {opt.gp.y_train_}")
-        #logger.debug(f"GP y_train_std_: {opt.gp.y_train_std_}")
-        #logger.debug(f"GP y_train_mean_: {opt.gp.y_train_mean_}")
+    #root_logger.debug(f"noise_vector: {[i*noise_scaling_coefficient for i in noise]}")
+    logger.debug(f"GP kernel_: {opt.gp.kernel_}")
+    #logger.debug(f"GP priors: {opt.gp_priors}")
+    #logger.debug(f"GP X_train_: {opt.gp.X_train_}")
+    #logger.debug(f"GP alpha: {opt.gp.alpha}")
+    #logger.debug(f"GP alpha_: {opt.gp.alpha_}")
+    #logger.debug(f"GP y_train_: {opt.gp.y_train_}")
+    #logger.debug(f"GP y_train_std_: {opt.gp.y_train_std_}")
+    #logger.debug(f"GP y_train_mean_: {opt.gp.y_train_mean_}")
 
-        #if warp_inputs and hasattr(opt.gp, "warp_alphas_"):
-            #warp_params = dict(
+    #if warp_inputs and hasattr(opt.gp, "warp_alphas_"):
+        #warp_params = dict(
+            #zip(
+                #parameter_ranges.keys(),
                 #zip(
-                    #parameter_ranges.keys(),
-                    #zip(
-                        #np.around(np.exp(opt.gp.warp_alphas_), 3),
-                        #np.around(np.exp(opt.gp.warp_betas_), 3),
-                    #),
-                #)
+                    #np.around(np.exp(opt.gp.warp_alphas_), 3),
+                    #np.around(np.exp(opt.gp.warp_betas_), 3),
+                #),
             #)
-            #logger.debug(
-                #f"Input warping was applied using the following parameters for "
-                #f"the beta distributions:\n"
-                #f"{warp_params}"
-            #)
+        #)
+        #logger.debug(
+            #f"Input warping was applied using the following parameters for "
+            #f"the beta distributions:\n"
+            #f"{warp_params}"
+        #)
 
     return opt
 
