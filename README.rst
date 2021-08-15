@@ -2,14 +2,14 @@ This is a fork of Chess Tuning Tools by Karlson "kiudee" Pfannschmidt, (https://
 
 These modifications are (at the time of writing):
 
-* It saves the intermediate result to disk after each round and allows resuming from the previous round within an iteration.
-* It has an option (enabled by default) to reset the optimizer object of Bayes-skopt, https://github.com/kiudee/bayes-skopt/blob/master/bask/optimizer.py, each iteration in an attempt to workaround https://github.com/kiudee/chess-tuning-tools/issues/118.
-* It allows tuning against multiple engines. It selects as engine2 each round at random one of all engines after the first specified in the configuration json file.
+* It saves the intermediate result to disk after each round and allows resuming from the previous round within an iteration. (Useful if you run games with long time control.)
+* It has an option (disabled by default) to reset the optimizer object of Bayes-skopt, https://github.com/kiudee/bayes-skopt/blob/master/bask/optimizer.py, each iteration in an attempt to workaround https://github.com/kiudee/chess-tuning-tools/issues/118.
+* It allows tuning against multiple engines. It selects each round as engine2 at random one of all engines after the first specified in the configuration json file.
 * It allows the user to set the parameters of the prior distributions for the kernel length scales.
 * The use of an opening book is optional.
 * It displays the scales (currently a bit messy) of the partial dependence contour plots, including the differences between the maximum and minimum values.
 * It lets the user set normalize_y of the optimizer to true or false through an option.
-* It restarts the engines between each game. (Cutechess-cli option "-each restart=on")
+* It restarts the engines between each game (Cutechess-cli option "-each restart=on"), making sure no information is passed from previous games in the engine.
 * It lets the user, through an experimental option, multiply the noise of the observations by a coefficent when sent to the optimizer. 
   It is intended as an experimental attempt to work around the https://github.com/kiudee/chess-tuning-tools/issues/118 bug.
 * It includes the current settings in the log when starting or resuming, and it saves the games in separate PGN files for different tuning configuration files.
