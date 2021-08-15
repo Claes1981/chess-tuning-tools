@@ -12,11 +12,11 @@ import dill
 import matplotlib.pyplot as plt
 import numpy as np
 from bask import Optimizer
-from bask.priors import make_roundflat
+#from bask.priors import make_roundflat
 from numpy.random import RandomState
 from scipy.optimize import OptimizeResult
 from scipy.special import erfinv
-from scipy.stats import dirichlet, halfnorm
+from scipy.stats import dirichlet #, halfnorm
 from skopt.space import Categorical, Dimension, Integer, Real, Space
 from skopt.utils import normalize_dimensions
 
@@ -397,7 +397,7 @@ def initialize_optimizer(
     logger = logging.getLogger(LOGGER)
     # Create random generator:
     random_state = setup_random_state(random_seed)
-    space = normalize_dimensions(parameter_ranges)
+    #space = normalize_dimensions(parameter_ranges)
 
     gp_kwargs = dict(
         normalize_y=normalize_y,
