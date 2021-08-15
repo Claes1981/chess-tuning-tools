@@ -326,7 +326,7 @@ def initialize_optimizer(
     warp_inputs: bool = True,
     normalize_y: bool = True,
     kernel_lengthscale_prior_lower_bound: float = 0.1,
-    kernel_lengthscale_prior_upper_bound: float = 0.0,
+    kernel_lengthscale_prior_upper_bound: float = 0.5,
     kernel_lengthscale_prior_lower_steepness: float = 2.0,
     kernel_lengthscale_prior_upper_steepness: float = 1.0,
     n_points: int = 500,

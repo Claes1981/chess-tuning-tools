@@ -202,7 +202,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 )
 @click.option(
     "--kernel-lengthscale-prior-lower-bound",
-    default=0.05,
+    default=0.1,
     help="Lower bound of prior distribution of Kernel lengthscale.",
     show_default=True,
 )
@@ -296,7 +296,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 )
 @click.option(
     "--fast-resume/--no-fast-resume",
-    default=False,
+    default=True,
     help="If set, resume the tuning process with the model in the file specified by"
     " the --model-path. "
     "Note, that a full reinitialization will be performed, if the parameter"
@@ -312,7 +312,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 )
 @click.option(
     "--reset/--no-reset",
-    default=True,
+    default=False,
     help="Deletes the optimizer object and creates a new one each iteration. "
     "Same effect as stopping and resuming the program after every iteration. "
     "Experimental option. Attempt to workaround flattening issue.",
@@ -336,7 +336,7 @@ def local(  # noqa: C901
     gp_samples=300,
     gp_initial_burnin=100,
     gp_initial_samples=300,
-    kernel_lengthscale_prior_lower_bound=0.05,
+    kernel_lengthscale_prior_lower_bound=0.1,
     kernel_lengthscale_prior_upper_bound=0.5,
     kernel_lengthscale_prior_lower_steepness=2.0,
     kernel_lengthscale_prior_upper_steepness=1.0,
@@ -350,10 +350,10 @@ def local(  # noqa: C901
     random_seed=0,
     result_every=1,
     resume=True,
-    fast_resume=False,
+    fast_resume=True,
     model_path="model.pkl",
     point=None,
-    reset=True,
+    reset=False,
     verbose=0,
     warp_inputs=True,
     rounds=10,
