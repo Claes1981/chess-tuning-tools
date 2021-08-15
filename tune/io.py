@@ -185,7 +185,6 @@ def load_tuning_config(json_dict):
         raise ValueError("Tuning config does not contain engines.")
     engines = json_dict["engines"]
     number_of_engines=len(engines)
-
     e=engines[0]
     if "command" not in e:
         raise ValueError("Tuning config contains an engine without command.")
@@ -194,7 +193,6 @@ def load_tuning_config(json_dict):
         fixed_params.append(dict())
     else:
         fixed_params.append(e["fixed_parameters"])
-
     e=engines[random.randint(1, number_of_engines-1)] #select engine2 at random
     if "command" not in e:
         raise ValueError("Tuning config contains an engine without command.")
@@ -206,7 +204,6 @@ def load_tuning_config(json_dict):
     if "parameter_ranges" not in json_dict:
         raise ValueError("There are no parameter ranges defined in the config file.")
     param_ranges = parse_ranges(json_dict["parameter_ranges"])
-
     return json_dict, commands, fixed_params, param_ranges
 
 

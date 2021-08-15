@@ -257,7 +257,6 @@ def initialize_data(
     round = 0
     counts_array = np.array([0, 0, 0, 0, 0])
     intermediate_data_path=data_path.replace(".",f"_intermediate.",1)
-
     if data_path is not None and resume:
         space = normalize_dimensions(parameter_ranges)
         path = pathlib.Path(data_path)

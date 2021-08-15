@@ -10,13 +10,11 @@ import click
 import dill
 import numpy as np
 from atomicwrites import AtomicWriter
-
 from skopt.utils import create_result
 from scipy.stats import halfnorm
 
 from tune.db_workers import TuningClient, TuningServer
 from tune.io import load_tuning_config, prepare_engines_json, write_engines_json
-
 from tune.local import (
     counts_to_penta,
     initialize_data,
@@ -565,6 +563,7 @@ def local(  # noqa: C901
         )
 
         iteration = len(X)
+
         #with AtomicWriter(data_path, mode="wb", overwrite=True).open() as f:
             #np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
         with AtomicWriter(model_path, mode="wb", overwrite=True).open() as f:
