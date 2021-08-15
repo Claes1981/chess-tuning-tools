@@ -6,7 +6,7 @@ import sys
 import time
 from datetime import datetime
 from logging import Logger
-from typing import List, Optional, Sequence, Tuple, Union
+from typing import Callable, List, Optional, Sequence, Tuple, Union
 
 import dill
 import matplotlib.pyplot as plt
@@ -328,10 +328,10 @@ def initialize_optimizer(
     random_seed: int = 0,
     warp_inputs: bool = True,
     normalize_y: bool = True,
-    kernel_lengthscale_prior_lower_bound: float = 0.1,
-    kernel_lengthscale_prior_upper_bound: float = 0.5,
-    kernel_lengthscale_prior_lower_steepness: float = 2.0,
-    kernel_lengthscale_prior_upper_steepness: float = 1.0,
+    #kernel_lengthscale_prior_lower_bound: float = 0.1,
+    #kernel_lengthscale_prior_upper_bound: float = 0.5,
+    #kernel_lengthscale_prior_lower_steepness: float = 2.0,
+    #kernel_lengthscale_prior_upper_steepness: float = 1.0,
     n_points: int = 500,
     n_initial_points: int = 16,
     acq_function: str = "mes",
@@ -341,6 +341,7 @@ def initialize_optimizer(
     model_path: Optional[str] = None,
     gp_initial_burnin: int = 100,
     gp_initial_samples: int = 300,
+    gp_priors: Optional[List[Callable[[float], float]]] = None,
 ) -> Optimizer:
     """Create an Optimizer object and if needed resume and/or reinitialize.
 
@@ -381,6 +382,12 @@ def initialize_optimizer(
         Number of burnin samples to use for reinitialization.
     gp_initial_samples : int, default=300
         Number of samples to use for reinitialization.
+    gp_priors : list of callables, default=None
+        List of priors to be used for the kernel hyperparameters. Specified in the
+        following order:
+        - signal magnitude prior
+        - lengthscale prior (x number of parameters)
+        - noise magnitude prior
 
     Returns
     -------
@@ -397,20 +404,20 @@ def initialize_optimizer(
         warp_inputs=warp_inputs,
     )
 
-    roundflat = make_roundflat(
-                kernel_lengthscale_prior_lower_bound,
-                kernel_lengthscale_prior_upper_bound,
-                kernel_lengthscale_prior_lower_steepness,
-                kernel_lengthscale_prior_upper_steepness,
-            )
-    priors = [
+    #roundflat = make_roundflat(
+                #kernel_lengthscale_prior_lower_bound,
+                #kernel_lengthscale_prior_upper_bound,
+                #kernel_lengthscale_prior_lower_steepness,
+                #kernel_lengthscale_prior_upper_steepness,
+            #)
+    #priors = [
         # Prior distribution for the signal variance:
-        lambda x: halfnorm(scale=2.).logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0),
+        #lambda x: halfnorm(scale=2.).logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0),
         # Prior distribution for the length scales:
-        *[lambda x: roundflat(np.exp(x)) + x for _ in range(space.n_dims)],
+        #*[lambda x: roundflat(np.exp(x)) + x for _ in range(space.n_dims)],
         # Prior distribution for the noise:
-        lambda x: halfnorm(scale=2.).logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0)
-        ]
+        #lambda x: halfnorm(scale=2.).logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0)
+        #]
 
     opt = Optimizer(
         dimensions=parameter_ranges,
@@ -418,7 +425,8 @@ def initialize_optimizer(
         n_initial_points=n_initial_points,
         # gp_kernel=kernel,  # TODO: Let user pass in different kernels
         gp_kwargs=gp_kwargs,
-        gp_priors=priors,
+        #gp_priors=priors,
+        gp_priors=gp_priors,
         acq_func=acq_function,
         acq_func_kwargs=dict(alpha=1.96, n_thompson=500),
         random_state=random_state,
@@ -445,6 +453,8 @@ def initialize_optimizer(
                     "existing optimizer instance is no longer "
                     "valid. Reinitializing now."
                 )
+            if gp_priors is not None:
+                opt.gp_priors = gp_priors
 
     if reinitialize and len(X) > 0:
         logger.info(
