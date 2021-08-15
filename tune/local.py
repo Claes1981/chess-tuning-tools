@@ -222,6 +222,7 @@ def reduce_ranges(
 def initialize_data(
     parameter_ranges: Sequence[Union[Sequence, Dimension]],
     data_path: Optional[str] = None,
+    intermediate_data_path: Optional[str] = None,
     resume: bool = True,
 ) -> Tuple[list, list, list, int]:
     """Initialize data structures needed for tuning. Either empty or resumed from disk.
@@ -232,6 +233,9 @@ def initialize_data(
         Parameter range specifications as expected by scikit-optimize.
     data_path : str or None, default=None
         Path to the file containing the data structures used for resuming.
+        If None, no resuming will be performed.
+    intermediate_data_path : str or None, default=None
+        Path to the file containing the data structures used for resuming an unfinished experiment.
         If None, no resuming will be performed.
     resume : bool, default=True
         If True, fill the data structures with the the data from the given data_path.
@@ -256,7 +260,6 @@ def initialize_data(
     iteration = 0
     round = 0
     counts_array = np.array([0, 0, 0, 0, 0])
-    intermediate_data_path=data_path.replace(".",f"_intermediate.",1)
     if data_path is not None and resume:
         space = normalize_dimensions(parameter_ranges)
         path = pathlib.Path(data_path)

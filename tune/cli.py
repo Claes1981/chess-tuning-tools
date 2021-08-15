@@ -380,6 +380,7 @@ def local(  # noqa: C901
             parameter_ranges=list(param_ranges.values()),
             resume=resume,
             data_path=data_path,
+            intermediate_data_path=intermediate_data_path,
         )
     except ValueError:
         root_logger.error(
