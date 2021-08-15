@@ -5,7 +5,6 @@ These modifications are (at the time of writing):
 * It saves the intermediate result to disk after each round and allows resuming from the previous round within an iteration. (Useful if you run games with long time control.)
 * It has an option (disabled by default) to reset the optimizer object of Bayes-skopt, https://github.com/kiudee/bayes-skopt/blob/master/bask/optimizer.py, each iteration in an attempt to workaround https://github.com/kiudee/chess-tuning-tools/issues/118.
 * It allows tuning against multiple engines. It selects each round as engine2 at random one of all engines after the first specified in the configuration json file.
-* It allows the user to set the parameters of the prior distributions for the kernel length scales.
 * The use of an opening book is optional.
 * It displays the scales (currently a bit messy) of the partial dependence contour plots, including the differences between the maximum and minimum values.
 * It lets the user set normalize_y of the optimizer to true or false through an option.

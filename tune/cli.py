@@ -11,7 +11,7 @@ import dill
 import numpy as np
 from atomicwrites import AtomicWriter
 from skopt.utils import create_result
-from scipy.stats import halfnorm
+#from scipy.stats import halfnorm
 
 from tune.db_workers import TuningClient, TuningServer
 from tune.io import load_tuning_config, prepare_engines_json, write_engines_json
@@ -26,6 +26,7 @@ from tune.local import (
     setup_logger,
     update_model,
 )
+from tune.priors import create_priors
 
 #watch.config(pdb=True)
 
@@ -200,35 +201,71 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     "Should be a multiple of 100.",
     show_default=True,
 )
+#@click.option(
+    #"--kernel-lengthscale-prior-lower-bound",
+    #default=0.1,
+    #help="Lower bound of prior distribution of Kernel lengthscale.",
+    #show_default=True,
+#)
+#@click.option(
+    #"--kernel-lengthscale-prior-upper-bound",
+    #default=0.5,
+    #help="Upper bound of prior distribution of Kernel lengthscale.",
+    #show_default=True,
+#)
+#@click.option(
+    #"--kernel-lengthscale-prior-lower-steepness",
+    #default=2.0,
+    #help="Lower steepness of prior distribution of Kernel lengthscale.",
+    #show_default=True,
+#)
+#@click.option(
+    #"--kernel-lengthscale-prior-upper-steepness",
+    #default=1.0,
+    #help="Upper steepness of prior distribution of Kernel lengthscale.",
+    #show_default=True,
+#)
 @click.option(
-    "--kernel-lengthscale-prior-lower-bound",
+    "--gp-signal-prior-scale",
+    default=4.0,
+    type=click.FloatRange(min=0.0),
+    help="Prior scale of the signal (standard deviation) magnitude which is used to"
+    "parametrize a half-normal distribution."
+    "Needs to be a number strictly greater than 0.0.",
+    show_default=True,
+)
+@click.option(
+    "--gp-noise-prior-scale",
+    default=0.0006,
+    type=click.FloatRange(min=0.0),
+    help="Prior scale of the noise (standard deviation) which is used to parametrize a "
+    "half-normal distribution."
+    "Needs to be a number strictly greater than 0.0.",
+    show_default=True,
+)
+@click.option(
+    "--gp-lengthscale-prior-lb",
     default=0.1,
-    help="Lower bound of prior distribution of Kernel lengthscale.",
+    type=click.FloatRange(min=0.0),
+    help="Lower bound for the inverse-gamma lengthscale prior. "
+    "It marks the point where the prior reaches 1% of the cumulative density."
+    "Needs to be a number strictly greater than 0.0.",
     show_default=True,
 )
 @click.option(
-    "--kernel-lengthscale-prior-upper-bound",
+    "--gp-lengthscale-prior-ub",
     default=0.5,
-    help="Upper bound of prior distribution of Kernel lengthscale.",
-    show_default=True,
-)
-@click.option(
-    "--kernel-lengthscale-prior-lower-steepness",
-    default=2.0,
-    help="Lower steepness of prior distribution of Kernel lengthscale.",
-    show_default=True,
-)
-@click.option(
-    "--kernel-lengthscale-prior-upper-steepness",
-    default=1.0,
-    help="Upper steepness of prior distribution of Kernel lengthscale.",
+    type=click.FloatRange(min=0.0),
+    help="Upper bound for the inverse-gamma lengthscale prior. "
+    "It marks the point where the prior reaches 99% of the cumulative density."
+    "Needs to be a number strictly greater than 0.0 and the lower bound.",
     show_default=True,
 )
 @click.option(
     "--normalize-y/--no-normalize-y",
     default=True,
-    show_default=True,
     help="If True, the parameter normalize_y is set to True in the optimizer",
+    show_default=True,
 )
 @click.option(
     "--noise-scaling-coefficient",
@@ -336,10 +373,14 @@ def local(  # noqa: C901
     gp_samples=300,
     gp_initial_burnin=100,
     gp_initial_samples=300,
-    kernel_lengthscale_prior_lower_bound=0.1,
-    kernel_lengthscale_prior_upper_bound=0.5,
-    kernel_lengthscale_prior_lower_steepness=2.0,
-    kernel_lengthscale_prior_upper_steepness=1.0,
+    #kernel_lengthscale_prior_lower_bound=0.1,
+    #kernel_lengthscale_prior_upper_bound=0.5,
+    #kernel_lengthscale_prior_lower_steepness=2.0,
+    #kernel_lengthscale_prior_upper_steepness=1.0,
+    gp_signal_prior_scale=4.0,
+    gp_noise_prior_scale=0.0006,
+    gp_lengthscale_prior_lb=0.1,
+    gp_lengthscale_prior_ub=0.5,
     normalize_y=True,
     noise_scaling_coefficient=1,
     logfile="log.txt",
@@ -368,8 +409,8 @@ def local(  # noqa: C901
         verbose=verbose, logfile=settings.get("logfile", logfile)
     )
     root_logger.debug(f"Got the following tuning settings:\n{json_dict}")
-    root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Kernel lengthscale prior lower bound: {kernel_lengthscale_prior_lower_bound}, Kernel lengthscale prior upper bound: {kernel_lengthscale_prior_upper_bound}, Kernel lengthscale prior lower steepness: {kernel_lengthscale_prior_lower_steepness}, Kernel lengthscale prior upper steepness: {kernel_lengthscale_prior_upper_steepness}, Warp inputs: {warp_inputs}, Normalize y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
-                )
+    root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, GP signal prior scale: {gp_signal_prior_scale}, GP noise prior scale: {gp_noise_prior_scale}, GP lengthscale prior lower bound: {gp_lengthscale_prior_lb}, GP lengthscale prior upper bound: {gp_lengthscale_prior_ub}, Warp inputs: {warp_inputs}, Normalize y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}")
+    #root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Kernel lengthscale prior lower bound: {kernel_lengthscale_prior_lower_bound}, Kernel lengthscale prior upper bound: {kernel_lengthscale_prior_upper_bound}, Kernel lengthscale prior lower steepness: {kernel_lengthscale_prior_lower_steepness}, Kernel lengthscale prior upper steepness: {kernel_lengthscale_prior_upper_steepness}, Warp inputs: {warp_inputs}, Normalize y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}")
 
     # Initialize/import data structures:
     if data_path is None:
@@ -392,6 +433,17 @@ def local(  # noqa: C901
 
     # Initialize Optimizer object and if applicable, resume from existing
     # data/optimizer:
+    gp_priors = create_priors(
+        n_parameters=len(param_ranges),
+        signal_scale=settings.get("gp_signal_prior_scale", gp_signal_prior_scale),
+        lengthscale_lower_bound=settings.get(
+            "gp_lengthscale_prior_lb", gp_lengthscale_prior_lb
+        ),
+        lengthscale_upper_bound=settings.get(
+            "gp_lengthscale_prior_ub", gp_lengthscale_prior_ub
+        ),
+        noise_scale=settings.get("gp_noise_prior_scale", gp_noise_prior_scale),
+    )
     opt = initialize_optimizer(
         X=X,
         y=y,
@@ -401,10 +453,10 @@ def local(  # noqa: C901
         random_seed=settings.get("random_seed", random_seed),
         warp_inputs=settings.get("warp_inputs", warp_inputs),
         normalize_y=settings.get("normalize_y", normalize_y),
-        kernel_lengthscale_prior_lower_bound=settings.get("kernel_lengthscale_prior_lower_bound", kernel_lengthscale_prior_lower_bound),
-        kernel_lengthscale_prior_upper_bound=settings.get("kernel_lengthscale_prior_upper_bound", kernel_lengthscale_prior_upper_bound),
-        kernel_lengthscale_prior_lower_steepness=settings.get("kernel_lengthscale_prior_lower_steepness", kernel_lengthscale_prior_lower_steepness),
-        kernel_lengthscale_prior_upper_steepness=settings.get("kernel_lengthscale_prior_upper_steepness", kernel_lengthscale_prior_upper_steepness),
+        #kernel_lengthscale_prior_lower_bound=settings.get("kernel_lengthscale_prior_lower_bound", kernel_lengthscale_prior_lower_bound),
+        #kernel_lengthscale_prior_upper_bound=settings.get("kernel_lengthscale_prior_upper_bound", kernel_lengthscale_prior_upper_bound),
+        #kernel_lengthscale_prior_lower_steepness=settings.get("kernel_lengthscale_prior_lower_steepness", kernel_lengthscale_prior_lower_steepness),
+        #kernel_lengthscale_prior_upper_steepness=settings.get("kernel_lengthscale_prior_upper_steepness", kernel_lengthscale_prior_upper_steepness),
         n_points=settings.get("n_points", n_points),
         n_initial_points=settings.get("n_initial_points", n_initial_points),
         acq_function=settings.get("acq_function", acq_function),
@@ -414,6 +466,7 @@ def local(  # noqa: C901
         model_path=model_path,
         gp_initial_burnin=settings.get("gp_initial_burnin", gp_initial_burnin),
         gp_initial_samples=settings.get("gp_initial_samples", gp_initial_samples),
+        gp_priors=gp_priors,
     )
 
     # Main optimization loop:
@@ -528,10 +581,10 @@ def local(  # noqa: C901
                 random_seed=settings.get("random_seed", random_seed),
                 warp_inputs=settings.get("warp_inputs", warp_inputs),
                 normalize_y=settings.get("normalize_y", normalize_y),
-                kernel_lengthscale_prior_lower_bound=settings.get("kernel_lengthscale_prior_lower_bound", kernel_lengthscale_prior_lower_bound),
-                kernel_lengthscale_prior_upper_bound=settings.get("kernel_lengthscale_prior_upper_bound", kernel_lengthscale_prior_upper_bound),
-                kernel_lengthscale_prior_lower_steepness=settings.get("kernel_lengthscale_prior_lower_steepness", kernel_lengthscale_prior_lower_steepness),
-                kernel_lengthscale_prior_upper_steepness=settings.get("kernel_lengthscale_prior_upper_steepness", kernel_lengthscale_prior_upper_steepness),
+                #kernel_lengthscale_prior_lower_bound=settings.get("kernel_lengthscale_prior_lower_bound", kernel_lengthscale_prior_lower_bound),
+                #kernel_lengthscale_prior_upper_bound=settings.get("kernel_lengthscale_prior_upper_bound", kernel_lengthscale_prior_upper_bound),
+                #kernel_lengthscale_prior_lower_steepness=settings.get("kernel_lengthscale_prior_lower_steepness", kernel_lengthscale_prior_lower_steepness),
+                #kernel_lengthscale_prior_upper_steepness=settings.get("kernel_lengthscale_prior_upper_steepness", kernel_lengthscale_prior_upper_steepness),
                 n_points=settings.get("n_points", n_points),
                 n_initial_points=settings.get("n_initial_points", n_initial_points),
                 acq_function=settings.get("acq_function", acq_function),
