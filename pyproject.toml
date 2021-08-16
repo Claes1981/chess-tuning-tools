@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "chess-tuning-tools"
-version = "0.8.0"
+version = "0.8.0.2e3c318"
 description = "A collection of tools for local and distributed tuning of chess engines."
 authors = ["Karlson Pfannschmidt","Claes Fransson"]
 license = "Apache-2.0"
@@ -63,6 +63,12 @@ tune = "tune.cli:cli"
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/Claes1981/chess-tuning-tools/issues"
 
+[tool.poetry-dynamic-versioning]
+enable = true
+vcs = "git"
+style = "semver"
+format = "v{base}+{distance}.{commit}"
+
 [build-system]
-requires = ["poetry>=0.12"]
+requires = ["poetry>=0.12", "poetry-dynamic-versioning"]
 build-backend = "poetry.masonry.api"
