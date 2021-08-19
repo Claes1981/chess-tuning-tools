@@ -336,6 +336,7 @@ def initialize_optimizer(
     n_initial_points: int = 16,
     acq_function: str = "mes",
     acq_function_samples: int = 1,
+    acq_function_lcb_alpha: float = 1.96,
     resume: bool = True,
     fast_resume: bool = True,
     model_path: Optional[str] = None,
@@ -403,6 +404,11 @@ def initialize_optimizer(
         normalize_y=normalize_y,
         warp_inputs=warp_inputs,
     )
+    
+    acq_func_kwargs = dict(
+        alpha=acq_function_lcb_alpha,
+        n_thompson=500,
+    )
 
     #roundflat = make_roundflat(
                 #kernel_lengthscale_prior_lower_bound,
@@ -428,7 +434,7 @@ def initialize_optimizer(
         #gp_priors=priors,
         gp_priors=gp_priors,
         acq_func=acq_function,
-        acq_func_kwargs=dict(alpha=1.96, n_thompson=500),
+        acq_func_kwargs=acq_func_kwargs,
         random_state=random_state,
     )
 
@@ -903,6 +909,7 @@ def update_model(
     variance: float,
     noise_scaling_coefficient: float = 1.0,
     acq_function_samples: int = 1,
+    acq_function_lcb_alpha: float = 1.96,
     gp_burnin: int = 5,
     gp_samples: int = 300,
     gp_initial_burnin: int = 100,

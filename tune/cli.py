@@ -144,7 +144,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     "--acq-function",
     default="mes",
     help="Acquisition function to use for selecting points to try. "
-    "Can be {mes, pvrs, ei, ts, vr}.",
+    "Can be {mes, pvrs, ei, ts, vr, lcb}.",
     show_default=True,
 )
 @click.option(
@@ -154,6 +154,13 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     "More samples will slow down the computation time, but might give more "
     "stable tuning results. Less samples on the other hand cause more exploration "
     "which could help avoid the tuning to get stuck.",
+    show_default=True,
+)
+@click.option(
+    "--acq-function-lcb-alpha",
+    default=1.96,
+    help="Number of standard errors to substract from the mean estimate "
+    "if using the Lower Confidence Bound, lcb, acquisition function. ",
     show_default=True,
 )
 @click.option(
@@ -369,6 +376,7 @@ def local(  # noqa: C901
     tuning_config,
     acq_function="mes",
     acq_function_samples=1,
+    acq_function_lcb_alpha=1.96,
     confidence=0.9,
     data_path=None,
     gp_burnin=5,
@@ -411,7 +419,7 @@ def local(  # noqa: C901
         verbose=verbose, logfile=settings.get("logfile", logfile)
     )
     root_logger.debug(f"Got the following tuning settings:\n{json_dict}")
-    root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, GP signal prior scale: {gp_signal_prior_scale}, GP noise prior scale: {gp_noise_prior_scale}, GP lengthscale prior lower bound: {gp_lengthscale_prior_lb}, GP lengthscale prior upper bound: {gp_lengthscale_prior_ub}, Warp inputs: {warp_inputs}, Normalize y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}")
+    root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, Acquisition function lcb alpha: {acq_function_lcb_alpha}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, GP signal prior scale: {gp_signal_prior_scale}, GP noise prior scale: {gp_noise_prior_scale}, GP lengthscale prior lower bound: {gp_lengthscale_prior_lb}, GP lengthscale prior upper bound: {gp_lengthscale_prior_ub}, Warp inputs: {warp_inputs}, Normalize y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}")
     #root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Kernel lengthscale prior lower bound: {kernel_lengthscale_prior_lower_bound}, Kernel lengthscale prior upper bound: {kernel_lengthscale_prior_upper_bound}, Kernel lengthscale prior lower steepness: {kernel_lengthscale_prior_lower_steepness}, Kernel lengthscale prior upper steepness: {kernel_lengthscale_prior_upper_steepness}, Warp inputs: {warp_inputs}, Normalize y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}")
     root_logger.debug(f"Chess Tuning Tools version: {importlib.metadata.version('chess-tuning-tools')}, Bayes-skopt version: {importlib.metadata.version('bask')}, Scikit-optimize version: {importlib.metadata.version('scikit-optimize')}, Scikit-learn version: {importlib.metadata.version('scikit-learn')}, SciPy version: {importlib.metadata.version('scipy')}")
     #root_logger.debug(f"Chess Tuning Tools version: {pkg_resources.get_distribution('chess-tuning-tools').parsed_version}")
@@ -465,6 +473,7 @@ def local(  # noqa: C901
         n_initial_points=settings.get("n_initial_points", n_initial_points),
         acq_function=settings.get("acq_function", acq_function),
         acq_function_samples=settings.get("acq_function_samples", acq_function_samples),
+        acq_function_lcb_alpha=settings.get("acq_function_lcb_alpha", acq_function_lcb_alpha),
         resume=resume,
         fast_resume=fast_resume,
         model_path=model_path,
@@ -593,6 +602,7 @@ def local(  # noqa: C901
                 n_initial_points=settings.get("n_initial_points", n_initial_points),
                 acq_function=settings.get("acq_function", acq_function),
                 acq_function_samples=settings.get("acq_function_samples", acq_function_samples),
+                acq_function_lcb_alpha=settings.get("acq_function_lcb_alpha", acq_function_lcb_alpha),
                 resume=True,
                 fast_resume=False,
                 model_path=none,
@@ -609,6 +619,9 @@ def local(  # noqa: C901
                 noise_scaling_coefficient=noise_scaling_coefficient,
                 acq_function_samples=settings.get(
                     "acq_function_samples", acq_function_samples
+                ),
+                acq_function_lcb_alpha=settings.get(
+                    "acq_function_lcb_alpha", acq_function_lcb_alpha
                 ),
                 gp_burnin=settings.get("gp_burnin", gp_burnin),
                 gp_samples=settings.get("gp_samples", gp_samples),
