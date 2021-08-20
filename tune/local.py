@@ -405,6 +405,8 @@ def initialize_optimizer(
         warp_inputs=warp_inputs,
     )
     
+    if acq_function_lcb_alpha == float("inf"):
+        acq_function_lcb_alpha = str(acq_function_lcb_alpha) #Bayes-skopt expect alpha as a string, "inf", in case of infinite alpha.
     acq_func_kwargs = dict(
         alpha=acq_function_lcb_alpha,
         n_thompson=500,
