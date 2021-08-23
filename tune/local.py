@@ -14,13 +14,15 @@ import numpy as np
 from bask import Optimizer
 #from bask.priors import make_roundflat
 from numpy.random import RandomState
+from athena.active import ActiveSubspaces
+from athena.utils import Normalizer
 from scipy.optimize import OptimizeResult
 from scipy.special import erfinv
 from scipy.stats import dirichlet #, halfnorm
 from skopt.space import Categorical, Dimension, Integer, Real, Space
 from skopt.utils import normalize_dimensions
 
-from tune.plots import plot_objective
+from tune.plots import plot_objective, _evenly_sample, plot_activesubspace_eigenvalues, plot_activesubspace_eigenvectors, plot_activesubspace_sufficient_summary
 from tune.summary import confidence_intervals
 from tune.utils import TimeControl, expected_ucb
 
@@ -616,6 +618,73 @@ def plot_results(
     )
     logger.info(f"Saving a plot to {full_plotpath}.")
     plt.close(fig)
+
+
+    n_samples = 10000
+    input_dim = optimizer.space.n_dims
+    grad = []
+    y=[]
+
+    # Uniformly distributed inputs
+    lb = 0 * np.ones(input_dim) # lower bounds
+    ub = 1 * np.ones(input_dim) # upper bounds
+
+    x_raw = inputs_uniform(n_samples, lb, ub)
+    nor = Normalizer(lb, ub)
+    x = nor.fit_transform(x_raw)
+
+    for x_row in x_raw:
+        y_row, grad_row = optimizer.gp.predict(
+                np.reshape(x_row, (1,-1)), return_mean_grad=True
+            )
+        if grad == []:
+            grad = grad_row
+            y=y_row
+        else:
+            grad = np.vstack([grad,grad_row])
+            y = np.vstack([y,y_row])
+
+    asub = ActiveSubspaces(dim=2, method='exact', n_boot=100)
+    asub.fit(gradients=grad)
+
+    #plt.style.use("dark_background")
+    #fig, ax = plt.subplots(
+        #nrows=3,
+        #ncols=1,
+        #figsize=(9, 9),
+    #)
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    active_sub_fig = plt.figure(constrained_layout=True, figsize=(10, 8))
+
+    as_subfigs = active_sub_fig.subfigures(nrows=3, ncols=1, wspace=0.07)
+
+    #active_sub_fig.tight_layout()
+    #fig.patch.set_facecolor("#36393f")
+    as_subfigs[0]=plot_activesubspace_eigenvalues(asub, figsize=(6, 4))
+    logger.debug(f"Eigenvalues: {np.squeeze(asub.evals)}")
+    as_subfigs[1]=plot_activesubspace_eigenvectors(asub, figsize=(6, 4))
+    logger.debug(f"Activity scores: {np.squeeze(asub.activity_scores)}")
+    as_subfigs[2]=plot_activesubspace_sufficient_summary(asub, x, y, figsize=(6, 4))
+
+    #plt.subplot(3,1,1)
+    #asub.plot_eigenvalues(figsize=(6, 4))
+    #plt.subplot(3,1,2)
+    #asub.plot_eigenvectors(figsize=(6, 4))
+    #plt.subplot(3,1,3)
+    #asub.plot_sufficient_summary(x, y, figsize=(6, 4))
+
+    #plt.show()
+    full_plotpath = plotpath / f"{timestr}-{len(optimizer.Xi)}-active_subspaces.png"
+    active_sub_fig.savefig(
+        full_plotpath, dpi=300, facecolor="#36393f",
+    )
+    logger.info(f"Saving an active subspaces plot to {full_plotpath}.")
+    plt.close(active_sub_fig)
+
+
+def inputs_uniform(n_samples, lb,  ub):
+    return np.vstack(
+        np.array([np.random.uniform(lb[i], ub[i], n_samples) for i in range(lb.shape[0])]).T)
 
 
 def run_match(

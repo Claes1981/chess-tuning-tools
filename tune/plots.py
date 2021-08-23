@@ -5,7 +5,7 @@ from skopt.plots import _format_scatter_plot_axes
 
 from tune.utils import expected_ucb
 
-__all__ = ["partial_dependence", "plot_objective"]
+__all__ = ["partial_dependence", "plot_objective", "plot_activesubspace_eigenvalues", "plot_activesubspace_eigenvectors", "plot_activesubspace_sufficient_summary"]
 
 
 def _evenly_sample(dim, n_points):
@@ -323,3 +323,223 @@ def plot_objective(
         plot_dims=plot_dims,
         dim_labels=dimensions,
     )
+
+def plot_activesubspace_eigenvalues(asub,
+                                    n_evals=None,
+                                    filename=None,
+                                    figsize=(8, 8),
+                                    title='', **kwargs):
+        """
+        Plot the eigenvalues.
+
+        :param int n_evals: number of eigenvalues to plot. If not provided all
+            the eigenvalues will be plotted.
+        :param str filename: if specified, the plot is saved at `filename`.
+        :param tuple(int,int) figsize: tuple in inches defining the figure size.
+            Default is (8, 8).
+        :param str title: title of the plot.
+        :raises: TypeError
+
+        .. warning:: `asub.fit` has to be called in advance.
+        """
+        #ax = self #or plt.gca()
+        if asub.evals is None:
+            raise TypeError('The eigenvalues have not been computed.'
+                            'You have to perform the fit method.')
+        if n_evals is None:
+            n_evals = asub.evals.shape[0]
+        if n_evals > asub.evals.shape[0]:
+            raise TypeError('Invalid number of eigenvalues to plot.')
+
+        #ax = ax or plt.gca()
+        eigen_values_fig = plt.figure(figsize=figsize)
+        eigen_values_fig.suptitle(title)
+        ax = eigen_values_fig.add_subplot(111)
+        if np.amin(asub.evals[:n_evals]) == 0:
+            ax.semilogy(range(1, n_evals + 1),
+                        asub.evals[:n_evals] + np.finfo(float).eps,
+                        'ko-',
+                        markersize=8,
+                        linewidth=2)
+        else:
+            ax.semilogy(range(1, n_evals + 1),
+                        asub.evals[:n_evals],
+                        'ko-',
+                        markersize=8,
+                        linewidth=2)
+        ax.set_xticks(range(1, n_evals + 1))
+        ax.set_xlabel('Index')
+        ax.set_ylabel('Eigenvalues')
+
+        if asub.evals_br is None:
+            ax.axis([
+                0, n_evals + 1, 0.1 * np.amin(asub.evals[:n_evals]),
+                10 * np.amax(asub.evals[:n_evals])
+            ])
+        else:
+            if np.amin(asub.evals[:n_evals]) == 0:
+                ax.fill_between(
+                    range(1, n_evals + 1),
+                    asub.evals_br[:n_evals, 0] * (1 + np.finfo(float).eps),
+                    asub.evals_br[:n_evals, 1] * (1 + np.finfo(float).eps),
+                    facecolor='0.7',
+                    interpolate=True)
+            else:
+                ax.fill_between(range(1, n_evals + 1),
+                                asub.evals_br[:n_evals, 0],
+                                asub.evals_br[:n_evals, 1],
+                                facecolor='0.7',
+                                interpolate=True)
+            ax.axis([
+                0, n_evals + 1, 0.1 * np.amin(asub.evals_br[:n_evals, 0]),
+                10 * np.amax(asub.evals_br[:n_evals, 1])
+            ])
+
+        ax.grid(linestyle='dotted')
+        eigen_values_fig.tight_layout
+
+        if filename:
+            eigen_values_fig.savefig(filename)
+        else:
+            return eigen_values_fig
+
+def plot_activesubspace_eigenvectors(#self,
+                                    asub,
+                                    n_evects=None,
+                                    filename=None,
+                                    figsize=None,
+                                    labels=None,
+                                    title=''):
+        """
+        Plot the eigenvectors.
+
+        :param int n_evects: number of eigenvectors to plot. Default is asub.dim.
+        :param str filename: if specified, the plot is saved at `filename`.
+        :param tuple(int,int) figsize: tuple in inches defining the figure size.
+            Default is (8, 2 * n_evects).
+        :param str labels: labels for the components of the eigenvectors.
+        :param str title: title of the plot.
+        :raises: ValueError, TypeError
+
+        .. warning:: `asub.fit` has to be called in advance.
+        """
+        #ax = self or plt.gca()
+        if asub.evects is None:
+            raise TypeError('The eigenvectors have not been computed.'
+                            'You have to perform the fit method.')
+        if n_evects is None:
+            n_evects = asub.dim
+        if n_evects > asub.evects.shape[0]:
+            raise ValueError('Invalid number of eigenvectors to plot.')
+
+        if figsize is None:
+            figsize = (8, 2 * n_evects)
+
+        n_pars = asub.evects.shape[0]
+        fig, axes = plt.subplots(n_evects, 1, figsize=figsize)
+        fig.suptitle(title)
+        # to ensure generality for subplots (1, 1)
+        axes = np.array(axes)
+        for i, ax in enumerate(axes.flat):
+            ax.scatter(range(1, n_pars + 1),
+                    asub.evects[:n_pars + 1, i],
+                    c='blue',
+                    s=60,
+                    alpha=0.9,
+                    edgecolors='k')
+            ax.axhline(linewidth=0.7, color='black')
+
+            ax.set_xticks(range(1, n_pars + 1))
+            if labels:
+                ax.set_xticklabels(labels)
+
+            ax.set_ylabel('Active eigenvector {}'.format(i + 1))
+            ax.grid(linestyle='dotted')
+            ax.axis([0, n_pars + 1, -1 - 0.1, 1 + 0.1])
+
+        axes.flat[-1].set_xlabel('Eigenvector components')
+        fig.tight_layout()
+        # tight_layout does not consider suptitle so we adjust it manually
+        plt.subplots_adjust(top=0.94)
+        #ax.figure=fig
+        #self.add_child_axes(fig)
+
+        if filename:
+            plt.savefig(filename)
+        else:
+            return fig
+
+def plot_activesubspace_sufficient_summary( asub,
+                                            inputs,
+                                            outputs,
+                                            filename=None,
+                                            figsize=(10, 8),
+                                            title=''):
+        """
+        Plot the sufficient summary.
+
+        :param numpy.ndarray inputs: array n_samples-by-n_params containing the
+            points in the full input space.
+        :param numpy.ndarray outputs: array n_samples-by-1 containing the
+            corresponding function evaluations.
+        :param str filename: if specified, the plot is saved at `filename`.
+        :param tuple(int,int) figsize: tuple in inches defining the figure
+            size. Defaults to (10, 8).
+        :param str title: title of the plot.
+        :raises: ValueError, TypeError
+
+        .. warning:: `asub.fit` has to be called in advance.
+
+            Plot only available for partitions up to dimension 2.
+        """
+        #ax = self or plt.gca()
+        if asub.evects is None:
+            raise TypeError('The eigenvectors have not been computed.'
+                            'You have to perform the fit method.')
+
+        #plt.figure(figsize=figsize)
+        #plt.title(title)
+        sufficient_summary_fig = plt.figure(figsize=figsize)
+        sufficient_summary_fig.suptitle(title)
+        ax = sufficient_summary_fig.add_subplot(111)
+
+        if asub.dim == 1:
+            ax.scatter(asub.transform(inputs)[0],
+                        outputs,
+                        c='blue',
+                        s=40,
+                        alpha=0.9,
+                        edgecolors='k')
+            ax.set_xlabel('Active variable ' + r'$W_1^T \mathbf{\mu}}$',
+                    fontsize=18)
+            ax.set_ylabel(r'$f \, (\mathbf{\mu})$', fontsize=18)
+        elif asub.dim == 2:
+            x = asub.transform(inputs)[0]
+            scatter_plot= ax.scatter(x[:, 0],
+                        x[:, 1],
+                        c=outputs.reshape(-1),
+                        s=60,
+                        alpha=0.9,
+                        edgecolors='k',
+                        vmin=np.min(outputs),
+                        vmax=np.max(outputs))
+            ax.set_xlabel('First active variable', fontsize=18)
+            ax.set_ylabel('Second active variable', fontsize=18)
+            ymin = 1.1 * np.amin([np.amin(x[:, 0]), np.amin(x[:, 1])])
+            ymax = 1.1 * np.amax([np.amax(x[:, 0]), np.amax(x[:, 1])])
+            ax.axis('equal')
+            ax.axis([ymin, ymax, ymin, ymax])
+
+            sufficient_summary_fig.colorbar(scatter_plot, ax=ax)
+        else:
+            raise ValueError(
+                'Sufficient summary plots cannot be made in more than 2 '
+                'dimensions.')
+
+        ax.grid(linestyle='dotted')
+        sufficient_summary_fig.tight_layout()
+
+        if filename:
+            sufficient_summary_fig.savefig(filename)
+        else:
+            return sufficient_summary_fig
