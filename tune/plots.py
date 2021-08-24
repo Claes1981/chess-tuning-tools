@@ -325,6 +325,8 @@ def plot_objective(
     )
 
 def plot_activesubspace_eigenvalues(asub,
+                                    active_subsp_fig=None,
+                                    as_eigenvalues_ax=None,
                                     n_evals=None,
                                     filename=None,
                                     figsize=(8, 8),
@@ -352,59 +354,65 @@ def plot_activesubspace_eigenvalues(asub,
             raise TypeError('Invalid number of eigenvalues to plot.')
 
         #ax = ax or plt.gca()
-        eigen_values_fig = plt.figure(figsize=figsize)
-        eigen_values_fig.suptitle(title)
-        ax = eigen_values_fig.add_subplot(111)
+        #eigen_values_fig = plt.figure(figsize=figsize)
+        #eigen_values_fig.suptitle(title)
+        #ax = eigen_values_fig.add_subplot(111)
         if np.amin(asub.evals[:n_evals]) == 0:
-            ax.semilogy(range(1, n_evals + 1),
+            as_eigenvalues_ax.semilogy(range(1, n_evals + 1),
                         asub.evals[:n_evals] + np.finfo(float).eps,
                         'ko-',
                         markersize=8,
                         linewidth=2)
         else:
-            ax.semilogy(range(1, n_evals + 1),
+            #as_eigenvalues_ax.semilogy(range(1, n_evals + 1),
+            as_eigenvalues_ax.plot(range(1, n_evals + 1),
                         asub.evals[:n_evals],
                         'ko-',
                         markersize=8,
                         linewidth=2)
-        ax.set_xticks(range(1, n_evals + 1))
-        ax.set_xlabel('Index')
-        ax.set_ylabel('Eigenvalues')
+            as_eigenvalues_ax.set_yscale("log")
+
+        as_eigenvalues_ax.set_xticks(range(1, n_evals + 1))
+        as_eigenvalues_ax.set_xlabel('Index')
+        as_eigenvalues_ax.set_ylabel('Eigenvalues')
 
         if asub.evals_br is None:
-            ax.axis([
+            as_eigenvalues_ax.axis([
                 0, n_evals + 1, 0.1 * np.amin(asub.evals[:n_evals]),
                 10 * np.amax(asub.evals[:n_evals])
             ])
         else:
             if np.amin(asub.evals[:n_evals]) == 0:
-                ax.fill_between(
+                as_eigenvalues_ax.fill_between(
                     range(1, n_evals + 1),
                     asub.evals_br[:n_evals, 0] * (1 + np.finfo(float).eps),
                     asub.evals_br[:n_evals, 1] * (1 + np.finfo(float).eps),
                     facecolor='0.7',
                     interpolate=True)
             else:
-                ax.fill_between(range(1, n_evals + 1),
+                as_eigenvalues_ax.fill_between(range(1, n_evals + 1),
                                 asub.evals_br[:n_evals, 0],
                                 asub.evals_br[:n_evals, 1],
                                 facecolor='0.7',
                                 interpolate=True)
-            ax.axis([
+            as_eigenvalues_ax.axis([
                 0, n_evals + 1, 0.1 * np.amin(asub.evals_br[:n_evals, 0]),
                 10 * np.amax(asub.evals_br[:n_evals, 1])
             ])
 
-        ax.grid(linestyle='dotted')
-        eigen_values_fig.tight_layout
+        as_eigenvalues_ax.grid(linestyle='dotted')
+        #eigen_values_fig.tight_layout
 
-        if filename:
-            eigen_values_fig.savefig(filename)
-        else:
-            return eigen_values_fig
+        #if filename:
+        #    eigen_values_fig.savefig(filename)
+        #else:
+        #    return eigen_values_fig
+        return as_eigenvalues_ax
 
 def plot_activesubspace_eigenvectors(#self,
                                     asub,
+                                    active_subsp_fig=None,
+                                    as_eigenvectors_axs=None,
                                     n_evects=None,
                                     filename=None,
                                     figsize=None,
@@ -436,11 +444,11 @@ def plot_activesubspace_eigenvectors(#self,
             figsize = (8, 2 * n_evects)
 
         n_pars = asub.evects.shape[0]
-        fig, axes = plt.subplots(n_evects, 1, figsize=figsize)
-        fig.suptitle(title)
+        #fig, axes = plt.subplots(n_evects, 1, figsize=figsize)
+        #fig.suptitle(title)
         # to ensure generality for subplots (1, 1)
-        axes = np.array(axes)
-        for i, ax in enumerate(axes.flat):
+        as_eigenvectors_axs = np.array(as_eigenvectors_axs)
+        for i, ax in enumerate(as_eigenvectors_axs.flat):
             ax.scatter(range(1, n_pars + 1),
                     asub.evects[:n_pars + 1, i],
                     c='blue',
@@ -457,21 +465,24 @@ def plot_activesubspace_eigenvectors(#self,
             ax.grid(linestyle='dotted')
             ax.axis([0, n_pars + 1, -1 - 0.1, 1 + 0.1])
 
-        axes.flat[-1].set_xlabel('Eigenvector components')
-        fig.tight_layout()
+        as_eigenvectors_axs.flat[-1].set_xlabel('Eigenvector components')
+        #fig.tight_layout()
         # tight_layout does not consider suptitle so we adjust it manually
-        plt.subplots_adjust(top=0.94)
+        #plt.subplots_adjust(top=0.94)
         #ax.figure=fig
         #self.add_child_axes(fig)
+        #breakpoint()
+        #if filename:
+        #    plt.savefig(filename)
+        #else:
+        #    return fig
+        return as_eigenvectors_axs
 
-        if filename:
-            plt.savefig(filename)
-        else:
-            return fig
-
-def plot_activesubspace_sufficient_summary( asub,
+def plot_activesubspace_sufficient_summary(asub,
                                             inputs,
                                             outputs,
+                                            active_subsp_fig=None,
+                                            as_sufficient_summary_ax=None,
                                             filename=None,
                                             figsize=(10, 8),
                                             title=''):
@@ -499,23 +510,23 @@ def plot_activesubspace_sufficient_summary( asub,
 
         #plt.figure(figsize=figsize)
         #plt.title(title)
-        sufficient_summary_fig = plt.figure(figsize=figsize)
-        sufficient_summary_fig.suptitle(title)
-        ax = sufficient_summary_fig.add_subplot(111)
+        #sufficient_summary_fig = plt.figure(figsize=figsize)
+        #sufficient_summary_fig.suptitle(title)
+        #ax = sufficient_summary_fig.add_subplot(111)
 
         if asub.dim == 1:
-            ax.scatter(asub.transform(inputs)[0],
+            as_sufficient_summary_ax.scatter(asub.transform(inputs)[0],
                         outputs,
                         c='blue',
                         s=40,
                         alpha=0.9,
                         edgecolors='k')
-            ax.set_xlabel('Active variable ' + r'$W_1^T \mathbf{\mu}}$',
+            as_sufficient_summary_ax.set_xlabel('Active variable ' + r'$W_1^T \mathbf{\mu}}$',
                     fontsize=18)
-            ax.set_ylabel(r'$f \, (\mathbf{\mu})$', fontsize=18)
+            as_sufficient_summary_ax.set_ylabel(r'$f \, (\mathbf{\mu})$', fontsize=18)
         elif asub.dim == 2:
             x = asub.transform(inputs)[0]
-            scatter_plot= ax.scatter(x[:, 0],
+            scatter_plot= as_sufficient_summary_ax.scatter(x[:, 0],
                         x[:, 1],
                         c=outputs.reshape(-1),
                         s=60,
@@ -523,23 +534,25 @@ def plot_activesubspace_sufficient_summary( asub,
                         edgecolors='k',
                         vmin=np.min(outputs),
                         vmax=np.max(outputs))
-            ax.set_xlabel('First active variable', fontsize=18)
-            ax.set_ylabel('Second active variable', fontsize=18)
+            as_sufficient_summary_ax.set_xlabel('First active variable', fontsize=18)
+            as_sufficient_summary_ax.set_ylabel('Second active variable', fontsize=18)
             ymin = 1.1 * np.amin([np.amin(x[:, 0]), np.amin(x[:, 1])])
             ymax = 1.1 * np.amax([np.amax(x[:, 0]), np.amax(x[:, 1])])
-            ax.axis('equal')
-            ax.axis([ymin, ymax, ymin, ymax])
+            as_sufficient_summary_ax.axis('equal')
+            as_sufficient_summary_ax.axis([ymin, ymax, ymin, ymax])
 
-            sufficient_summary_fig.colorbar(scatter_plot, ax=ax)
+            active_subsp_fig.colorbar(scatter_plot, ax=as_sufficient_summary_ax)
         else:
             raise ValueError(
                 'Sufficient summary plots cannot be made in more than 2 '
                 'dimensions.')
 
-        ax.grid(linestyle='dotted')
-        sufficient_summary_fig.tight_layout()
+        as_sufficient_summary_ax.grid(linestyle='dotted')
+        #sufficient_summary_fig.tight_layout()
 
-        if filename:
-            sufficient_summary_fig.savefig(filename)
-        else:
-            return sufficient_summary_fig
+        #if filename:
+        #    sufficient_summary_fig.savefig(filename)
+        #else:
+        #    return sufficient_summary_fig
+        return as_sufficient_summary_ax
+

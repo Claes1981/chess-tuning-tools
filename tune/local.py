@@ -406,7 +406,7 @@ def initialize_optimizer(
         normalize_y=normalize_y,
         warp_inputs=warp_inputs,
     )
-    
+
     if acq_function_lcb_alpha == float("inf"):
         acq_function_lcb_alpha = str(acq_function_lcb_alpha) #Bayes-skopt expect alpha as a string, "inf", in case of infinite alpha.
     acq_func_kwargs = dict(
@@ -600,21 +600,21 @@ def plot_results(
     logger.debug("Starting to compute the next plot.")
     plt.style.use("dark_background")
     fig, ax = plt.subplots(
-        nrows=optimizer.space.n_dims,
-        ncols=optimizer.space.n_dims,
-        figsize=(3 * optimizer.space.n_dims, 3 * optimizer.space.n_dims),
+       nrows=optimizer.space.n_dims,
+       ncols=optimizer.space.n_dims,
+       figsize=(3 * optimizer.space.n_dims, 3 * optimizer.space.n_dims),
     )
     fig.patch.set_facecolor("#36393f")
     for i in range(optimizer.space.n_dims):
-        for j in range(optimizer.space.n_dims):
-            ax[i, j].set_facecolor("#36393f")
+       for j in range(optimizer.space.n_dims):
+           ax[i, j].set_facecolor("#36393f")
     timestr = time.strftime("%Y%m%d-%H%M%S")
     plot_objective(result_object, dimensions=parameter_names, fig=fig, ax=ax)
     plotpath = pathlib.Path(plot_path)
     plotpath.mkdir(parents=True, exist_ok=True)
     full_plotpath = plotpath / f"{timestr}-{len(optimizer.Xi)}.png"
     plt.savefig(
-        full_plotpath, dpi=300, facecolor="#36393f",
+       full_plotpath, dpi=300, facecolor="#36393f",
     )
     logger.info(f"Saving a plot to {full_plotpath}.")
     plt.close(fig)
@@ -647,25 +647,31 @@ def plot_results(
     asub = ActiveSubspaces(dim=2, method='exact', n_boot=100)
     asub.fit(gradients=grad)
 
-    #plt.style.use("dark_background")
+    plt.style.use("default")
     #fig, ax = plt.subplots(
         #nrows=3,
         #ncols=1,
         #figsize=(9, 9),
     #)
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    active_sub_fig = plt.figure(constrained_layout=True, figsize=(10, 8))
+    active_subsp_fig = plt.figure(constrained_layout=True, figsize=(20, 20))
 
-    as_subfigs = active_sub_fig.subfigures(nrows=3, ncols=1, wspace=0.07)
+    as_subfigs = active_subsp_fig.subfigures(nrows=3, ncols=1, wspace=0.07, height_ratios=[1,1,3])
 
     #active_sub_fig.tight_layout()
-    #fig.patch.set_facecolor("#36393f")
-    as_subfigs[0]=plot_activesubspace_eigenvalues(asub, figsize=(6, 4))
+    fig.patch.set_facecolor("#36393f")
+    as_eigenvalues_ax=as_subfigs[0].subplots(1, 1)
+    as_eigenvalues_ax=plot_activesubspace_eigenvalues(asub, active_subsp_fig=active_subsp_fig,as_eigenvalues_ax=as_eigenvalues_ax, figsize=(6, 4))
     logger.debug(f"Eigenvalues: {np.squeeze(asub.evals)}")
-    as_subfigs[1]=plot_activesubspace_eigenvectors(asub, figsize=(6, 4))
-    logger.debug(f"Activity scores: {np.squeeze(asub.activity_scores)}")
-    as_subfigs[2]=plot_activesubspace_sufficient_summary(asub, x, y, figsize=(6, 4))
 
+    as_eigenvectors_axs=as_subfigs[1].subplots(2, 1)
+    as_eigenvectors_axs=plot_activesubspace_eigenvectors(asub, active_subsp_fig=active_subsp_fig,as_eigenvectors_axs=as_eigenvectors_axs, figsize=(6, 4))
+
+    logger.debug(f"Activity scores: {np.squeeze(asub.activity_scores)}")
+    as_sufficient_summary_ax=as_subfigs[2].subplots(1, 1)
+    as_sufficient_summary_ax=plot_activesubspace_sufficient_summary(asub, x, y, active_subsp_fig=active_subsp_fig,as_sufficient_summary_ax=as_sufficient_summary_ax, figsize=(6, 4))
+
+    active_subsp_fig.suptitle('Active subspaces')
     #plt.subplot(3,1,1)
     #asub.plot_eigenvalues(figsize=(6, 4))
     #plt.subplot(3,1,2)
@@ -675,11 +681,11 @@ def plot_results(
 
     #plt.show()
     full_plotpath = plotpath / f"{timestr}-{len(optimizer.Xi)}-active_subspaces.png"
-    active_sub_fig.savefig(
+    active_subsp_fig.savefig(
         full_plotpath, dpi=300, facecolor="#36393f",
     )
     logger.info(f"Saving an active subspaces plot to {full_plotpath}.")
-    plt.close(active_sub_fig)
+    plt.close(active_subsp_fig)
 
 
 def inputs_uniform(n_samples, lb,  ub):
