@@ -526,11 +526,20 @@ def plot_activesubspace_sufficient_summary(asub,
             as_sufficient_summary_ax.set_ylabel(r'$f \, (\mathbf{\mu})$', fontsize=18)
         elif asub.dim == 2:
             x = asub.transform(inputs)[0]
-            scatter_plot= as_sufficient_summary_ax.scatter(x[:, 0],
+            #scatter_plot= as_sufficient_summary_ax.scatter(x[:, 0],
+                        #x[:, 1],
+                        #c=outputs.reshape(-1),
+                        #s=60,
+                        #alpha=0.9,
+                        #edgecolors='k',
+                        #vmin=np.min(outputs),
+                        #vmax=np.max(outputs))
+            contour_plot= as_sufficient_summary_ax.tricontourf(x[:, 0],
                         x[:, 1],
-                        c=outputs.reshape(-1),
-                        s=60,
+                        outputs.reshape(-1),
+                        levels=10,
                         alpha=0.9,
+                        cmap="viridis_r",
                         edgecolors='k',
                         vmin=np.min(outputs),
                         vmax=np.max(outputs))
@@ -541,7 +550,7 @@ def plot_activesubspace_sufficient_summary(asub,
             as_sufficient_summary_ax.axis('equal')
             as_sufficient_summary_ax.axis([ymin, ymax, ymin, ymax])
 
-            active_subsp_fig.colorbar(scatter_plot, ax=as_sufficient_summary_ax)
+            active_subsp_fig.colorbar(contour_plot, ax=as_sufficient_summary_ax)
         else:
             raise ValueError(
                 'Sufficient summary plots cannot be made in more than 2 '

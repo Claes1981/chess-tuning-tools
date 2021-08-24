@@ -662,12 +662,12 @@ def plot_results(
     fig.patch.set_facecolor("#36393f")
     as_eigenvalues_ax=as_subfigs[0].subplots(1, 1)
     as_eigenvalues_ax=plot_activesubspace_eigenvalues(asub, active_subsp_fig=active_subsp_fig,as_eigenvalues_ax=as_eigenvalues_ax, figsize=(6, 4))
-    logger.debug(f"Eigenvalues: {np.squeeze(asub.evals)}")
+    logger.debug(f"Active subspaces eigenvalues: {np.squeeze(asub.evals)}")
 
     as_eigenvectors_axs=as_subfigs[1].subplots(2, 1)
-    as_eigenvectors_axs=plot_activesubspace_eigenvectors(asub, active_subsp_fig=active_subsp_fig,as_eigenvectors_axs=as_eigenvectors_axs, figsize=(6, 4))
+    as_eigenvectors_axs=plot_activesubspace_eigenvectors(asub, active_subsp_fig=active_subsp_fig,as_eigenvectors_axs=as_eigenvectors_axs, labels=parameter_names, figsize=(6, 4))
 
-    logger.debug(f"Activity scores: {np.squeeze(asub.activity_scores)}")
+    logger.debug(f"Active subspaces activity scores: {np.squeeze(asub.activity_scores)}")
     as_sufficient_summary_ax=as_subfigs[2].subplots(1, 1)
     as_sufficient_summary_ax=plot_activesubspace_sufficient_summary(asub, x, y, active_subsp_fig=active_subsp_fig,as_sufficient_summary_ax=as_sufficient_summary_ax, figsize=(6, 4))
 
