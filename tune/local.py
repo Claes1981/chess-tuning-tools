@@ -597,6 +597,7 @@ def plot_results(
     if optimizer.space.n_dims == 1:
         logger.warning("Plotting for only 1 parameter is not supported yet.")
         return
+    plt.rcdefaults()
     logger.debug("Starting to compute the next plot.")
     plt.style.use("dark_background")
     fig, ax = plt.subplots(
@@ -686,6 +687,7 @@ def plot_results(
     )
     logger.info(f"Saving an active subspaces plot to {full_plotpath}.")
     plt.close(active_subsp_fig)
+    plt.rcdefaults()
 
 
 def inputs_uniform(n_samples, lb,  ub):
