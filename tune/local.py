@@ -649,15 +649,10 @@ def plot_results(
     asub.fit(gradients=active_subspace_samples_gradient)
 
     plt.style.use("default")
-    #fig, ax = plt.subplots(
-        #nrows=3,
-        #ncols=1,
-        #figsize=(9, 9),
-    #)
     timestr = time.strftime("%Y%m%d-%H%M%S")
+    
     active_subspace_figure = plt.figure(constrained_layout=True, figsize=(20, 20))
-
-    as_subfigs = active_subspace_figure.subfigures(nrows=3, ncols=1, wspace=0.07, height_ratios=[1,1,3])
+    as_subfigs = active_subspace_figure.subfigures(nrows=3, ncols=1, wspace=0.07, height_ratios=[1,3,3])
 
     #active_sub_fig.tight_layout()
     fig.patch.set_facecolor("#36393f")
@@ -665,8 +660,8 @@ def plot_results(
     as_eigenvalues_ax=plot_activesubspace_eigenvalues(asub, active_subspace_figure=active_subspace_figure, as_eigenvalues_ax=as_eigenvalues_ax, figsize=(6, 4))
     logger.debug(f"Active subspace eigenvalues: {np.squeeze(asub.evals)}")
 
-    as_eigenvectors_axs=as_subfigs[1].subplots(2, 1)
-    as_eigenvectors_axs=plot_activesubspace_eigenvectors(asub, active_subspace_figure=active_subspace_figure, as_eigenvectors_axs=as_eigenvectors_axs, labels=parameter_names, figsize=(6, 4))
+    as_eigenvectors_axs=as_subfigs[1].subplots(number_of_input_dimensions, 1)
+    as_eigenvectors_axs=plot_activesubspace_eigenvectors(asub, active_subspace_figure=active_subspace_figure, as_eigenvectors_axs=as_eigenvectors_axs, n_evects=number_of_input_dimensions, labels=parameter_names)#, figsize=(6, 4))
 
     logger.debug(f"Active subspace activity scores: {np.squeeze(asub.activity_scores)}")
     as_sufficient_summary_ax=as_subfigs[2].subplots(1, 1)
