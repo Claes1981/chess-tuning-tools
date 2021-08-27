@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import LogLocator
 from skopt.plots import _format_scatter_plot_axes
+from athena.utils import Normalizer
 
 from tune.utils import expected_ucb
 
@@ -516,6 +517,8 @@ def plot_activesubspace_sufficient_summary(asub,
         #ax = sufficient_summary_fig.add_subplot(111)
 
         best_point, best_value = expected_ucb(result_object, alpha=0.0)
+        best_point_normalized_zero_to_one = result_object.space.transform([best_point])
+        best_point_normalized_minus_one_to_one = Normalizer(0, 1).fit_transform(best_point_normalized_zero_to_one) 
 
         if asub.dim == 1:
             as_sufficient_summary_ax.scatter(asub.transform(inputs)[0],
@@ -529,6 +532,7 @@ def plot_activesubspace_sufficient_summary(asub,
             as_sufficient_summary_ax.set_ylabel(r'$f \, (\mathbf{\mu})$', fontsize=18)
         elif asub.dim == 2:
             active_subspace_x = asub.transform(inputs)[0]
+            active_subspace_best_point = asub.transform(best_point_normalized_minus_one_to_one)[0]
             #scatter_plot= as_sufficient_summary_ax.scatter(active_subspace_x[:, 0],
                         #active_subspace_x[:, 1],
                         #c=outputs.reshape(-1),
@@ -554,6 +558,8 @@ def plot_activesubspace_sufficient_summary(asub,
             as_sufficient_summary_ax.axis([ymin, ymax, ymin, ymax])
 
             active_subspace_figure.colorbar(contour_plot, ax=as_sufficient_summary_ax)
+            
+            as_sufficient_summary_ax.scatter(active_subspace_best_point[0,0], active_subspace_best_point[0,1], c=["r"], s=20, lw=0.0)
         else:
             raise ValueError(
                 'Sufficient summary plots cannot be made in more than 2 '
