@@ -663,23 +663,23 @@ def plot_results(
     fig.patch.set_facecolor("#36393f")
     as_eigenvalues_ax=as_subfigs[0].subplots(1, 1)
     as_eigenvalues_ax=plot_activesubspace_eigenvalues(asub, active_subspace_figure=active_subspace_figure, as_eigenvalues_ax=as_eigenvalues_ax, figsize=(6, 4))
-    logger.debug(f"Active subspaces eigenvalues: {np.squeeze(asub.evals)}")
+    logger.debug(f"Active subspace eigenvalues: {np.squeeze(asub.evals)}")
 
     as_eigenvectors_axs=as_subfigs[1].subplots(2, 1)
     as_eigenvectors_axs=plot_activesubspace_eigenvectors(asub, active_subspace_figure=active_subspace_figure, as_eigenvectors_axs=as_eigenvectors_axs, labels=parameter_names, figsize=(6, 4))
 
-    logger.debug(f"Active subspaces activity scores: {np.squeeze(asub.activity_scores)}")
+    logger.debug(f"Active subspace activity scores: {np.squeeze(asub.activity_scores)}")
     as_sufficient_summary_ax=as_subfigs[2].subplots(1, 1)
     as_sufficient_summary_ax=plot_activesubspace_sufficient_summary(asub, active_subspace_samples_normalized_x, active_subspace_samples_y, result_object, active_subspace_figure=active_subspace_figure, as_sufficient_summary_ax=as_sufficient_summary_ax, figsize=(6, 4))
 
-    active_subspace_figure.suptitle('Active subspaces')
+    active_subspace_figure.suptitle('Active subspace')
 
     #plt.show()
-    full_plotpath = plotpath / f"{timestr}-{len(optimizer.Xi)}-active_subspaces.png"
+    full_plotpath = plotpath / f"{timestr}-{len(optimizer.Xi)}-active_subspace.png"
     active_subspace_figure.savefig(
         full_plotpath, dpi=300, facecolor="#36393f",
     )
-    logger.info(f"Saving an active subspaces plot to {full_plotpath}.")
+    logger.info(f"Saving an active subspace plot to {full_plotpath}.")
     plt.close(active_subspace_figure)
     plt.rcdefaults()
 
