@@ -528,17 +528,17 @@ def plot_activesubspace_sufficient_summary(asub,
                     fontsize=18)
             as_sufficient_summary_ax.set_ylabel(r'$f \, (\mathbf{\mu})$', fontsize=18)
         elif asub.dim == 2:
-            x = asub.transform(inputs)[0]
-            #scatter_plot= as_sufficient_summary_ax.scatter(x[:, 0],
-                        #x[:, 1],
+            active_subspace_x = asub.transform(inputs)[0]
+            #scatter_plot= as_sufficient_summary_ax.scatter(active_subspace_x[:, 0],
+                        #active_subspace_x[:, 1],
                         #c=outputs.reshape(-1),
                         #s=60,
                         #alpha=0.9,
                         #edgecolors='k',
                         #vmin=np.min(outputs),
                         #vmax=np.max(outputs))
-            contour_plot= as_sufficient_summary_ax.tricontourf(x[:, 0],
-                        x[:, 1],
+            contour_plot= as_sufficient_summary_ax.tricontourf(active_subspace_x[:, 0],
+                        active_subspace_x[:, 1],
                         outputs.reshape(-1),
                         levels=10,
                         alpha=0.9,
@@ -548,8 +548,8 @@ def plot_activesubspace_sufficient_summary(asub,
                         vmax=np.max(outputs))
             as_sufficient_summary_ax.set_xlabel('First active variable', fontsize=18)
             as_sufficient_summary_ax.set_ylabel('Second active variable', fontsize=18)
-            ymin = 1.1 * np.amin([np.amin(x[:, 0]), np.amin(x[:, 1])])
-            ymax = 1.1 * np.amax([np.amax(x[:, 0]), np.amax(x[:, 1])])
+            ymin = 1.1 * np.amin([np.amin(active_subspace_x[:, 0]), np.amin(active_subspace_x[:, 1])])
+            ymax = 1.1 * np.amax([np.amax(active_subspace_x[:, 0]), np.amax(active_subspace_x[:, 1])])
             as_sufficient_summary_ax.axis('equal')
             as_sufficient_summary_ax.axis([ymin, ymax, ymin, ymax])
 

@@ -623,30 +623,30 @@ def plot_results(
 
     number_of_active_subspace_samples = 10000
     number_of_input_dimensions = optimizer.space.n_dims
-    grad = []
-    y=[]
+    active_subspace_samples_gradient = []
+    active_subspace_samples_y=[]
 
     # Uniformly distributed inputs
     lb = 0 * np.ones(number_of_input_dimensions) # lower bounds
     ub = 1 * np.ones(number_of_input_dimensions) # upper bounds
 
-    x_raw = inputs_uniform(number_of_active_subspace_samples, lb, ub)
-    nor = Normalizer(lb, ub)
-    x = nor.fit_transform(x_raw)
+    active_subspace_samples_x_raw = inputs_uniform(number_of_active_subspace_samples, lb, ub)
+    active_subspaces_input_normalizer = Normalizer(lb, ub)
+    active_subspace_samples_normalized_x = active_subspaces_input_normalizer.fit_transform(active_subspace_samples_x_raw)
 
-    for x_row in x_raw:
+    for x_row in active_subspace_samples_x_raw:
         y_row, grad_row = optimizer.gp.predict(
                 np.reshape(x_row, (1,-1)), return_mean_grad=True
             )
-        if grad == []:
-            grad = grad_row
-            y=y_row
+        if active_subspace_samples_gradient == []:
+            active_subspace_samples_gradient = grad_row
+            active_subspace_samples_y=y_row
         else:
-            grad = np.vstack([grad,grad_row])
-            y = np.vstack([y,y_row])
+            active_subspace_samples_gradient = np.vstack([active_subspace_samples_gradient,grad_row])
+            active_subspace_samples_y = np.vstack([active_subspace_samples_y,y_row])
 
     asub = ActiveSubspaces(dim=2, method='exact', n_boot=100)
-    asub.fit(gradients=grad)
+    asub.fit(gradients=active_subspace_samples_gradient)
 
     plt.style.use("default")
     #fig, ax = plt.subplots(
@@ -662,15 +662,15 @@ def plot_results(
     #active_sub_fig.tight_layout()
     fig.patch.set_facecolor("#36393f")
     as_eigenvalues_ax=as_subfigs[0].subplots(1, 1)
-    as_eigenvalues_ax=plot_activesubspace_eigenvalues(asub, active_subspace_figure=active_subspace_figure,as_eigenvalues_ax=as_eigenvalues_ax, figsize=(6, 4))
+    as_eigenvalues_ax=plot_activesubspace_eigenvalues(asub, active_subspace_figure=active_subspace_figure, as_eigenvalues_ax=as_eigenvalues_ax, figsize=(6, 4))
     logger.debug(f"Active subspaces eigenvalues: {np.squeeze(asub.evals)}")
 
     as_eigenvectors_axs=as_subfigs[1].subplots(2, 1)
-    as_eigenvectors_axs=plot_activesubspace_eigenvectors(asub, active_subspace_figure=active_subspace_figure,as_eigenvectors_axs=as_eigenvectors_axs, labels=parameter_names, figsize=(6, 4))
+    as_eigenvectors_axs=plot_activesubspace_eigenvectors(asub, active_subspace_figure=active_subspace_figure, as_eigenvectors_axs=as_eigenvectors_axs, labels=parameter_names, figsize=(6, 4))
 
     logger.debug(f"Active subspaces activity scores: {np.squeeze(asub.activity_scores)}")
     as_sufficient_summary_ax=as_subfigs[2].subplots(1, 1)
-    as_sufficient_summary_ax=plot_activesubspace_sufficient_summary(asub, x, y, result_object, active_subspace_figure=active_subspace_figure,as_sufficient_summary_ax=as_sufficient_summary_ax, figsize=(6, 4))
+    as_sufficient_summary_ax=plot_activesubspace_sufficient_summary(asub, active_subspace_samples_normalized_x, active_subspace_samples_y, result_object, active_subspace_figure=active_subspace_figure, as_sufficient_summary_ax=as_sufficient_summary_ax, figsize=(6, 4))
 
     active_subspace_figure.suptitle('Active subspaces')
 
