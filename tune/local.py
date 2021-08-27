@@ -621,16 +621,16 @@ def plot_results(
     plt.close(fig)
 
 
-    n_samples = 10000
-    input_dim = optimizer.space.n_dims
+    number_of_active_subspace_samples = 10000
+    number_of_input_dimensions = optimizer.space.n_dims
     grad = []
     y=[]
 
     # Uniformly distributed inputs
-    lb = 0 * np.ones(input_dim) # lower bounds
-    ub = 1 * np.ones(input_dim) # upper bounds
+    lb = 0 * np.ones(number_of_input_dimensions) # lower bounds
+    ub = 1 * np.ones(number_of_input_dimensions) # upper bounds
 
-    x_raw = inputs_uniform(n_samples, lb, ub)
+    x_raw = inputs_uniform(number_of_active_subspace_samples, lb, ub)
     nor = Normalizer(lb, ub)
     x = nor.fit_transform(x_raw)
 
@@ -655,38 +655,32 @@ def plot_results(
         #figsize=(9, 9),
     #)
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    active_subsp_fig = plt.figure(constrained_layout=True, figsize=(20, 20))
+    active_subspace_figure = plt.figure(constrained_layout=True, figsize=(20, 20))
 
-    as_subfigs = active_subsp_fig.subfigures(nrows=3, ncols=1, wspace=0.07, height_ratios=[1,1,3])
+    as_subfigs = active_subspace_figure.subfigures(nrows=3, ncols=1, wspace=0.07, height_ratios=[1,1,3])
 
     #active_sub_fig.tight_layout()
     fig.patch.set_facecolor("#36393f")
     as_eigenvalues_ax=as_subfigs[0].subplots(1, 1)
-    as_eigenvalues_ax=plot_activesubspace_eigenvalues(asub, active_subsp_fig=active_subsp_fig,as_eigenvalues_ax=as_eigenvalues_ax, figsize=(6, 4))
+    as_eigenvalues_ax=plot_activesubspace_eigenvalues(asub, active_subspace_figure=active_subspace_figure,as_eigenvalues_ax=as_eigenvalues_ax, figsize=(6, 4))
     logger.debug(f"Active subspaces eigenvalues: {np.squeeze(asub.evals)}")
 
     as_eigenvectors_axs=as_subfigs[1].subplots(2, 1)
-    as_eigenvectors_axs=plot_activesubspace_eigenvectors(asub, active_subsp_fig=active_subsp_fig,as_eigenvectors_axs=as_eigenvectors_axs, labels=parameter_names, figsize=(6, 4))
+    as_eigenvectors_axs=plot_activesubspace_eigenvectors(asub, active_subspace_figure=active_subspace_figure,as_eigenvectors_axs=as_eigenvectors_axs, labels=parameter_names, figsize=(6, 4))
 
     logger.debug(f"Active subspaces activity scores: {np.squeeze(asub.activity_scores)}")
     as_sufficient_summary_ax=as_subfigs[2].subplots(1, 1)
-    as_sufficient_summary_ax=plot_activesubspace_sufficient_summary(asub, x, y, active_subsp_fig=active_subsp_fig,as_sufficient_summary_ax=as_sufficient_summary_ax, figsize=(6, 4))
+    as_sufficient_summary_ax=plot_activesubspace_sufficient_summary(asub, x, y, result_object, active_subspace_figure=active_subspace_figure,as_sufficient_summary_ax=as_sufficient_summary_ax, figsize=(6, 4))
 
-    active_subsp_fig.suptitle('Active subspaces')
-    #plt.subplot(3,1,1)
-    #asub.plot_eigenvalues(figsize=(6, 4))
-    #plt.subplot(3,1,2)
-    #asub.plot_eigenvectors(figsize=(6, 4))
-    #plt.subplot(3,1,3)
-    #asub.plot_sufficient_summary(x, y, figsize=(6, 4))
+    active_subspace_figure.suptitle('Active subspaces')
 
     #plt.show()
     full_plotpath = plotpath / f"{timestr}-{len(optimizer.Xi)}-active_subspaces.png"
-    active_subsp_fig.savefig(
+    active_subspace_figure.savefig(
         full_plotpath, dpi=300, facecolor="#36393f",
     )
     logger.info(f"Saving an active subspaces plot to {full_plotpath}.")
-    plt.close(active_subsp_fig)
+    plt.close(active_subspace_figure)
     plt.rcdefaults()
 
 

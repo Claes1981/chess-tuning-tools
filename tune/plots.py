@@ -325,7 +325,7 @@ def plot_objective(
     )
 
 def plot_activesubspace_eigenvalues(asub,
-                                    active_subsp_fig=None,
+                                    active_subspace_figure=None,
                                     as_eigenvalues_ax=None,
                                     n_evals=None,
                                     filename=None,
@@ -411,7 +411,7 @@ def plot_activesubspace_eigenvalues(asub,
 
 def plot_activesubspace_eigenvectors(#self,
                                     asub,
-                                    active_subsp_fig=None,
+                                    active_subspace_figure=None,
                                     as_eigenvectors_axs=None,
                                     n_evects=None,
                                     filename=None,
@@ -481,7 +481,8 @@ def plot_activesubspace_eigenvectors(#self,
 def plot_activesubspace_sufficient_summary(asub,
                                             inputs,
                                             outputs,
-                                            active_subsp_fig=None,
+                                            result_object,
+                                            active_subspace_figure=None,
                                             as_sufficient_summary_ax=None,
                                             filename=None,
                                             figsize=(10, 8),
@@ -513,6 +514,8 @@ def plot_activesubspace_sufficient_summary(asub,
         #sufficient_summary_fig = plt.figure(figsize=figsize)
         #sufficient_summary_fig.suptitle(title)
         #ax = sufficient_summary_fig.add_subplot(111)
+
+        best_point, best_value = expected_ucb(result_object, alpha=0.0)
 
         if asub.dim == 1:
             as_sufficient_summary_ax.scatter(asub.transform(inputs)[0],
@@ -550,7 +553,7 @@ def plot_activesubspace_sufficient_summary(asub,
             as_sufficient_summary_ax.axis('equal')
             as_sufficient_summary_ax.axis([ymin, ymax, ymin, ymax])
 
-            active_subsp_fig.colorbar(contour_plot, ax=as_sufficient_summary_ax)
+            active_subspace_figure.colorbar(contour_plot, ax=as_sufficient_summary_ax)
         else:
             raise ValueError(
                 'Sufficient summary plots cannot be made in more than 2 '
