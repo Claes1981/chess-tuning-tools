@@ -7,6 +7,7 @@ import time
 from datetime import datetime
 from logging import Logger
 from typing import Callable, List, Optional, Sequence, Tuple, Union
+from prettytable import PrettyTable
 
 import dill
 import matplotlib.pyplot as plt
@@ -663,7 +664,14 @@ def plot_results(
     as_eigenvectors_axs=as_subfigs[1].subplots(number_of_input_dimensions, 1)
     as_eigenvectors_axs=plot_activesubspace_eigenvectors(asub, active_subspace_figure=active_subspace_figure, as_eigenvectors_axs=as_eigenvectors_axs, n_evects=number_of_input_dimensions, labels=parameter_names)#, figsize=(6, 4))
 
-    logger.debug(f"Active subspace activity scores: {np.squeeze(asub.activity_scores)}")
+    activity_scores_table = PrettyTable()
+    activity_scores_table.add_column("Parameter", parameter_names)
+    activity_scores_table.add_column("Activity score", np.squeeze(asub.activity_scores))
+    activity_scores_table.sortby = "Activity score"
+    activity_scores_table.reversesort = True
+    logger.debug(f"Active subspace activity scores:\n{activity_scores_table}")
+    #logger.debug(f"Active subspace activity scores: {np.squeeze(asub.activity_scores)}")
+    
     as_sufficient_summary_ax=as_subfigs[2].subplots(1, 1)
     as_sufficient_summary_ax=plot_activesubspace_sufficient_summary(asub, active_subspace_samples_normalized_x, active_subspace_samples_y, result_object, active_subspace_figure=active_subspace_figure, as_sufficient_summary_ax=as_sufficient_summary_ax, figsize=(6, 4))
 
