@@ -6,8 +6,9 @@ These modifications are (at the time of writing):
 * It allows tuning against multiple engines. It selects each round as engine2 at random one of all engines after the first specified in the configuration json file.
 * The use of an opening book is optional.
 * It displays the scales (currently a bit messy) of the partial dependence contour plots, including the differences between the maximum and minimum values.
+* It plots an active subspace of the model predicted mean, with help from the ATHENA package, https://mathlab.github.io/ATHENA/.  
+* It has an option to choose aqcuisition function at random each iteration, and an option to allow the user to set the lcb acquisition function alpha parameter.
 * It lets the user set normalize_y of the optimizer to true or false through an option.
-* It allows the user to set the lcb acquisition function alpha parameter.
 * It restarts the engines between each game (Cutechess-cli option "-each restart=on"), making sure no information is passed from previous games in the engine.
 * It has an option (disabled by default) to reset the optimizer object of Bayes-skopt, https://github.com/kiudee/bayes-skopt/blob/master/bask/optimizer.py, each iteration in an attempt to workaround https://github.com/kiudee/chess-tuning-tools/issues/118.
 * It lets the user, through an experimental option, multiply the noise of the observations by a coefficent when sent to the optimizer. 
