@@ -145,7 +145,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     "--acq-function",
     default="mes",
     help="Acquisition function to use for selecting points to try. "
-    "Can be {mes, pvrs, ei, ts, vr, lcb}.",
+    "Can be {mes, pvrs, ei, ts, vr, lcb, rand}.",
     show_default=True,
 )
 @click.option(
@@ -239,8 +239,8 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     "--gp-signal-prior-scale",
     default=4.0,
     type=click.FloatRange(min=0.0),
-    help="Prior scale of the signal (standard deviation) magnitude which is used to"
-    "parametrize a half-normal distribution."
+    help="Prior scale of the signal (standard deviation) magnitude which is used to "
+    "parametrize a half-normal distribution. "
     "Needs to be a number strictly greater than 0.0.",
     show_default=True,
 )
@@ -249,7 +249,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     default=0.0006,
     type=click.FloatRange(min=0.0),
     help="Prior scale of the noise (standard deviation) which is used to parametrize a "
-    "half-normal distribution."
+    "half-normal distribution. "
     "Needs to be a number strictly greater than 0.0.",
     show_default=True,
 )
@@ -258,7 +258,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     default=0.1,
     type=click.FloatRange(min=0.0),
     help="Lower bound for the inverse-gamma lengthscale prior. "
-    "It marks the point where the prior reaches 1% of the cumulative density."
+    "It marks the point where the prior reaches 1% of the cumulative density. "
     "Needs to be a number strictly greater than 0.0.",
     show_default=True,
 )
@@ -267,7 +267,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     default=0.5,
     type=click.FloatRange(min=0.0),
     help="Upper bound for the inverse-gamma lengthscale prior. "
-    "It marks the point where the prior reaches 99% of the cumulative density."
+    "It marks the point where the prior reaches 99% of the cumulative density. "
     "Needs to be a number strictly greater than 0.0 and the lower bound.",
     show_default=True,
 )
@@ -329,7 +329,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 @click.option(
     "--result-every",
     default=1,
-    help="Output the actual current optimum every n-th iteration."
+    help="Output the actual current optimum every n-th iteration. "
     "The further you are in the tuning process, the longer this will take to "
     "compute. Consider increasing this number, if you do not need the output "
     "that often. Set to 0 to turn it off.",
@@ -344,9 +344,9 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 @click.option(
     "--fast-resume/--no-fast-resume",
     default=True,
-    help="If set, resume the tuning process with the model in the file specified by"
+    help="If set, resume the tuning process with the model in the file specified by "
     " the --model-path. "
-    "Note, that a full reinitialization will be performed, if the parameter"
+    "Note, that a full reinitialization will be performed, if the parameter "
     "ranges have been changed.",
     show_default=True,
 )
