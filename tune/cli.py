@@ -12,6 +12,7 @@ import click
 import dill
 import numpy as np
 from atomicwrites import AtomicWriter
+import random
 from skopt.utils import create_result
 #from scipy.stats import halfnorm
 
@@ -585,6 +586,9 @@ def local(  # noqa: C901
             root_logger.info("Deleting the model and generating a new one.")
             #reset optimizer
             del opt
+            if acq_function == "rand":
+                current_acq_func = random.choice(['mes', 'pvrs', 'ei', 'lcb', 'ts'])
+                root_logger.debug(f"Current random acquisition function: {current_acq_func}")
             opt = initialize_optimizer(
                 X=X,
                 y=y,
@@ -600,7 +604,7 @@ def local(  # noqa: C901
                 #kernel_lengthscale_prior_upper_steepness=settings.get("kernel_lengthscale_prior_upper_steepness", kernel_lengthscale_prior_upper_steepness),
                 n_points=settings.get("n_points", n_points),
                 n_initial_points=settings.get("n_initial_points", n_initial_points),
-                acq_function=settings.get("acq_function", acq_function),
+                acq_function=current_acq_func,
                 acq_function_samples=settings.get("acq_function_samples", acq_function_samples),
                 acq_function_lcb_alpha=settings.get("acq_function_lcb_alpha", acq_function_lcb_alpha),
                 resume=True,
@@ -611,6 +615,9 @@ def local(  # noqa: C901
             )
         else:
             root_logger.info("Updating model.")
+            if acq_function == "rand":
+                opt.acq_func = random.choice(['mes', 'pvrs', 'ei', 'lcb', 'ts'])
+                root_logger.debug(f"Current random acquisition function: {opt.acq_func}")
             update_model(
                 optimizer=opt,
                 point=point,

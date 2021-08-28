@@ -15,6 +15,7 @@ import numpy as np
 from bask import Optimizer
 #from bask.priors import make_roundflat
 from numpy.random import RandomState
+import random
 from athena.active import ActiveSubspaces
 from athena.utils import Normalizer
 from scipy.optimize import OptimizeResult
@@ -407,6 +408,10 @@ def initialize_optimizer(
         normalize_y=normalize_y,
         warp_inputs=warp_inputs,
     )
+    if acq_function == "rand":
+                current_acq_func = random.choice(['mes', 'pvrs', 'ei', 'lcb', 'ts'])
+    else:
+                current_acq_func = acq_function
 
     if acq_function_lcb_alpha == float("inf"):
         acq_function_lcb_alpha = str(acq_function_lcb_alpha) #Bayes-skopt expect alpha as a string, "inf", in case of infinite alpha.
@@ -438,7 +443,7 @@ def initialize_optimizer(
         gp_kwargs=gp_kwargs,
         #gp_priors=priors,
         gp_priors=gp_priors,
-        acq_func=acq_function,
+        acq_func=current_acq_func,
         acq_func_kwargs=acq_func_kwargs,
         random_state=random_state,
     )
@@ -471,6 +476,8 @@ def initialize_optimizer(
         logger.info(
             f"Importing {len(X)} existing datapoints. " f"This could take a while..."
         )
+        if acq_function == "rand":
+            logger.debug(f"Current random acquisition function: {current_acq_func}")
         opt.tell(
             X,
             y,
