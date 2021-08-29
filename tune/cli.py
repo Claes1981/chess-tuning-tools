@@ -33,6 +33,7 @@ from tune.priors import create_priors
 
 #watch.config(pdb=True)
 
+
 @click.group()
 def cli():
     pass
@@ -428,7 +429,7 @@ def local(  # noqa: C901
     # Initialize/import data structures:
     if data_path is None:
         data_path = "data.npz"
-    intermediate_data_path=data_path.replace(".",f"_intermediate.",1)
+    intermediate_data_path = data_path.replace(".", "_intermediate.", 1)
     try:
         X, y, noise, iteration, round, counts_array, point = initialize_data(
             parameter_ranges=list(param_ranges.values()),
@@ -511,10 +512,10 @@ def local(  # noqa: C901
                 )
 
         if point is None:
-            round = 0                                   #If previous tested point is not present, start over iteration
+            round = 0                                   # If previous tested point is not present, start over iteration.
             counts_array = np.array([0, 0, 0, 0, 0])
         if round == 0:
-            point = opt.ask()                           # Ask optimizer for next point
+            point = opt.ask()                           # Ask optimizer for next point.
             point_dict = dict(zip(param_ranges.keys(), point))
             root_logger.info("Testing {}".format(point_dict))
             root_logger.info("Start experiment")
@@ -547,7 +548,7 @@ def local(  # noqa: C901
             root_logger.debug(f"engines.json is prepared:\n{engine_json}")
             write_engines_json(engine_json, point_dict)
             out_exp = []
-            for output_line in run_match(**settings,tuning_config_name=tuning_config.name):
+            for output_line in run_match(**settings, tuning_config_name=tuning_config.name):
                 root_logger.debug(output_line.rstrip())
                 out_exp.append(output_line)
             out_exp = "".join(out_exp)
@@ -576,15 +577,15 @@ def local(  # noqa: C901
             np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
         with AtomicWriter(model_path, mode="wb", overwrite=True).open() as f:
             dill.dump(opt, f)
-        round=0
+        round = 0
         counts_array = np.array([0, 0, 0, 0, 0])
         with AtomicWriter(intermediate_data_path, mode="wb", overwrite=True).open() as f:
-                np.savez_compressed(f, np.array(round), counts_array, point)
+            np.savez_compressed(f, np.array(round), counts_array, point)
 
         # Update model with the new data:
         if reset:
             root_logger.info("Deleting the model and generating a new one.")
-            #reset optimizer
+            # Reset optimizer.
             del opt
             if acq_function == "rand":
                 current_acq_func = random.choice(['mes', 'pvrs', 'ei', 'lcb', 'ts'])
@@ -611,7 +612,7 @@ def local(  # noqa: C901
                 acq_function_lcb_alpha=settings.get("acq_function_lcb_alpha", acq_function_lcb_alpha),
                 resume=True,
                 fast_resume=False,
-                model_path=none,
+                model_path=None,
                 gp_initial_burnin=settings.get("gp_burnin", gp_burnin),
                 gp_initial_samples=settings.get("gp_samples", gp_samples),
             )
@@ -636,7 +637,7 @@ def local(  # noqa: C901
                 gp_samples=settings.get("gp_samples", gp_samples),
                 gp_initial_burnin=settings.get("gp_initial_burnin", gp_initial_burnin),
                 gp_initial_samples=settings.get("gp_initial_samples", gp_initial_samples),
-        )
+            )
 
         iteration = len(X)
 
@@ -644,6 +645,7 @@ def local(  # noqa: C901
             #np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
         with AtomicWriter(model_path, mode="wb", overwrite=True).open() as f:
             dill.dump(opt, f)
+
 
 if __name__ == "__main__":
     sys.exit(cli())  # pragma: no cover

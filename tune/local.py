@@ -24,7 +24,7 @@ from scipy.stats import dirichlet #, halfnorm
 from skopt.space import Categorical, Dimension, Integer, Real, Space
 from skopt.utils import normalize_dimensions
 
-from tune.plots import plot_objective, _evenly_sample, plot_activesubspace_eigenvalues, plot_activesubspace_eigenvectors, plot_activesubspace_sufficient_summary
+from tune.plots import plot_objective, plot_activesubspace_eigenvalues, plot_activesubspace_eigenvectors, plot_activesubspace_sufficient_summary
 from tune.summary import confidence_intervals
 from tune.utils import TimeControl, expected_ucb
 
@@ -35,6 +35,7 @@ __all__ = [
     "parse_experiment_result",
     "print_results",
     "plot_results",
+    "inputs_uniform",
     "reduce_ranges",
     "update_model",
     "elo_to_prob",
@@ -409,12 +410,12 @@ def initialize_optimizer(
         warp_inputs=warp_inputs,
     )
     if acq_function == "rand":
-                current_acq_func = random.choice(['mes', 'pvrs', 'ei', 'lcb', 'ts'])
+        current_acq_func = random.choice(['mes', 'pvrs', 'ei', 'lcb', 'ts'])
     else:
-                current_acq_func = acq_function
+        current_acq_func = acq_function
 
     if acq_function_lcb_alpha == float("inf"):
-        acq_function_lcb_alpha = str(acq_function_lcb_alpha) #Bayes-skopt expect alpha as a string, "inf", in case of infinite alpha.
+        acq_function_lcb_alpha = str(acq_function_lcb_alpha)  # Bayes-skopt expect alpha as a string, "inf", in case of infinite alpha.
     acq_func_kwargs = dict(
         alpha=acq_function_lcb_alpha,
         n_thompson=500,
@@ -482,7 +483,7 @@ def initialize_optimizer(
             X,
             y,
             #noise_vector=noise,
-            noise_vector=[i*noise_scaling_coefficient for i in noise],
+            noise_vector = [i*noise_scaling_coefficient for i in noise],
             gp_burnin=gp_initial_burnin,
             gp_samples=gp_initial_samples,
             n_samples=acq_function_samples,
@@ -609,34 +610,33 @@ def plot_results(
     logger.debug("Starting to compute the next plot.")
     plt.style.use("dark_background")
     fig, ax = plt.subplots(
-       nrows=optimizer.space.n_dims,
-       ncols=optimizer.space.n_dims,
-       figsize=(3 * optimizer.space.n_dims, 3 * optimizer.space.n_dims),
+        nrows=optimizer.space.n_dims,
+        ncols=optimizer.space.n_dims,
+        figsize=(3 * optimizer.space.n_dims, 3 * optimizer.space.n_dims),
     )
     fig.patch.set_facecolor("#36393f")
     for i in range(optimizer.space.n_dims):
-       for j in range(optimizer.space.n_dims):
-           ax[i, j].set_facecolor("#36393f")
+        for j in range(optimizer.space.n_dims):
+            ax[i, j].set_facecolor("#36393f")
     timestr = time.strftime("%Y%m%d-%H%M%S")
     plot_objective(result_object, dimensions=parameter_names, fig=fig, ax=ax)
     plotpath = pathlib.Path(plot_path)
     plotpath.mkdir(parents=True, exist_ok=True)
     full_plotpath = plotpath / f"{timestr}-{len(optimizer.Xi)}.png"
     plt.savefig(
-       full_plotpath, dpi=300, facecolor="#36393f",
+        full_plotpath, dpi=300, facecolor="#36393f",
     )
     logger.info(f"Saving a plot to {full_plotpath}.")
     plt.close(fig)
 
-
     number_of_active_subspace_samples = 10000
     number_of_input_dimensions = optimizer.space.n_dims
     active_subspace_samples_gradient = []
-    active_subspace_samples_y=[]
+    active_subspace_samples_y = []
 
     # Uniformly distributed inputs
-    lb = 0 * np.ones(number_of_input_dimensions) # lower bounds
-    ub = 1 * np.ones(number_of_input_dimensions) # upper bounds
+    lb = 0 * np.ones(number_of_input_dimensions)  # lower bounds
+    ub = 1 * np.ones(number_of_input_dimensions)  # upper bounds
 
     active_subspace_samples_x_raw = inputs_uniform(number_of_active_subspace_samples, lb, ub)
     active_subspaces_input_normalizer = Normalizer(lb, ub)
@@ -644,32 +644,32 @@ def plot_results(
 
     for x_row in active_subspace_samples_x_raw:
         y_row, grad_row = optimizer.gp.predict(
-                np.reshape(x_row, (1,-1)), return_mean_grad=True
-            )
+            np.reshape(x_row, (1, -1)), return_mean_grad=True
+        )
         if active_subspace_samples_gradient == []:
             active_subspace_samples_gradient = grad_row
-            active_subspace_samples_y=y_row
+            active_subspace_samples_y = y_row
         else:
-            active_subspace_samples_gradient = np.vstack([active_subspace_samples_gradient,grad_row])
-            active_subspace_samples_y = np.vstack([active_subspace_samples_y,y_row])
+            active_subspace_samples_gradient = np.vstack([active_subspace_samples_gradient, grad_row])
+            active_subspace_samples_y = np.vstack([active_subspace_samples_y, y_row])
 
     asub = ActiveSubspaces(dim=2, method='exact', n_boot=100)
     asub.fit(gradients=active_subspace_samples_gradient)
 
     plt.style.use("default")
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    
+
     active_subspace_figure = plt.figure(constrained_layout=True, figsize=(20, 20))
-    as_subfigs = active_subspace_figure.subfigures(nrows=3, ncols=1, wspace=0.07, height_ratios=[1,3,3])
+    as_subfigs = active_subspace_figure.subfigures(nrows=3, ncols=1, wspace=0.07, height_ratios=[1, 3, 3])
 
     #active_sub_fig.tight_layout()
     fig.patch.set_facecolor("#36393f")
-    as_eigenvalues_ax=as_subfigs[0].subplots(1, 1)
-    as_eigenvalues_ax=plot_activesubspace_eigenvalues(asub, active_subspace_figure=active_subspace_figure, as_eigenvalues_ax=as_eigenvalues_ax, figsize=(6, 4))
+    as_eigenvalues_ax = as_subfigs[0].subplots(1, 1)
+    as_eigenvalues_ax = plot_activesubspace_eigenvalues(asub, active_subspace_figure=active_subspace_figure, as_eigenvalues_ax=as_eigenvalues_ax, figsize=(6, 4))
     logger.debug(f"Active subspace eigenvalues: {np.squeeze(asub.evals)}")
 
-    as_eigenvectors_axs=as_subfigs[1].subplots(number_of_input_dimensions, 1)
-    as_eigenvectors_axs=plot_activesubspace_eigenvectors(asub, active_subspace_figure=active_subspace_figure, as_eigenvectors_axs=as_eigenvectors_axs, n_evects=number_of_input_dimensions, labels=parameter_names)#, figsize=(6, 4))
+    as_eigenvectors_axs = as_subfigs[1].subplots(number_of_input_dimensions, 1)
+    as_eigenvectors_axs = plot_activesubspace_eigenvectors(asub, active_subspace_figure=active_subspace_figure, as_eigenvectors_axs=as_eigenvectors_axs, n_evects=number_of_input_dimensions, labels=parameter_names)#, figsize=(6, 4))
 
     activity_scores_table = PrettyTable()
     activity_scores_table.add_column("Parameter", parameter_names)
@@ -678,9 +678,9 @@ def plot_results(
     activity_scores_table.reversesort = True
     logger.debug(f"Active subspace activity scores:\n{activity_scores_table}")
     #logger.debug(f"Active subspace activity scores: {np.squeeze(asub.activity_scores)}")
-    
-    as_sufficient_summary_ax=as_subfigs[2].subplots(1, 1)
-    as_sufficient_summary_ax=plot_activesubspace_sufficient_summary(asub, active_subspace_samples_normalized_x, active_subspace_samples_y, result_object, active_subspace_figure=active_subspace_figure, as_sufficient_summary_ax=as_sufficient_summary_ax, figsize=(6, 4))
+
+    as_sufficient_summary_ax = as_subfigs[2].subplots(1, 1)
+    as_sufficient_summary_ax = plot_activesubspace_sufficient_summary(asub, active_subspace_samples_normalized_x, active_subspace_samples_y, result_object, active_subspace_figure=active_subspace_figure, as_sufficient_summary_ax=as_sufficient_summary_ax, figsize=(6, 4))
 
     active_subspace_figure.suptitle('Active subspace')
 
@@ -694,7 +694,7 @@ def plot_results(
     plt.rcdefaults()
 
 
-def inputs_uniform(n_samples, lb,  ub):
+def inputs_uniform(n_samples, lb, ub):
     return np.vstack(
         np.array([np.random.uniform(lb[i], ub[i], n_samples) for i in range(lb.shape[0])]).T)
 
@@ -981,7 +981,7 @@ def parse_experiment_result(
         score_scale=score_scale,
         random_state=random_state,
         **kwargs,
-        )
+    )
     return score, error, counts_array
 
 
@@ -1036,7 +1036,7 @@ def update_model(
                 x=point,
                 y=score,
                 #noise_vector=variance,
-                noise_vector=noise_scaling_coefficient*variance,
+                noise_vector = noise_scaling_coefficient*variance,
                 n_samples=n_samples,
                 gp_samples=gp_samples,
                 gp_burnin=gp_burnin,
