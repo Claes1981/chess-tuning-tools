@@ -73,7 +73,7 @@ def run_client(
     clientconfig,
     dbconfig,
 ):
-    """ Run the client to generate games for distributed tuning.
+    """Run the client to generate games for distributed tuning.
 
     In order to connect to the database you need to provide a valid DBCONFIG
     json file. It contains the necessary parameters to connect to the database
@@ -421,10 +421,18 @@ def local(  # noqa: C901
         verbose=verbose, logfile=settings.get("logfile", logfile)
     )
     root_logger.debug(f"Got the following tuning settings:\n{json_dict}")
-    root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, Acquisition function lcb alpha: {acq_function_lcb_alpha}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, GP signal prior scale: {gp_signal_prior_scale}, GP noise prior scale: {gp_noise_prior_scale}, GP lengthscale prior lower bound: {gp_lengthscale_prior_lb}, GP lengthscale prior upper bound: {gp_lengthscale_prior_ub}, Warp inputs: {warp_inputs}, Normalize y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}")
-    #root_logger.debug(f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Kernel lengthscale prior lower bound: {kernel_lengthscale_prior_lower_bound}, Kernel lengthscale prior upper bound: {kernel_lengthscale_prior_upper_bound}, Kernel lengthscale prior lower steepness: {kernel_lengthscale_prior_lower_steepness}, Kernel lengthscale prior upper steepness: {kernel_lengthscale_prior_upper_steepness}, Warp inputs: {warp_inputs}, Normalize y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}")
-    root_logger.debug(f"Chess Tuning Tools version: {importlib.metadata.version('chess-tuning-tools')}, Bayes-skopt version: {importlib.metadata.version('bask')}, Scikit-optimize version: {importlib.metadata.version('scikit-optimize')}, Scikit-learn version: {importlib.metadata.version('scikit-learn')}, SciPy version: {importlib.metadata.version('scipy')}")
-    #root_logger.debug(f"Chess Tuning Tools version: {pkg_resources.get_distribution('chess-tuning-tools').parsed_version}")
+    root_logger.debug(
+        f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, Acquisition function lcb alpha: {acq_function_lcb_alpha}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, GP signal prior scale: {gp_signal_prior_scale}, GP noise prior scale: {gp_noise_prior_scale}, GP lengthscale prior lower bound: {gp_lengthscale_prior_lb}, GP lengthscale prior upper bound: {gp_lengthscale_prior_ub}, Warp inputs: {warp_inputs}, Normalize y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
+    )
+    #root_logger.debug(
+        #f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Kernel lengthscale prior lower bound: {kernel_lengthscale_prior_lower_bound}, Kernel lengthscale prior upper bound: {kernel_lengthscale_prior_upper_bound}, Kernel lengthscale prior lower steepness: {kernel_lengthscale_prior_lower_steepness}, Kernel lengthscale prior upper steepness: {kernel_lengthscale_prior_upper_steepness}, Warp inputs: {warp_inputs}, Normalize y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
+    #)
+    root_logger.debug(
+        f"Chess Tuning Tools version: {importlib.metadata.version('chess-tuning-tools')}, Bayes-skopt version: {importlib.metadata.version('bask')}, Scikit-optimize version: {importlib.metadata.version('scikit-optimize')}, Scikit-learn version: {importlib.metadata.version('scikit-learn')}, SciPy version: {importlib.metadata.version('scipy')}"
+    )
+    #root_logger.debug(
+        #f"Chess Tuning Tools version: {pkg_resources.get_distribution('chess-tuning-tools').parsed_version}"
+    #)
 
     # Initialize/import data structures:
     if data_path is None:
@@ -475,7 +483,9 @@ def local(  # noqa: C901
         n_initial_points=settings.get("n_initial_points", n_initial_points),
         acq_function=settings.get("acq_function", acq_function),
         acq_function_samples=settings.get("acq_function_samples", acq_function_samples),
-        acq_function_lcb_alpha=settings.get("acq_function_lcb_alpha", acq_function_lcb_alpha),
+        acq_function_lcb_alpha=settings.get(
+            "acq_function_lcb_alpha", acq_function_lcb_alpha
+        ),
         resume=resume,
         fast_resume=fast_resume,
         model_path=model_path,
@@ -512,10 +522,10 @@ def local(  # noqa: C901
                 )
 
         if point is None:
-            round = 0                                   # If previous tested point is not present, start over iteration.
+            round = 0  # If previous tested point is not present, start over iteration.
             counts_array = np.array([0, 0, 0, 0, 0])
         if round == 0:
-            point = opt.ask()                           # Ask optimizer for next point.
+            point = opt.ask()  # Ask optimizer for next point.
             point_dict = dict(zip(param_ranges.keys(), point))
             root_logger.info("Testing {}".format(point_dict))
             root_logger.info("Start experiment")
@@ -534,28 +544,44 @@ def local(  # noqa: C901
             round += 1
 
             if round > 1:
-                root_logger.debug(f"WW, WD, WL/DD, LD, LL experiment counts: {counts_array}")
+                root_logger.debug(
+                    f"WW, WD, WL/DD, LD, LL experiment counts: {counts_array}"
+                )
                 score, error_variance = counts_to_penta(counts=counts_array)
                 root_logger.info(
-                    "Experiment Elo so far: {} +- {}".format(-score * 100, np.sqrt(error_variance) * 100)
+                    "Experiment Elo so far: {} +- {}".format(
+                        -score * 100, np.sqrt(error_variance) * 100
+                    )
                 )
 
             root_logger.debug(f"Round: {round}")
-            settings, commands, fixed_params, param_ranges = load_tuning_config(json_dict)
+            settings, commands, fixed_params, param_ranges = load_tuning_config(
+                json_dict
+            )
 
             # Prepare engines.json file for cutechess-cli:
-            engine_json = prepare_engines_json(commands=commands, fixed_params=fixed_params)
+            engine_json = prepare_engines_json(
+                commands=commands, fixed_params=fixed_params
+            )
             root_logger.debug(f"engines.json is prepared:\n{engine_json}")
             write_engines_json(engine_json, point_dict)
             out_exp = []
-            for output_line in run_match(**settings, tuning_config_name=tuning_config.name):
+            for output_line in run_match(
+                **settings, tuning_config_name=tuning_config.name
+            ):
                 root_logger.debug(output_line.rstrip())
                 out_exp.append(output_line)
             out_exp = "".join(out_exp)
-            match_score, match_error_variance, match_counts_array = parse_experiment_result(out_exp, **settings)
+            (
+                match_score,
+                match_error_variance,
+                match_counts_array,
+            ) = parse_experiment_result(out_exp, **settings)
 
             counts_array += match_counts_array
-            with AtomicWriter(intermediate_data_path, mode="wb", overwrite=True).open() as f:
+            with AtomicWriter(
+                intermediate_data_path, mode="wb", overwrite=True
+            ).open() as f:
                 np.savez_compressed(f, np.array(round), counts_array, point)
 
         later = datetime.now()
@@ -579,7 +605,9 @@ def local(  # noqa: C901
             dill.dump(opt, f)
         round = 0
         counts_array = np.array([0, 0, 0, 0, 0])
-        with AtomicWriter(intermediate_data_path, mode="wb", overwrite=True).open() as f:
+        with AtomicWriter(
+            intermediate_data_path, mode="wb", overwrite=True
+        ).open() as f:
             np.savez_compressed(f, np.array(round), counts_array, point)
 
         # Update model with the new data:
@@ -588,8 +616,10 @@ def local(  # noqa: C901
             # Reset optimizer.
             del opt
             if acq_function == "rand":
-                current_acq_func = random.choice(['mes', 'pvrs', 'ei', 'lcb', 'ts'])
-                root_logger.debug(f"Current random acquisition function: {current_acq_func}")
+                current_acq_func = random.choice(["mes", "pvrs", "ei", "lcb", "ts"])
+                root_logger.debug(
+                    f"Current random acquisition function: {current_acq_func}"
+                )
             else:
                 current_acq_func = acq_function
             opt = initialize_optimizer(
@@ -608,8 +638,12 @@ def local(  # noqa: C901
                 n_points=settings.get("n_points", n_points),
                 n_initial_points=settings.get("n_initial_points", n_initial_points),
                 acq_function=current_acq_func,
-                acq_function_samples=settings.get("acq_function_samples", acq_function_samples),
-                acq_function_lcb_alpha=settings.get("acq_function_lcb_alpha", acq_function_lcb_alpha),
+                acq_function_samples=settings.get(
+                    "acq_function_samples", acq_function_samples
+                ),
+                acq_function_lcb_alpha=settings.get(
+                    "acq_function_lcb_alpha", acq_function_lcb_alpha
+                ),
                 resume=True,
                 fast_resume=False,
                 model_path=None,
@@ -619,8 +653,10 @@ def local(  # noqa: C901
         else:
             root_logger.info("Updating model.")
             if acq_function == "rand":
-                opt.acq_func = random.choice(['mes', 'pvrs', 'ei', 'lcb', 'ts'])
-                root_logger.debug(f"Current random acquisition function: {opt.acq_func}")
+                opt.acq_func = random.choice(["mes", "pvrs", "ei", "lcb", "ts"])
+                root_logger.debug(
+                    f"Current random acquisition function: {opt.acq_func}"
+                )
             update_model(
                 optimizer=opt,
                 point=point,
@@ -636,7 +672,9 @@ def local(  # noqa: C901
                 gp_burnin=settings.get("gp_burnin", gp_burnin),
                 gp_samples=settings.get("gp_samples", gp_samples),
                 gp_initial_burnin=settings.get("gp_initial_burnin", gp_initial_burnin),
-                gp_initial_samples=settings.get("gp_initial_samples", gp_initial_samples),
+                gp_initial_samples=settings.get(
+                    "gp_initial_samples", gp_initial_samples
+                ),
             )
 
         iteration = len(X)

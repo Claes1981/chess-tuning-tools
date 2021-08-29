@@ -159,7 +159,7 @@ def parse_ranges(s):
 
 
 def load_tuning_config(json_dict):
-    """ Load the provided tuning configuration and split it up.
+    """Load the provided tuning configuration and split it up.
 
     Parameters
     ----------
@@ -184,8 +184,8 @@ def load_tuning_config(json_dict):
     if "engines" not in json_dict:
         raise ValueError("Tuning config does not contain engines.")
     engines = json_dict["engines"]
-    number_of_engines=len(engines)
-    e=engines[0]
+    number_of_engines = len(engines)
+    e = engines[0]
     if "command" not in e:
         raise ValueError("Tuning config contains an engine without command.")
     commands.append(e["command"])
@@ -193,7 +193,7 @@ def load_tuning_config(json_dict):
         fixed_params.append(dict())
     else:
         fixed_params.append(e["fixed_parameters"])
-    e=engines[random.randint(1, number_of_engines-1)] #select engine2 at random
+    e = engines[random.randint(1, number_of_engines - 1)]  # Select engine2 at random.
     if "command" not in e:
         raise ValueError("Tuning config contains an engine without command.")
     commands.append(e["command"])
