@@ -668,33 +668,33 @@ def plot_results(
             )
             active_subspace_samples_y = np.vstack([active_subspace_samples_y, y_row])
 
-    asub = ActiveSubspaces(dim=2, method="exact", n_boot=100)
-    asub.fit(gradients=active_subspace_samples_gradient)
+    active_subspaces_object = ActiveSubspaces(dim=2, method="exact", n_boot=100)
+    active_subspaces_object.fit(gradients=active_subspace_samples_gradient)
 
     plt.style.use("default")
     timestr = time.strftime("%Y%m%d-%H%M%S")
 
     active_subspace_figure = plt.figure(constrained_layout=True, figsize=(20, 20))
-    as_subfigs = active_subspace_figure.subfigures(
+    active_subspace_subfigures = active_subspace_figure.subfigures(
         nrows=3, ncols=1, wspace=0.07, height_ratios=[1, 3, 3]
     )
 
-    #active_sub_fig.tight_layout()
-    fig.patch.set_facecolor("#36393f")
-    as_eigenvalues_ax = as_subfigs[0].subplots(1, 1)
-    as_eigenvalues_ax = plot_activesubspace_eigenvalues(
-        asub,
+    #active_subspace_figure.tight_layout()
+    #active_subspace_figure.patch.set_facecolor("#36393f")
+    active_subspace_eigenvalues_axes = active_subspace_subfigures[0].subplots(1, 1)
+    active_subspace_eigenvalues_axes = plot_activesubspace_eigenvalues(
+        active_subspaces_object,
         active_subspace_figure=active_subspace_figure,
-        as_eigenvalues_ax=as_eigenvalues_ax,
+        active_subspace_eigenvalues_axes=active_subspace_eigenvalues_axes,
         figsize=(6, 4),
     )
-    logger.debug(f"Active subspace eigenvalues: {np.squeeze(asub.evals)}")
+    logger.debug(f"Active subspace eigenvalues: {np.squeeze(active_subspaces_object.evals)}")
 
-    as_eigenvectors_axs = as_subfigs[1].subplots(number_of_input_dimensions, 1)
-    as_eigenvectors_axs = plot_activesubspace_eigenvectors(
-        asub,
+    active_subspace_eigenvectors_axes = active_subspace_subfigures[1].subplots(number_of_input_dimensions, 1)
+    active_subspace_eigenvectors_axes = plot_activesubspace_eigenvectors(
+        active_subspaces_object,
         active_subspace_figure=active_subspace_figure,
-        as_eigenvectors_axs=as_eigenvectors_axs,
+        active_subspace_eigenvectors_axes=active_subspace_eigenvectors_axes,
         n_evects=number_of_input_dimensions,
         labels=parameter_names,
         #figsize=(6, 4),
@@ -702,33 +702,35 @@ def plot_results(
 
     activity_scores_table = PrettyTable()
     activity_scores_table.add_column("Parameter", parameter_names)
-    activity_scores_table.add_column("Activity score", np.squeeze(asub.activity_scores))
+    activity_scores_table.add_column("Activity score", np.squeeze(active_subspaces_object.activity_scores))
     activity_scores_table.sortby = "Activity score"
     activity_scores_table.reversesort = True
     logger.debug(f"Active subspace activity scores:\n{activity_scores_table}")
-    #logger.debug(f"Active subspace activity scores: {np.squeeze(asub.activity_scores)}")
+    #logger.debug(f"Active subspace activity scores: {np.squeeze(active_subspaces_object.activity_scores)}")
 
-    as_sufficient_summary_ax = as_subfigs[2].subplots(1, 1)
-    as_sufficient_summary_ax = plot_activesubspace_sufficient_summary(
-        asub,
+    active_subspace_sufficient_summary_axes = active_subspace_subfigures[2].subplots(1, 1)
+    active_subspace_sufficient_summary_axes = plot_activesubspace_sufficient_summary(
+        active_subspaces_object,
         active_subspace_samples_normalized_x,
         active_subspace_samples_y,
         result_object,
         active_subspace_figure=active_subspace_figure,
-        as_sufficient_summary_ax=as_sufficient_summary_ax,
+        active_subspace_sufficient_summary_axes=active_subspace_sufficient_summary_axes,
         figsize=(6, 4),
     )
 
     active_subspace_figure.suptitle("Active subspace")
 
     #plt.show()
-    full_plotpath = plotpath / f"{timestr}-{len(optimizer.Xi)}-active_subspace.png"
+    active_subspace_full_plotpath = (
+        plotpath / f"{timestr}-{len(optimizer.Xi)}-active_subspace.png"
+    )
     active_subspace_figure.savefig(
-        full_plotpath,
+        active_subspace_full_plotpath,
         dpi=300,
         facecolor="#36393f",
     )
-    logger.info(f"Saving an active subspace plot to {full_plotpath}.")
+    logger.info(f"Saving an active subspace plot to {active_subspace_full_plotpath}.")
     plt.close(active_subspace_figure)
     plt.rcdefaults()
 

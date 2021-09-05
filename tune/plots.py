@@ -348,9 +348,9 @@ def plot_objective(
 
 
 def plot_activesubspace_eigenvalues(
-    asub,
+    active_subspaces_object,
     active_subspace_figure=None,
-    as_eigenvalues_ax=None,
+    active_subspace_eigenvalues_axes=None,
     n_evals=None,
     filename=None,
     figsize=(8, 8),
@@ -368,96 +368,96 @@ def plot_activesubspace_eigenvalues(
     :param str title: title of the plot.
     :raises: TypeError
 
-    .. warning:: `asub.fit` has to be called in advance.
+    .. warning:: `active_subspaces_object.fit` has to be called in advance.
     """
     #ax = self #or plt.gca()
-    if asub.evals is None:
+    if active_subspaces_object.evals is None:
         raise TypeError(
             "The eigenvalues have not been computed."
             "You have to perform the fit method."
         )
     if n_evals is None:
-        n_evals = asub.evals.shape[0]
-    if n_evals > asub.evals.shape[0]:
+        n_evals = active_subspaces_object.evals.shape[0]
+    if n_evals > active_subspaces_object.evals.shape[0]:
         raise TypeError("Invalid number of eigenvalues to plot.")
 
     #ax = ax or plt.gca()
     #eigen_values_fig = plt.figure(figsize=figsize)
     #eigen_values_fig.suptitle(title)
     #ax = eigen_values_fig.add_subplot(111)
-    if np.amin(asub.evals[:n_evals]) == 0:
-        as_eigenvalues_ax.semilogy(
+    if np.amin(active_subspaces_object.evals[:n_evals]) == 0:
+        active_subspace_eigenvalues_axes.semilogy(
             range(1, n_evals + 1),
-            asub.evals[:n_evals] + np.finfo(float).eps,
+            active_subspaces_object.evals[:n_evals] + np.finfo(float).eps,
             "ko-",
             markersize=8,
             linewidth=2,
         )
     else:
-        #as_eigenvalues_ax.semilogy(range(1, n_evals + 1),
-        as_eigenvalues_ax.plot(
+        #active_subspace_eigenvalues_axes.semilogy(range(1, n_evals + 1),
+        active_subspace_eigenvalues_axes.plot(
             range(1, n_evals + 1),
-            asub.evals[:n_evals],
+            active_subspaces_object.evals[:n_evals],
             "ko-",
             markersize=8,
             linewidth=2,
         )
-        as_eigenvalues_ax.set_yscale("log")
+        active_subspace_eigenvalues_axes.set_yscale("log")
 
-    as_eigenvalues_ax.set_xticks(range(1, n_evals + 1))
-    as_eigenvalues_ax.set_xlabel("Index")
-    as_eigenvalues_ax.set_ylabel("Eigenvalues")
+    active_subspace_eigenvalues_axes.set_xticks(range(1, n_evals + 1))
+    active_subspace_eigenvalues_axes.set_xlabel("Index")
+    active_subspace_eigenvalues_axes.set_ylabel("Eigenvalues")
 
-    if asub.evals_br is None:
-        as_eigenvalues_ax.axis(
+    if active_subspaces_object.evals_br is None:
+        active_subspace_eigenvalues_axes.axis(
             [
                 0,
                 n_evals + 1,
-                0.1 * np.amin(asub.evals[:n_evals]),
-                10 * np.amax(asub.evals[:n_evals]),
+                0.1 * np.amin(active_subspaces_object.evals[:n_evals]),
+                10 * np.amax(active_subspaces_object.evals[:n_evals]),
             ]
         )
     else:
-        if np.amin(asub.evals[:n_evals]) == 0:
-            as_eigenvalues_ax.fill_between(
+        if np.amin(active_subspaces_object.evals[:n_evals]) == 0:
+            active_subspace_eigenvalues_axes.fill_between(
                 range(1, n_evals + 1),
-                asub.evals_br[:n_evals, 0] * (1 + np.finfo(float).eps),
-                asub.evals_br[:n_evals, 1] * (1 + np.finfo(float).eps),
+                active_subspaces_object.evals_br[:n_evals, 0] * (1 + np.finfo(float).eps),
+                active_subspaces_object.evals_br[:n_evals, 1] * (1 + np.finfo(float).eps),
                 facecolor="0.7",
                 interpolate=True,
             )
         else:
-            as_eigenvalues_ax.fill_between(
+            active_subspace_eigenvalues_axes.fill_between(
                 range(1, n_evals + 1),
-                asub.evals_br[:n_evals, 0],
-                asub.evals_br[:n_evals, 1],
+                active_subspaces_object.evals_br[:n_evals, 0],
+                active_subspaces_object.evals_br[:n_evals, 1],
                 facecolor="0.7",
                 interpolate=True,
             )
-        as_eigenvalues_ax.axis(
+        active_subspace_eigenvalues_axes.axis(
             [
                 0,
                 n_evals + 1,
-                0.1 * np.amin(asub.evals_br[:n_evals, 0]),
-                10 * np.amax(asub.evals_br[:n_evals, 1]),
+                0.1 * np.amin(active_subspaces_object.evals_br[:n_evals, 0]),
+                10 * np.amax(active_subspaces_object.evals_br[:n_evals, 1]),
             ]
         )
 
-    as_eigenvalues_ax.grid(linestyle="dotted")
+    active_subspace_eigenvalues_axes.grid(linestyle="dotted")
     #eigen_values_fig.tight_layout
 
     #if filename:
     #    eigen_values_fig.savefig(filename)
     #else:
     #    return eigen_values_fig
-    return as_eigenvalues_ax
+    return active_subspace_eigenvalues_axes
 
 
 def plot_activesubspace_eigenvectors(
     #self,
-    asub,
+    active_subspaces_object,
     active_subspace_figure=None,
-    as_eigenvectors_axs=None,
+    active_subspace_eigenvectors_axes=None,
     n_evects=None,
     filename=None,
     figsize=None,
@@ -467,7 +467,7 @@ def plot_activesubspace_eigenvectors(
     """
     Plot the eigenvectors.
 
-    :param int n_evects: number of eigenvectors to plot. Default is asub.dim.
+    :param int n_evects: number of eigenvectors to plot. Default is active_subspaces_object.dim.
     :param str filename: if specified, the plot is saved at `filename`.
     :param tuple(int,int) figsize: tuple in inches defining the figure size.
         Default is (8, 2 * n_evects).
@@ -475,31 +475,31 @@ def plot_activesubspace_eigenvectors(
     :param str title: title of the plot.
     :raises: ValueError, TypeError
 
-    .. warning:: `asub.fit` has to be called in advance.
+    .. warning:: `active_subspaces_object.fit` has to be called in advance.
     """
     #ax = self or plt.gca()
-    if asub.evects is None:
+    if active_subspaces_object.evects is None:
         raise TypeError(
             "The eigenvectors have not been computed."
             "You have to perform the fit method."
         )
     if n_evects is None:
-        n_evects = asub.dim
-    if n_evects > asub.evects.shape[0]:
+        n_evects = active_subspaces_object.dim
+    if n_evects > active_subspaces_object.evects.shape[0]:
         raise ValueError("Invalid number of eigenvectors to plot.")
 
     if figsize is None:
         figsize = (8, 2 * n_evects)
 
-    n_pars = asub.evects.shape[0]
+    n_pars = active_subspaces_object.evects.shape[0]
     #fig, axes = plt.subplots(n_evects, 1, figsize=figsize)
     #fig.suptitle(title)
     # to ensure generality for subplots (1, 1)
-    as_eigenvectors_axs = np.array(as_eigenvectors_axs)
-    for i, ax in enumerate(as_eigenvectors_axs.flat):
+    active_subspace_eigenvectors_axes = np.array(active_subspace_eigenvectors_axes)
+    for i, ax in enumerate(active_subspace_eigenvectors_axes.flat):
         ax.scatter(
             range(1, n_pars + 1),
-            asub.evects[: n_pars + 1, i],
+            active_subspaces_object.evects[: n_pars + 1, i],
             c="blue",
             s=60,
             alpha=0.9,
@@ -515,7 +515,7 @@ def plot_activesubspace_eigenvectors(
         ax.grid(linestyle="dotted")
         ax.axis([0, n_pars + 1, -1 - 0.1, 1 + 0.1])
 
-    as_eigenvectors_axs.flat[-1].set_xlabel("Eigenvector components")
+    active_subspace_eigenvectors_axes.flat[-1].set_xlabel("Eigenvector components")
     #fig.tight_layout()
     # tight_layout does not consider suptitle so we adjust it manually
     #plt.subplots_adjust(top=0.94)
@@ -526,16 +526,16 @@ def plot_activesubspace_eigenvectors(
     #    plt.savefig(filename)
     #else:
     #    return fig
-    return as_eigenvectors_axs
+    return active_subspace_eigenvectors_axes
 
 
 def plot_activesubspace_sufficient_summary(
-    asub,
+    active_subspaces_object,
     inputs,
     outputs,
     result_object,
     active_subspace_figure=None,
-    as_sufficient_summary_ax=None,
+    active_subspace_sufficient_summary_axes=None,
     filename=None,
     figsize=(10, 8),
     title="",
@@ -553,12 +553,12 @@ def plot_activesubspace_sufficient_summary(
     :param str title: title of the plot.
     :raises: ValueError, TypeError
 
-    .. warning:: `asub.fit` has to be called in advance.
+    .. warning:: `active_subspaces_object.fit` has to be called in advance.
 
         Plot only available for partitions up to dimension 2.
     """
     #ax = self or plt.gca()
-    if asub.evects is None:
+    if active_subspaces_object.evects is None:
         raise TypeError(
             "The eigenvectors have not been computed."
             "You have to perform the fit method."
@@ -583,28 +583,28 @@ def plot_activesubspace_sufficient_summary(
         tuner_sample_points_normalized_zero_to_one
     )
 
-    if asub.dim == 1:
-        as_sufficient_summary_ax.scatter(
-            asub.transform(inputs)[0],
+    if active_subspaces_object.dim == 1:
+        active_subspace_sufficient_summary_axes.scatter(
+            active_subspaces_object.transform(inputs)[0],
             outputs,
             c="blue",
             s=40,
             alpha=0.9,
             edgecolors="k",
         )
-        as_sufficient_summary_ax.set_xlabel(
+        active_subspace_sufficient_summary_axes.set_xlabel(
             "Active variable " + r"$W_1^T \mathbf{\mu}}$", fontsize=18
         )
-        as_sufficient_summary_ax.set_ylabel(r"$f \, (\mathbf{\mu})$", fontsize=18)
-    elif asub.dim == 2:
-        active_subspace_x = asub.transform(inputs)[0]
-        active_subspace_best_point = asub.transform(
+        active_subspace_sufficient_summary_axes.set_ylabel(r"$f \, (\mathbf{\mu})$", fontsize=18)
+    elif active_subspaces_object.dim == 2:
+        active_subspace_x = active_subspaces_object.transform(inputs)[0]
+        active_subspace_best_point = active_subspaces_object.transform(
             best_point_normalized_minus_one_to_one
         )[0]
-        active_subspace_tuner_sample_points = asub.transform(
+        active_subspace_tuner_sample_points = active_subspaces_object.transform(
             tuner_sample_points_normalized_minus_one_to_one
         )[0]
-        #scatter_plot= as_sufficient_summary_ax.scatter(
+        #scatter_plot= active_subspace_sufficient_summary_axes.scatter(
             #active_subspace_x[:, 0],
             #active_subspace_x[:, 1],
             #c=outputs.reshape(-1),
@@ -614,7 +614,7 @@ def plot_activesubspace_sufficient_summary(
             #vmin=np.min(outputs),
             #vmax=np.max(outputs)
             #)
-        contour_plot = as_sufficient_summary_ax.tricontourf(
+        contour_plot = active_subspace_sufficient_summary_axes.tricontourf(
             active_subspace_x[:, 0],
             active_subspace_x[:, 1],
             outputs.reshape(-1),
@@ -625,19 +625,19 @@ def plot_activesubspace_sufficient_summary(
             vmin=np.min(outputs),
             vmax=np.max(outputs),
         )
-        as_sufficient_summary_ax.set_xlabel("First active variable", fontsize=18)
-        as_sufficient_summary_ax.set_ylabel("Second active variable", fontsize=18)
+        active_subspace_sufficient_summary_axes.set_xlabel("First active variable", fontsize=18)
+        active_subspace_sufficient_summary_axes.set_ylabel("Second active variable", fontsize=18)
         ymin = 1.1 * np.amin(
             [np.amin(active_subspace_x[:, 0]), np.amin(active_subspace_x[:, 1])]
         )
         ymax = 1.1 * np.amax(
             [np.amax(active_subspace_x[:, 0]), np.amax(active_subspace_x[:, 1])]
         )
-        as_sufficient_summary_ax.axis("equal")
-        as_sufficient_summary_ax.axis([ymin, ymax, ymin, ymax])
+        active_subspace_sufficient_summary_axes.axis("equal")
+        active_subspace_sufficient_summary_axes.axis([ymin, ymax, ymin, ymax])
 
-        active_subspace_figure.colorbar(contour_plot, ax=as_sufficient_summary_ax)
-        as_sufficient_summary_ax.scatter(
+        active_subspace_figure.colorbar(contour_plot, ax=active_subspace_sufficient_summary_axes)
+        active_subspace_sufficient_summary_axes.scatter(
             active_subspace_tuner_sample_points[:, 0],
             active_subspace_tuner_sample_points[:, 1],
             c="k",
@@ -645,7 +645,7 @@ def plot_activesubspace_sufficient_summary(
             lw=0.0,
             alpha=0.25,
         )
-        as_sufficient_summary_ax.scatter(
+        active_subspace_sufficient_summary_axes.scatter(
             active_subspace_best_point[0, 0],
             active_subspace_best_point[0, 1],
             c=["r"],
@@ -657,11 +657,11 @@ def plot_activesubspace_sufficient_summary(
             "Sufficient summary plots cannot be made in more than 2 dimensions."
         )
 
-    as_sufficient_summary_ax.grid(linestyle="dotted")
+    active_subspace_sufficient_summary_axes.grid(linestyle="dotted")
     #sufficient_summary_fig.tight_layout()
 
     #if filename:
     #    sufficient_summary_fig.savefig(filename)
     #else:
     #    return sufficient_summary_fig
-    return as_sufficient_summary_ax
+    return active_subspace_sufficient_summary_axes
