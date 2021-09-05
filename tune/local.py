@@ -626,7 +626,13 @@ def plot_results(
         for j in range(optimizer.space.n_dims):
             ax[i, j].set_facecolor("#36393f")
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    plot_objective(result_object, dimensions=parameter_names, plot_standard_deviation=False, fig=fig, ax=ax)
+    plot_objective(
+        result_object,
+        dimensions=parameter_names,
+        plot_standard_deviation=False,
+        fig=fig,
+        ax=ax,
+    )
     plotpath = pathlib.Path(plot_path)
     plotpath.mkdir(parents=True, exist_ok=True)
     full_plotpath = plotpath / f"{timestr}-{len(optimizer.Xi)}.png"
@@ -650,14 +656,24 @@ def plot_results(
         for j in range(optimizer.space.n_dims):
             standard_deviation_axes[i, j].set_facecolor("#36393f")
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    plot_objective(result_object, dimensions=parameter_names, plot_standard_deviation=True, fig=standard_deviation_figure, ax=standard_deviation_axes)
-    standard_deviation_full_plotpath = plotpath / f"{timestr}-{len(optimizer.Xi)}-standard_deviation.png"
+    plot_objective(
+        result_object,
+        dimensions=parameter_names,
+        plot_standard_deviation=True,
+        fig=standard_deviation_figure,
+        ax=standard_deviation_axes,
+    )
+    standard_deviation_full_plotpath = (
+        plotpath / f"{timestr}-{len(optimizer.Xi)}-standard_deviation.png"
+    )
     plt.savefig(
         standard_deviation_full_plotpath,
         dpi=300,
         facecolor="#36393f",
     )
-    logger.info(f"Saving a standard deviation plot to {standard_deviation_full_plotpath}.")
+    logger.info(
+        f"Saving a standard deviation plot to {standard_deviation_full_plotpath}."
+    )
     plt.close(standard_deviation_figure)
     plt.rcdefaults()
 
@@ -711,9 +727,13 @@ def plot_results(
         active_subspace_eigenvalues_axes=active_subspace_eigenvalues_axes,
         figsize=(6, 4),
     )
-    logger.debug(f"Active subspace eigenvalues: {np.squeeze(active_subspaces_object.evals)}")
+    logger.debug(
+        f"Active subspace eigenvalues: {np.squeeze(active_subspaces_object.evals)}"
+    )
 
-    active_subspace_eigenvectors_axes = active_subspace_subfigures[1].subplots(number_of_input_dimensions, 1)
+    active_subspace_eigenvectors_axes = active_subspace_subfigures[1].subplots(
+        number_of_input_dimensions, 1
+    )
     active_subspace_eigenvectors_axes = plot_activesubspace_eigenvectors(
         active_subspaces_object,
         active_subspace_figure=active_subspace_figure,
@@ -725,13 +745,17 @@ def plot_results(
 
     activity_scores_table = PrettyTable()
     activity_scores_table.add_column("Parameter", parameter_names)
-    activity_scores_table.add_column("Activity score", np.squeeze(active_subspaces_object.activity_scores))
+    activity_scores_table.add_column(
+        "Activity score", np.squeeze(active_subspaces_object.activity_scores)
+    )
     activity_scores_table.sortby = "Activity score"
     activity_scores_table.reversesort = True
     logger.debug(f"Active subspace activity scores:\n{activity_scores_table}")
     #logger.debug(f"Active subspace activity scores: {np.squeeze(active_subspaces_object.activity_scores)}")
 
-    active_subspace_sufficient_summary_axes = active_subspace_subfigures[2].subplots(1, 1)
+    active_subspace_sufficient_summary_axes = active_subspace_subfigures[2].subplots(
+        1, 1
+    )
     active_subspace_sufficient_summary_axes = plot_activesubspace_sufficient_summary(
         active_subspaces_object,
         active_subspace_samples_normalized_x,

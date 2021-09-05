@@ -50,7 +50,15 @@ def _evenly_sample(dim, n_points):
 
 
 def partial_dependence(
-    space, model, i, j=None, plot_standard_deviation=False, sample_points=None, n_samples=250, n_points=40, x_eval=None
+    space,
+    model,
+    i,
+    j=None,
+    plot_standard_deviation=False,
+    sample_points=None,
+    n_samples=250,
+    n_points=40,
+    x_eval=None,
 ):
     """Calculate the partial dependence for dimensions `i` and `j` with
     respect to the objective value, as approximated by `model`.
@@ -140,7 +148,7 @@ def partial_dependence(
             # is implemented.
             if plot_standard_deviation:
                 with model.noise_set_to_zero():
-                        _, std = model.predict(rvs_, return_std=True)
+                    _, std = model.predict(rvs_, return_std=True)
                 yi.append(np.mean(std))
             else:
                 yi.append(np.mean(model.predict(rvs_)))
@@ -159,7 +167,6 @@ def partial_dependence(
                 rvs_[:, dim_locs[j] : dim_locs[j + 1]] = x_
                 rvs_[:, dim_locs[i] : dim_locs[i + 1]] = y_
                 if plot_standard_deviation:
-                    #breakpoint()
                     with model.noise_set_to_zero():
                         _, std = model.predict(rvs_, return_std=True)
                         row.append(np.mean(std))
@@ -316,7 +323,13 @@ def plot_objective(
             # lower triangle
             elif i > j:
                 xi, yi, zi = partial_dependence(
-                    space, result.models[-1], i, j, plot_standard_deviation, rvs_transformed, n_points
+                    space,
+                    result.models[-1],
+                    i,
+                    j,
+                    plot_standard_deviation,
+                    rvs_transformed,
+                    n_points,
                 )
                 contour_plot = ax[i, j].contourf(
                     xi, yi, zi, levels, locator=locator, cmap="viridis_r"
@@ -443,8 +456,10 @@ def plot_activesubspace_eigenvalues(
         if np.amin(active_subspaces_object.evals[:n_evals]) == 0:
             active_subspace_eigenvalues_axes.fill_between(
                 range(1, n_evals + 1),
-                active_subspaces_object.evals_br[:n_evals, 0] * (1 + np.finfo(float).eps),
-                active_subspaces_object.evals_br[:n_evals, 1] * (1 + np.finfo(float).eps),
+                active_subspaces_object.evals_br[:n_evals, 0]
+                * (1 + np.finfo(float).eps),
+                active_subspaces_object.evals_br[:n_evals, 1]
+                * (1 + np.finfo(float).eps),
                 facecolor="0.7",
                 interpolate=True,
             )
@@ -617,7 +632,9 @@ def plot_activesubspace_sufficient_summary(
         active_subspace_sufficient_summary_axes.set_xlabel(
             "Active variable " + r"$W_1^T \mathbf{\mu}}$", fontsize=18
         )
-        active_subspace_sufficient_summary_axes.set_ylabel(r"$f \, (\mathbf{\mu})$", fontsize=18)
+        active_subspace_sufficient_summary_axes.set_ylabel(
+            r"$f \, (\mathbf{\mu})$", fontsize=18
+        )
     elif active_subspaces_object.dim == 2:
         active_subspace_x = active_subspaces_object.transform(inputs)[0]
         active_subspace_best_point = active_subspaces_object.transform(
@@ -647,8 +664,12 @@ def plot_activesubspace_sufficient_summary(
             vmin=np.min(outputs),
             vmax=np.max(outputs),
         )
-        active_subspace_sufficient_summary_axes.set_xlabel("First active variable", fontsize=18)
-        active_subspace_sufficient_summary_axes.set_ylabel("Second active variable", fontsize=18)
+        active_subspace_sufficient_summary_axes.set_xlabel(
+            "First active variable", fontsize=18
+        )
+        active_subspace_sufficient_summary_axes.set_ylabel(
+            "Second active variable", fontsize=18
+        )
         ymin = 1.1 * np.amin(
             [np.amin(active_subspace_x[:, 0]), np.amin(active_subspace_x[:, 1])]
         )
@@ -658,7 +679,9 @@ def plot_activesubspace_sufficient_summary(
         active_subspace_sufficient_summary_axes.axis("equal")
         active_subspace_sufficient_summary_axes.axis([ymin, ymax, ymin, ymax])
 
-        active_subspace_figure.colorbar(contour_plot, ax=active_subspace_sufficient_summary_axes)
+        active_subspace_figure.colorbar(
+            contour_plot, ax=active_subspace_sufficient_summary_axes
+        )
         active_subspace_sufficient_summary_axes.scatter(
             active_subspace_tuner_sample_points[:, 0],
             active_subspace_tuner_sample_points[:, 1],
