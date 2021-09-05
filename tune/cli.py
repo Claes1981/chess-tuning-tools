@@ -504,6 +504,7 @@ def local(  # noqa: C901
         # If a model has been fit, print/plot results so far:
         if len(y) > 0 and opt.gp.chain_ is not None:
             result_object = create_result(Xi=X, yi=y, space=opt.space, models=[opt.gp])
+            #root_logger.debug(f"result_object:\n{result_object}")
             result_every_n = settings.get("result_every", result_every)
             if result_every_n > 0 and iteration % result_every_n == 0:
                 print_results(

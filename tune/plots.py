@@ -50,7 +50,7 @@ def _evenly_sample(dim, n_points):
 
 
 def partial_dependence(
-    space, model, i, j=None, sample_points=None, n_samples=250, n_points=40, x_eval=None
+    space, model, i, j=None, plot_standard_deviation=False, sample_points=None, n_samples=250, n_points=40, x_eval=None
 ):
     """Calculate the partial dependence for dimensions `i` and `j` with
     respect to the objective value, as approximated by `model`.
@@ -138,7 +138,12 @@ def partial_dependence(
             # In case of `x_eval=None` rvs conists of random samples.
             # Calculating the mean of these samples is how partial dependence
             # is implemented.
-            yi.append(np.mean(model.predict(rvs_)))
+            if plot_standard_deviation:
+                with model.noise_set_to_zero():
+                        _, std = model.predict(rvs_, return_std=True)
+                yi.append(np.mean(std))
+            else:
+                yi.append(np.mean(model.predict(rvs_)))
 
         return xi, yi
 
@@ -153,7 +158,13 @@ def partial_dependence(
                 rvs_ = np.array(sample_points)  # copy
                 rvs_[:, dim_locs[j] : dim_locs[j + 1]] = x_
                 rvs_[:, dim_locs[i] : dim_locs[i + 1]] = y_
-                row.append(np.mean(model.predict(rvs_)))
+                if plot_standard_deviation:
+                    #breakpoint()
+                    with model.noise_set_to_zero():
+                        _, std = model.predict(rvs_, return_std=True)
+                        row.append(np.mean(std))
+                else:
+                    row.append(np.mean(model.predict(rvs_)))
             zi.append(row)
 
         return xi, yi, np.array(zi).T
@@ -167,6 +178,7 @@ def plot_objective(
     size=3,
     zscale="linear",
     dimensions=None,
+    plot_standard_deviation=False,
     n_random_restarts=100,
     alpha=0.25,
     margin=0.65,
@@ -279,6 +291,7 @@ def plot_objective(
                     result.models[-1],
                     i,
                     j=None,
+                    plot_standard_deviation=plot_standard_deviation,
                     sample_points=rvs_transformed,
                     n_points=n_points,
                 )
@@ -303,7 +316,7 @@ def plot_objective(
             # lower triangle
             elif i > j:
                 xi, yi, zi = partial_dependence(
-                    space, result.models[-1], i, j, rvs_transformed, n_points
+                    space, result.models[-1], i, j, plot_standard_deviation, rvs_transformed, n_points
                 )
                 contour_plot = ax[i, j].contourf(
                     xi, yi, zi, levels, locator=locator, cmap="viridis_r"
@@ -338,13 +351,22 @@ def plot_objective(
         if space.dimensions[row].is_constant:
             continue
         plot_dims.append((row, space.dimensions[row]))
-    return _format_scatter_plot_axes(
-        ax,
-        space,
-        ylabel="Partial dependence",
-        plot_dims=plot_dims,
-        dim_labels=dimensions,
-    )
+    if plot_standard_deviation:
+        return _format_scatter_plot_axes(
+            ax,
+            space,
+            ylabel="Standard deviation",
+            plot_dims=plot_dims,
+            dim_labels=dimensions,
+        )
+    else:
+        return _format_scatter_plot_axes(
+            ax,
+            space,
+            ylabel="Partial dependence",
+            plot_dims=plot_dims,
+            dim_labels=dimensions,
+        )
 
 
 def plot_activesubspace_eigenvalues(

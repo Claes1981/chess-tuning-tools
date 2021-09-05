@@ -614,7 +614,7 @@ def plot_results(
         logger.warning("Plotting for only 1 parameter is not supported yet.")
         return
     plt.rcdefaults()
-    logger.debug("Starting to compute the next plot.")
+    logger.debug("Starting to compute the next partial dependence plot.")
     plt.style.use("dark_background")
     fig, ax = plt.subplots(
         nrows=optimizer.space.n_dims,
@@ -626,7 +626,7 @@ def plot_results(
         for j in range(optimizer.space.n_dims):
             ax[i, j].set_facecolor("#36393f")
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    plot_objective(result_object, dimensions=parameter_names, fig=fig, ax=ax)
+    plot_objective(result_object, dimensions=parameter_names, plot_standard_deviation=False, fig=fig, ax=ax)
     plotpath = pathlib.Path(plot_path)
     plotpath.mkdir(parents=True, exist_ok=True)
     full_plotpath = plotpath / f"{timestr}-{len(optimizer.Xi)}.png"
@@ -635,8 +635,31 @@ def plot_results(
         dpi=300,
         facecolor="#36393f",
     )
-    logger.info(f"Saving a plot to {full_plotpath}.")
+    logger.info(f"Saving a partial dependence plot to {full_plotpath}.")
     plt.close(fig)
+
+    logger.debug("Starting to compute the next standard deviation plot.")
+    plt.style.use("dark_background")
+    standard_deviation_figure, standard_deviation_axes = plt.subplots(
+        nrows=optimizer.space.n_dims,
+        ncols=optimizer.space.n_dims,
+        figsize=(3 * optimizer.space.n_dims, 3 * optimizer.space.n_dims),
+    )
+    standard_deviation_figure.patch.set_facecolor("#36393f")
+    for i in range(optimizer.space.n_dims):
+        for j in range(optimizer.space.n_dims):
+            standard_deviation_axes[i, j].set_facecolor("#36393f")
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    plot_objective(result_object, dimensions=parameter_names, plot_standard_deviation=True, fig=standard_deviation_figure, ax=standard_deviation_axes)
+    standard_deviation_full_plotpath = plotpath / f"{timestr}-{len(optimizer.Xi)}-standard_deviation.png"
+    plt.savefig(
+        standard_deviation_full_plotpath,
+        dpi=300,
+        facecolor="#36393f",
+    )
+    logger.info(f"Saving a standard deviation plot to {standard_deviation_full_plotpath}.")
+    plt.close(standard_deviation_figure)
+    plt.rcdefaults()
 
     number_of_active_subspace_samples = 10000
     number_of_input_dimensions = optimizer.space.n_dims
