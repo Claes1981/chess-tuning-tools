@@ -246,8 +246,11 @@ def plot_objective(
     if colors is None:
         colors = plt.cm.get_cmap("Set3").colors
     space = result.space
+    contour_plot = np.empty((space.n_dims, space.n_dims), dtype=object)
     samples = np.asarray(result.x_iters)
     rvs_transformed = space.transform(space.rvs(n_samples=n_samples))
+    z_min = np.full((space.n_dims, space.n_dims), np.inf)
+    z_max = np.full((space.n_dims, space.n_dims), np.NINF)
     z_ranges = np.zeros((space.n_dims, space.n_dims))
 
     if zscale == "log":
@@ -331,10 +334,10 @@ def plot_objective(
                     rvs_transformed,
                     n_points,
                 )
-                contour_plot = ax[i, j].contourf(
+                contour_plot[i, j] = ax[i, j].contourf(
                     xi, yi, zi, levels, locator=locator, cmap="viridis_r"
                 )
-                fig.colorbar(contour_plot, ax=ax[i, j])
+                fig.colorbar(contour_plot[i, j], ax=ax[i, j])
                 ax[i, j].scatter(
                     samples[:, j], samples[:, i], c="k", s=10, lw=0.0, alpha=alpha
                 )
@@ -343,6 +346,8 @@ def plot_objective(
                     ax[i, j].scatter(
                         min_ucb[j], min_ucb[i], c=["xkcd:orange"], s=20, lw=0.0
                     )
+                z_min[i, j] = np.min(zi)
+                z_max[i, j] = np.max(zi)
                 z_ranges[i, j] = np.max(zi) - np.min(zi)
                 ax[i, j].text(
                     0.5,
@@ -364,6 +369,10 @@ def plot_objective(
         if space.dimensions[row].is_constant:
             continue
         plot_dims.append((row, space.dimensions[row]))
+    for i in range(space.n_dims):
+        for j in range(space.n_dims):
+            if i > j:
+                contour_plot[i, j].set_clim(vmin=np.min(z_min), vmax=np.max(z_max))
     if plot_standard_deviation:
         return _format_scatter_plot_axes(
             ax,
