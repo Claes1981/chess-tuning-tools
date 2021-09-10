@@ -635,7 +635,7 @@ def plot_results(
     )
     plotpath = pathlib.Path(plot_path)
     plotpath.mkdir(parents=True, exist_ok=True)
-    full_plotpath = plotpath / f"{timestr}-{len(optimizer.Xi)}.png"
+    full_plotpath = plotpath / f"{timestr}-{len(optimizer.Xi)}-partial_dependence.png"
     plt.savefig(
         full_plotpath,
         dpi=300,
@@ -676,7 +676,7 @@ def plot_results(
     )
     plt.close(standard_deviation_figure)
     plt.rcdefaults()
-    
+
     if optimizer.gp.kernel.k1.k2.nu >= 1.5:
         number_of_active_subspace_samples = 10000
         number_of_input_dimensions = optimizer.space.n_dims
