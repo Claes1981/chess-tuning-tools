@@ -705,23 +705,27 @@ def plot_results(
                 active_subspace_samples_gradient = np.vstack(
                     [active_subspace_samples_gradient, grad_row]
                 )
-                active_subspace_samples_y = np.vstack([active_subspace_samples_y, y_row])
+                active_subspace_samples_y = np.vstack(
+                    [active_subspace_samples_y, y_row]
+                )
 
         active_subspaces_object = ActiveSubspaces(dim=2, method="exact", n_boot=100)
         active_subspaces_object.fit(gradients=active_subspace_samples_gradient)
     else:
         for x_row in active_subspace_samples_x_raw:
-            y_row = optimizer.gp.predict(
-                np.reshape(x_row, (1, -1))
-            )
+            y_row = optimizer.gp.predict(np.reshape(x_row, (1, -1)))
             if active_subspace_samples_y == []:
                 active_subspace_samples_y = y_row
             else:
-                active_subspace_samples_y = np.vstack([active_subspace_samples_y, y_row])
+                active_subspace_samples_y = np.vstack(
+                    [active_subspace_samples_y, y_row]
+                )
 
         active_subspaces_object = ActiveSubspaces(dim=2, method="local", n_boot=100)
-        active_subspaces_object.fit(inputs=active_subspace_samples_normalized_x, outputs=active_subspace_samples_y)
-
+        active_subspaces_object.fit(
+            inputs=active_subspace_samples_normalized_x,
+            outputs=active_subspace_samples_y,
+        )
 
     plt.style.use("default")
     timestr = time.strftime("%Y%m%d-%H%M%S")
