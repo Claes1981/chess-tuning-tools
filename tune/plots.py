@@ -337,7 +337,7 @@ def plot_objective(
                 contour_plot[i, j] = ax[i, j].contourf(
                     xi, yi, zi, levels, locator=locator, cmap="viridis_r"
                 )
-                fig.colorbar(contour_plot[i, j], ax=ax[i, j])
+                #fig.colorbar(contour_plot[i, j], ax=ax[i, j])
                 ax[i, j].scatter(
                     samples[:, j], samples[:, i], c="k", s=10, lw=0.0, alpha=alpha
                 )
@@ -373,6 +373,7 @@ def plot_objective(
         for j in range(space.n_dims):
             if i > j:
                 contour_plot[i, j].set_clim(vmin=np.min(z_min), vmax=np.max(z_max))
+    fig.colorbar(contour_plot[1, 0], ax=ax[np.triu_indices(space.n_dims, k=1)])
     if plot_standard_deviation:
         return _format_scatter_plot_axes(
             ax,
