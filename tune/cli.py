@@ -368,7 +368,14 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     "Experimental option. Attempt to workaround flattening issue.",
     show_default=True,
 )
-@click.option("--verbose", "-v", count=True, default=0, help="Turn on debug output.")
+@click.option(
+    "--verbose",
+    "-v",
+    count=True,
+    default=0,
+    show_default=True,
+    help="Turn on debug output.",
+)
 @click.option(
     "--warp-inputs/--no-warp-inputs",
     default=True,

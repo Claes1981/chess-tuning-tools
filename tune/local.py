@@ -1003,7 +1003,9 @@ def run_match(
             yield line
 
 
-def is_debug_log(cutechess_line: str,) -> bool:
+def is_debug_log(
+    cutechess_line: str,
+) -> bool:
     """Check if the provided cutechess log line is a debug mode line.
 
     Parameters
@@ -1021,7 +1023,9 @@ def is_debug_log(cutechess_line: str,) -> bool:
     return False
 
 
-def check_log_for_errors(cutechess_output: List[str],) -> None:
+def check_log_for_errors(
+    cutechess_output: List[str],
+) -> None:
     """Parse the log output produced by cutechess-cli and scan for important errors.
 
     Parameters
