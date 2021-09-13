@@ -538,28 +538,30 @@ def local(  # noqa: C901
             point = opt.ask()  # Ask optimizer for next point.
             point_dict = dict(zip(param_ranges.keys(), point))
             root_logger.info("Testing {}".format(point_dict))
-            testing_current_value = opt.gp.predict(opt.space.transform([point]))
-            with opt.gp.noise_set_to_zero():
-                _, testing_current_std = opt.gp.predict(
-                    opt.space.transform([point]), return_std=True
+            if len(y) > 0 and opt.gp.chain_ is not None:
+                testing_current_value = opt.gp.predict(opt.space.transform([point]))
+                with opt.gp.noise_set_to_zero():
+                    _, testing_current_std = opt.gp.predict(
+                        opt.space.transform([point]), return_std=True
+                    )
+                root_logger.debug(
+                    f"Predicted Elo: {np.around(-testing_current_value[0] * 100, 4)} +- "
+                    f"{np.around(testing_current_std * 100, 4).item()}"
                 )
-            root_logger.debug(
-                f"Predicted Elo: {np.around(-testing_current_value[0] * 100, 4)} +- "
-                f"{np.around(testing_current_std * 100, 4).item()}"
-            )
             root_logger.info("Start experiment")
         else:
             point_dict = dict(zip(param_ranges.keys(), point))
             root_logger.info("Testing {}".format(point_dict))
-            testing_current_value = opt.gp.predict(opt.space.transform([point]))
-            with opt.gp.noise_set_to_zero():
-                _, testing_current_std = opt.gp.predict(
-                    opt.space.transform([point]), return_std=True
+            if len(y) > 0 and opt.gp.chain_ is not None:
+                testing_current_value = opt.gp.predict(opt.space.transform([point]))
+                with opt.gp.noise_set_to_zero():
+                    _, testing_current_std = opt.gp.predict(
+                        opt.space.transform([point]), return_std=True
+                    )
+                root_logger.debug(
+                    f"Predicted Elo: {np.around(-testing_current_value[0] * 100, 4)} +- "
+                    f"{np.around(testing_current_std * 100, 4).item()}"
                 )
-            root_logger.debug(
-                f"Predicted Elo: {np.around(-testing_current_value[0] * 100, 4)} +- "
-                f"{np.around(testing_current_std * 100, 4).item()}"
-            )
             root_logger.info("Continue experiment")
 
         # Run experiment:
