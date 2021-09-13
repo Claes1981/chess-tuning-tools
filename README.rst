@@ -32,6 +32,9 @@ These modifications are (at the time of writing):
 .. image:: https://readthedocs.org/projects/chess-tuning-tools/badge/?version=latest&style=flat-square
         :target: https://chess-tuning-tools.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
+        
+.. image:: https://zenodo.org/badge/234719111.svg?style=flat-square
+   :target: https://zenodo.org/badge/latestdoi/234719111
 
 
 A collection of tools for local and distributed tuning of chess engines.

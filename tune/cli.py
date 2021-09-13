@@ -20,8 +20,10 @@ from tune.db_workers import TuningClient, TuningServer
 from tune.io import load_tuning_config, prepare_engines_json, write_engines_json
 from tune.local import (
     counts_to_penta,
+    check_log_for_errors,
     initialize_data,
     initialize_optimizer,
+    is_debug_log,
     parse_experiment_result,
     plot_results,
     print_results,
@@ -555,9 +557,9 @@ def local(  # noqa: C901
 
         # Run experiment:
         now = datetime.now()
-        settings["debug_mode"] = settings.get(
-            "debug_mode", False if verbose <= 1 else True
-        )
+        #settings["debug_mode"] = settings.get(
+            #"debug_mode", False if verbose <= 1 else True
+        #)
 
         while round < settings.get("rounds", rounds):
             round += 1
@@ -585,12 +587,19 @@ def local(  # noqa: C901
             root_logger.debug(f"engines.json is prepared:\n{engine_json}")
             write_engines_json(engine_json, point_dict)
             out_exp = []
+            out_all = []
             for output_line in run_match(
                 **settings, tuning_config_name=tuning_config.name
             ):
-                root_logger.debug(output_line.rstrip())
-                out_exp.append(output_line)
-            out_exp = "".join(out_exp)
+                line = output_line.rstrip()
+                is_debug = is_debug_log(line)
+                if is_debug and verbose > 2:
+                    root_logger.debug(line)
+                if not is_debug:
+                    out_exp.append(line)
+                out_all.append(line)
+            check_log_for_errors(cutechess_output=out_all)
+            out_exp = "\n".join(out_exp)
             (
                 match_score,
                 match_error_variance,
