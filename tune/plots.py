@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import matplotlib.colors #as matplotlibcolors
 import numpy as np
 from matplotlib.ticker import LogLocator
 from skopt.plots import _format_scatter_plot_axes
@@ -373,7 +374,9 @@ def plot_objective(
         for j in range(space.n_dims):
             if i > j:
                 contour_plot[i, j].set_clim(vmin=np.min(z_min), vmax=np.max(z_max))
-    fig.colorbar(contour_plot[1, 0], ax=ax[np.triu_indices(space.n_dims, k=1)])
+    fig.colorbar(plt.cm.ScalarMappable(norm=matplotlib.colors.Normalize(vmin=np.min(z_min), vmax=np.max(z_max)), cmap="viridis_r"), ax=ax[np.triu_indices(space.n_dims, k=1)])
+    #plt.cm.ScalarMappable.set_clim(self, vmin=np.min(z_min), vmax=np.max(z_max))
+    #fig.colorbar(contour_plot[1, 0], ax=ax[np.triu_indices(space.n_dims, k=1)])
     if plot_standard_deviation:
         return _format_scatter_plot_axes(
             ax,
