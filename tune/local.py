@@ -26,6 +26,7 @@ from skopt.utils import normalize_dimensions
 
 from tune.plots import (
     plot_objective,
+    plot_credible_regions,
     plot_activesubspace_eigenvalues,
     plot_activesubspace_eigenvectors,
     plot_activesubspace_sufficient_summary,
@@ -678,6 +679,40 @@ def plot_results(
     )
     plt.close(standard_deviation_figure)
     plt.rcdefaults()
+
+    logger.debug("Starting to compute the next credible regions plot.")
+    plt.style.use("dark_background")
+    credible_regions_figure, credible_regions_axes = plt.subplots(
+        nrows=optimizer.space.n_dims,
+        ncols=optimizer.space.n_dims,
+        figsize=(3 * optimizer.space.n_dims, 3 * optimizer.space.n_dims),
+    )
+    credible_regions_figure.patch.set_facecolor("#36393f")
+    for i in range(optimizer.space.n_dims):
+        for j in range(optimizer.space.n_dims):
+            credible_regions_axes[i, j].set_facecolor("#36393f")
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    plot_credible_regions(
+        result_object,
+        dimensions=parameter_names,
+        plot_standard_deviation=False,
+        fig=credible_regions_figure,
+        ax=credible_regions_axes,
+    )
+    credible_regions_full_plotpath = (
+        plotpath / f"{timestr}-{len(optimizer.Xi)}-credible_regions.png"
+    )
+    plt.savefig(
+        credible_regions_full_plotpath,
+        dpi=300,
+        facecolor="#36393f",
+    )
+    logger.info(
+        f"Saving a credible regions plot to {credible_regions_full_plotpath}."
+    )
+    plt.close(credible_regions_figure)
+    plt.rcdefaults()
+
 
     number_of_active_subspace_samples = 10000
     number_of_input_dimensions = optimizer.space.n_dims

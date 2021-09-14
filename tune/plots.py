@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors #as matplotlibcolors
 import numpy as np
 from matplotlib.ticker import LogLocator
+from scipy.stats import gaussian_kde
 from skopt.plots import _format_scatter_plot_axes
 from athena.utils import Normalizer
 
@@ -48,6 +49,17 @@ def _evenly_sample(dim, n_points):
             xi = np.linspace(bounds[0], bounds[1], n_points)
         xi_transformed = dim.transform(xi)
     return xi, xi_transformed
+
+
+def density_estimation(space, m1, m2, i, j, n_points):
+    #xi, xi_transformed = _evenly_sample(space.dimensions[j], n_points)
+    #yi, yi_transformed = _evenly_sample(space.dimensions[i], n_points)
+    xi, yi = np.mgrid[space.dimensions[j].bounds[0]:space.dimensions[j].bounds[1]:100j, space.dimensions[i].bounds[0]:space.dimensions[i].bounds[1]:100j]
+    positions = np.vstack([xi.ravel(), yi.ravel()])
+    values = np.vstack([m1, m2])
+    kernel = gaussian_kde(values)
+    zi = np.reshape(kernel(positions).T, xi.shape)
+    return xi, yi, zi
 
 
 def partial_dependence(
@@ -376,6 +388,232 @@ def plot_objective(
                 contour_plot[i, j].set_clim(vmin=np.min(z_min), vmax=np.max(z_max))
     fig.colorbar(plt.cm.ScalarMappable(norm=matplotlib.colors.Normalize(vmin=np.min(z_min), vmax=np.max(z_max)), cmap="viridis_r"), ax=ax[np.triu_indices(space.n_dims, k=1)])
     #plt.cm.ScalarMappable.set_clim(self, vmin=np.min(z_min), vmax=np.max(z_max))
+    #fig.colorbar(contour_plot[1, 0], ax=ax[np.triu_indices(space.n_dims, k=1)])
+    if plot_standard_deviation:
+        return _format_scatter_plot_axes(
+            ax,
+            space,
+            ylabel="Standard deviation",
+            plot_dims=plot_dims,
+            dim_labels=dimensions,
+        )
+    else:
+        return _format_scatter_plot_axes(
+            ax,
+            space,
+            ylabel="Partial dependence",
+            plot_dims=plot_dims,
+            dim_labels=dimensions,
+        )
+
+
+def plot_credible_regions(
+    result,
+    levels=20,
+    n_points=200,
+    n_samples=30,
+    size=3,
+    zscale="linear",
+    dimensions=None,
+    plot_standard_deviation=False,
+    n_random_restarts=100,
+    alpha=0.25,
+    margin=0.65,
+    colors=None,
+    fig=None,
+    ax=None,
+):
+    """Pairwise partial dependence plot of the objective function.
+    The diagonal shows the partial dependence for dimension `i` with
+    respect to the objective function. The off-diagonal shows the
+    partial dependence for dimensions `i` and `j` with
+    respect to the objective function. The objective function is
+    approximated by `result.model.`
+    Pairwise scatter plots of the points at which the objective
+    function was directly evaluated are shown on the off-diagonal.
+    A red point indicates the found minimum.
+    Note: search spaces that contain `Categorical` dimensions are
+          currently not supported by this function.
+    Parameters
+    ----------
+    * `result` [`OptimizeResult`]
+        The result for which to create the scatter plot matrix.
+    * `levels` [int, default=10]
+        Number of levels to draw on the contour plot, passed directly
+        to `plt.contour()`.
+    * `n_points` [int, default=40]
+        Number of points at which to evaluate the partial dependence
+        along each dimension.
+    * `n_samples` [int, default=250]
+        Number of random samples to use for averaging the model function
+        at each of the `n_points`.
+    * `size` [float, default=2]
+        Height (in inches) of each facet.
+    * `zscale` [str, default='linear']
+        Scale to use for the z axis of the contour plots. Either 'linear'
+        or 'log'.
+    * `dimensions` [list of str, default=None] Labels of the dimension
+        variables. `None` defaults to `space.dimensions[i].name`, or
+        if also `None` to `['X_0', 'X_1', ..]`.
+    * `n_random_restarts` [int, default=100]
+        Number of restarts to try to find the global optimum.
+    * `alpha` [float, default=0.25]
+        Transparency of the sampled points.
+    * `margin` [float, default=0.65]
+        Margin in inches around the plot.
+    * `colors` [list of tuples, default=None]
+        Colors to use for the optima.
+    * `fig` [Matplotlib figure, default=None]
+        Figure to use for plotting. If None, it will create one.
+    * `ax` [k x k axes, default=None]
+        Axes on which to plot the marginals. If None, it will create appropriate
+        axes.
+    Returns
+    -------
+    * `ax`: [`Axes`]:
+        The matplotlib axes.
+    """
+    if colors is None:
+        colors = plt.cm.get_cmap("Set3").colors
+    space = result.space
+    contour_plot = np.empty((space.n_dims, space.n_dims), dtype=object)
+    samples = np.asarray(result.x_iters)
+    rvs_transformed = space.transform(space.rvs(n_samples=n_samples))
+    z_min = np.full((space.n_dims, space.n_dims), np.inf)
+    z_max = np.full((space.n_dims, space.n_dims), np.NINF)
+    z_ranges = np.zeros((space.n_dims, space.n_dims))
+
+    if zscale == "log":
+        locator = LogLocator()
+    elif zscale == "linear":
+        locator = None
+    else:
+        raise ValueError(
+            "Valid values for zscale are 'linear' and 'log'," " not '%s'." % zscale
+        )
+    if fig is None:
+        fig, ax = plt.subplots(
+            space.n_dims,
+            space.n_dims,
+            figsize=(size * space.n_dims, size * space.n_dims),
+        )
+    width, height = fig.get_size_inches()
+
+    fig.subplots_adjust(
+        left=margin / width,
+        right=1 - margin / width,
+        bottom=margin / height,
+        top=1 - margin / height,
+        hspace=0.1,
+        wspace=0.1,
+    )
+    failures = 0
+    while True:
+        try:
+            with result.models[-1].noise_set_to_zero():
+                min_x = expected_ucb(
+                    result, alpha=0.0, n_random_starts=n_random_restarts
+                )[0]
+                min_ucb = expected_ucb(result, n_random_starts=n_random_restarts)[0]
+        except ValueError:
+            failures += 1
+            if failures == 10:
+                break
+            continue
+        else:
+            break
+    X = space.rvs(n_samples=1000)
+    X_transformed = space.transform(X)
+    optimum_samples = result.models[-1].sample_y(
+        X_transformed, sample_mean=False, n_samples=500
+    )
+    X_opt_transformed = X_transformed[np.argmin(optimum_samples, axis=0)]
+    X_opt = np.asarray(space.inverse_transform(X_opt_transformed))
+    breakpoint()
+    for i in range(space.n_dims):
+        for j in range(space.n_dims):
+            if i == j:
+                xi, yi = partial_dependence(
+                    space,
+                    result.models[-1],
+                    i,
+                    j=None,
+                    plot_standard_deviation=plot_standard_deviation,
+                    sample_points=rvs_transformed,
+                    n_points=n_points,
+                )
+                yi_min, yi_max = np.min(yi), np.max(yi)
+                ax[i, i].plot(xi, yi, color=colors[1])
+                if failures != 10:
+                    ax[i, i].axvline(min_x[i], linestyle="--", color=colors[3], lw=1)
+                    ax[i, i].axvline(min_ucb[i], linestyle="--", color=colors[5], lw=1)
+                    ax[i, i].text(
+                        min_x[i],
+                        yi_min + 0.9 * (yi_max - yi_min),
+                        f"{np.around(min_x[i], 4)}",
+                        color=colors[3],
+                    )
+                    ax[i, i].text(
+                        min_ucb[i],
+                        yi_min + 0.7 * (yi_max - yi_min),
+                        f"{np.around(min_ucb[i], 4)}",
+                        color=colors[5],
+                    )
+
+            # lower triangle
+            elif i > j:
+                #xi, yi, zi = partial_dependence(
+                    #space,
+                    #result.models[-1],
+                    #i,
+                    #j,
+                    #plot_standard_deviation,
+                    #rvs_transformed,
+                    #n_points,
+                #)
+                #contour_plot[i, j] = ax[i, j].contourf(
+                    #xi, yi, zi, levels, locator=locator, cmap="viridis_r"
+                #)
+                #fig.colorbar(contour_plot[i, j], ax=ax[i, j])
+                xi, yi, zi = density_estimation(space, X_opt[:, j], X_opt[:, i], i, j, n_points)
+                ax[i, j].contourf(
+                    xi, yi, zi, levels, locator=locator, cmap="viridis"
+                )
+                ax[i, j].scatter(
+                    X_opt[:, j], X_opt[:, i], c="w", s=10, lw=0.0, alpha=alpha
+                )
+                if failures != 10:
+                    ax[i, j].scatter(min_x[j], min_x[i], c=["r"], s=20, lw=0.0)
+                    ax[i, j].scatter(
+                        min_ucb[j], min_ucb[i], c=["xkcd:orange"], s=20, lw=0.0
+                    )
+                #z_min[i, j] = np.min(zi)
+                #z_max[i, j] = np.max(zi)
+                #z_ranges[i, j] = np.max(zi) - np.min(zi)
+                #ax[i, j].text(
+                    #0.5,
+                    #0.5,
+                    #np.format_float_positional(
+                        #z_ranges[i, j],
+                        #precision=2,
+                        #unique=False,
+                        #fractional=False,
+                        #trim="k",
+                    #),
+                    #horizontalalignment="center",
+                    #verticalalignment="center",
+                    #transform=ax[i, j].transAxes,
+                #)
+    # Get all dimensions.
+    plot_dims = []
+    for row in range(space.n_dims):
+        if space.dimensions[row].is_constant:
+            continue
+        plot_dims.append((row, space.dimensions[row]))
+    #for i in range(space.n_dims):
+        #for j in range(space.n_dims):
+            #if i > j:
+                #contour_plot[i, j].set_clim(vmin=np.min(z_min), vmax=np.max(z_max))
     #fig.colorbar(contour_plot[1, 0], ax=ax[np.triu_indices(space.n_dims, k=1)])
     if plot_standard_deviation:
         return _format_scatter_plot_axes(
