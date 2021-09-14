@@ -667,7 +667,7 @@ def plot_activesubspace_sufficient_summary(
             active_subspace_x[:, 0],
             active_subspace_x[:, 1],
             outputs.reshape(-1),
-            levels=10,
+            levels=20,
             alpha=0.9,
             cmap="viridis_r",
             edgecolors="k",
