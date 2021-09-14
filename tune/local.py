@@ -712,7 +712,7 @@ def plot_results(
                     [active_subspace_samples_y, y_row]
                 )
 
-        active_subspaces_object = ActiveSubspaces(dim=2, method="exact", n_boot=100)
+        active_subspaces_object = ActiveSubspaces(dim=2, method="exact", n_boot=1000)
         active_subspaces_object.fit(gradients=active_subspace_samples_gradient)
     else:
         for x_row in active_subspace_samples_x_raw:
@@ -724,7 +724,7 @@ def plot_results(
                     [active_subspace_samples_y, y_row]
                 )
 
-        active_subspaces_object = ActiveSubspaces(dim=2, method="local", n_boot=100)
+        active_subspaces_object = ActiveSubspaces(dim=2, method="local", n_boot=1000)
         active_subspaces_object.fit(
             inputs=active_subspace_samples_normalized_x,
             outputs=active_subspace_samples_y,
