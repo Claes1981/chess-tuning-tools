@@ -577,8 +577,9 @@ def print_results(
             param_names=parameter_names,
             hdi_prob=confidence,
             opt_samples=1000,
-            multimodal=False,
-            #only_mean=False,
+            space_samples=5000,
+            multimodal=True,
+            only_mean=True,
         )
         logger.info(
             f"{confidence * 100}% confidence intervals of the parameters:"
