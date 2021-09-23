@@ -733,7 +733,9 @@ def plot_results(
     plt.style.use("default")
     timestr = time.strftime("%Y%m%d-%H%M%S")
 
-    active_subspace_figure = plt.figure(constrained_layout=True, figsize=(20, 18+number_of_input_dimensions*6))
+    active_subspace_figure = plt.figure(
+        constrained_layout=True, figsize=(20, 18 + number_of_input_dimensions * 6)
+    )
     active_subspace_subfigures = active_subspace_figure.subfigures(
         nrows=3, ncols=1, wspace=0.07, height_ratios=[1, number_of_input_dimensions, 3]
     )
