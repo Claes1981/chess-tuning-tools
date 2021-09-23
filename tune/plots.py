@@ -380,7 +380,7 @@ def plot_objective(
             cmap="viridis_r",
         ),
         ax=ax[np.triu_indices(space.n_dims, k=1)],
-        shrink=0.9,
+        shrink=0.7,
     )
     #plt.cm.ScalarMappable.set_clim(self, vmin=np.min(z_min), vmax=np.max(z_max))
     #fig.colorbar(contour_plot[1, 0], ax=ax[np.triu_indices(space.n_dims, k=1)])
