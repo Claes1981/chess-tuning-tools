@@ -733,9 +733,9 @@ def plot_results(
     plt.style.use("default")
     timestr = time.strftime("%Y%m%d-%H%M%S")
 
-    active_subspace_figure = plt.figure(constrained_layout=True, figsize=(20, 20))
+    active_subspace_figure = plt.figure(constrained_layout=True, figsize=(20, 18+number_of_input_dimensions*6))
     active_subspace_subfigures = active_subspace_figure.subfigures(
-        nrows=3, ncols=1, wspace=0.07, height_ratios=[1, 3, 3]
+        nrows=3, ncols=1, wspace=0.07, height_ratios=[1, number_of_input_dimensions, 3]
     )
 
     #active_subspace_figure.tight_layout()
@@ -745,7 +745,7 @@ def plot_results(
         active_subspaces_object,
         active_subspace_figure=active_subspace_figure,
         active_subspace_eigenvalues_axes=active_subspace_eigenvalues_axes,
-        figsize=(6, 4),
+        #figsize=(6, 4),
     )
     logger.debug(
         f"Active subspace eigenvalues: {np.squeeze(active_subspaces_object.evals)}"
@@ -783,7 +783,7 @@ def plot_results(
         result_object,
         active_subspace_figure=active_subspace_figure,
         active_subspace_sufficient_summary_axes=active_subspace_sufficient_summary_axes,
-        figsize=(6, 4),
+        #figsize=(6, 4),
     )
 
     active_subspace_figure.suptitle("Active subspace")
