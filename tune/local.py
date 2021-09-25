@@ -692,6 +692,8 @@ def plot_results(
     active_subspace_samples_x_raw = inputs_uniform(
         number_of_active_subspace_samples, lb, ub
     )
+    active_subspace_samples_x_raw = np.append(active_subspace_samples_x_raw, optimizer.space.transform(np.asarray(result_object.x_iters)), axis=0)
+    
     active_subspaces_input_normalizer = Normalizer(lb, ub)
     active_subspace_samples_normalized_x = (
         active_subspaces_input_normalizer.fit_transform(active_subspace_samples_x_raw)
