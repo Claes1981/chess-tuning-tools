@@ -633,12 +633,14 @@ def plot_activesubspace_sufficient_summary(
     tuner_sample_points_normalized_zero_to_one = result_object.space.transform(
         tuner_sample_points
     )
-    best_point_normalized_minus_one_to_one = Normalizer(0, 1).fit_transform(
-        best_point_normalized_zero_to_one
-    )
-    tuner_sample_points_normalized_minus_one_to_one = Normalizer(0, 1).fit_transform(
-        tuner_sample_points_normalized_zero_to_one
-    )
+    #best_point_normalized_minus_one_to_one = Normalizer(0, 1).fit_transform(
+        #best_point_normalized_zero_to_one
+    #)
+    best_point_normalized_minus_one_to_one = best_point_normalized_zero_to_one * 2 - 1
+    #tuner_sample_points_normalized_minus_one_to_one = Normalizer(0, 1).fit_transform(
+        #tuner_sample_points_normalized_zero_to_one
+    #)
+    tuner_sample_points_normalized_minus_one_to_one = tuner_sample_points_normalized_zero_to_one * 2 - 1 
 
     if active_subspaces_object.dim == 1:
         active_subspace_sufficient_summary_axes.scatter(
@@ -684,6 +686,21 @@ def plot_activesubspace_sufficient_summary(
             vmin=np.min(outputs),
             vmax=np.max(outputs),
         )
+        active_subspace_sufficient_summary_axes.scatter(
+            active_subspace_tuner_sample_points[:, 0],
+            active_subspace_tuner_sample_points[:, 1],
+            c="k",
+            s=20,
+            lw=0.0,
+            alpha=0.25,
+        )
+        active_subspace_sufficient_summary_axes.scatter(
+            active_subspace_best_point[0, 0],
+            active_subspace_best_point[0, 1],
+            c=["r"],
+            s=20,
+            lw=0.0,
+        )
         active_subspace_sufficient_summary_axes.set_xlabel(
             "First active variable", fontsize=18
         )
@@ -701,21 +718,6 @@ def plot_activesubspace_sufficient_summary(
 
         active_subspace_figure.colorbar(
             contour_plot, ax=active_subspace_sufficient_summary_axes
-        )
-        active_subspace_sufficient_summary_axes.scatter(
-            active_subspace_tuner_sample_points[:, 0],
-            active_subspace_tuner_sample_points[:, 1],
-            c="k",
-            s=20,
-            lw=0.0,
-            alpha=0.25,
-        )
-        active_subspace_sufficient_summary_axes.scatter(
-            active_subspace_best_point[0, 0],
-            active_subspace_best_point[0, 1],
-            c=["r"],
-            s=20,
-            lw=0.0,
         )
     else:
         raise ValueError(
