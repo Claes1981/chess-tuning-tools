@@ -324,6 +324,12 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     show_default=True,
 )
 @click.option(
+    "--plot-on-resume/--no-plot-on-resume",
+    default=False,
+    help="If True, also produce plots directly on resume, before more data is produced. Disabled by default to speed up the tuner.",
+    show_default=True,
+)
+@click.option(
     "--random-seed",
     default=0,
     help="Number to seed all internally used random generators.",
@@ -409,6 +415,7 @@ def local(  # noqa: C901
     n_points=500,
     plot_every=1,
     plot_path="plots",
+    plot_on_resume=False,
     random_seed=0,
     result_every=1,
     resume=True,
@@ -503,6 +510,7 @@ def local(  # noqa: C901
         gp_priors=gp_priors,
     )
 
+    is_first_iteration_after_program_start=True
     # Main optimization loop:
     while True:
         if round == 0:
@@ -523,7 +531,7 @@ def local(  # noqa: C901
                     confidence=settings.get("confidence", confidence),
                 )
             plot_every_n = settings.get("plot_every", plot_every)
-            if plot_every_n > 0 and iteration % plot_every_n == 0:
+            if plot_every_n > 0 and iteration % plot_every_n == 0 and (not is_first_iteration_after_program_start or plot_on_resume):
                 plot_results(
                     optimizer=opt,
                     result_object=result_object,
@@ -715,6 +723,7 @@ def local(  # noqa: C901
             )
 
         iteration = len(X)
+        is_first_iteration_after_program_start=False
 
         #with AtomicWriter(data_path, mode="wb", overwrite=True).open() as f:
             #np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
