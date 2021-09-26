@@ -736,10 +736,10 @@ def plot_results(
     timestr = time.strftime("%Y%m%d-%H%M%S")
 
     active_subspace_figure = plt.figure(
-        constrained_layout=True, figsize=(20, 18 + number_of_input_dimensions * 6)
+        constrained_layout=True, figsize=(20, 18 + active_subspaces_object.evects.shape[1] * 6)
     )
     active_subspace_subfigures = active_subspace_figure.subfigures(
-        nrows=3, ncols=1, wspace=0.07, height_ratios=[1, number_of_input_dimensions, 3]
+        nrows=3, ncols=1, wspace=0.07, height_ratios=[1, active_subspaces_object.evects.shape[1], 3]
     )
 
     #active_subspace_figure.tight_layout()
@@ -756,13 +756,14 @@ def plot_results(
     )
 
     active_subspace_eigenvectors_axes = active_subspace_subfigures[1].subplots(
-        number_of_input_dimensions, 1
+        active_subspaces_object.evects.shape[1], 1
     )
     active_subspace_eigenvectors_axes = plot_activesubspace_eigenvectors(
         active_subspaces_object,
         active_subspace_figure=active_subspace_figure,
         active_subspace_eigenvectors_axes=active_subspace_eigenvectors_axes,
-        n_evects=number_of_input_dimensions,
+        #n_evects=number_of_input_dimensions,
+        n_evects=active_subspaces_object.evects.shape[1],
         labels=parameter_names,
         #figsize=(6, 4),
     )
