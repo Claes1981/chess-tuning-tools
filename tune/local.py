@@ -680,7 +680,7 @@ def plot_results(
     plt.close(standard_deviation_figure)
     plt.rcdefaults()
 
-    number_of_active_subspace_samples = 10000
+    number_of_random_active_subspace_samples = 10000 - len(result_object.x_iters)
     number_of_input_dimensions = optimizer.space.n_dims
     active_subspace_samples_gradient = []
     active_subspace_samples_y = []
@@ -690,7 +690,7 @@ def plot_results(
     ub = 1 * np.ones(number_of_input_dimensions)  # upper bounds
 
     active_subspace_samples_x_raw = inputs_uniform(
-        number_of_active_subspace_samples, lb, ub
+        number_of_random_active_subspace_samples, lb, ub
     )
     active_subspace_samples_x_raw = np.append(active_subspace_samples_x_raw, optimizer.space.transform(np.asarray(result_object.x_iters)), axis=0)
     
