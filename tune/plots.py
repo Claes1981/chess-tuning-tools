@@ -3,7 +3,7 @@ import matplotlib.colors #as matplotlibcolors
 import numpy as np
 from matplotlib.ticker import LogLocator
 from skopt.plots import _format_scatter_plot_axes
-from athena.utils import Normalizer
+#from athena.utils import Normalizer
 
 from tune.utils import expected_ucb
 
@@ -640,7 +640,9 @@ def plot_activesubspace_sufficient_summary(
     #tuner_sample_points_normalized_minus_one_to_one = Normalizer(0, 1).fit_transform(
         #tuner_sample_points_normalized_zero_to_one
     #)
-    tuner_sample_points_normalized_minus_one_to_one = tuner_sample_points_normalized_zero_to_one * 2 - 1 
+    tuner_sample_points_normalized_minus_one_to_one = (
+        tuner_sample_points_normalized_zero_to_one * 2 - 1
+    )
 
     if active_subspaces_object.dim == 1:
         active_subspace_sufficient_summary_axes.scatter(

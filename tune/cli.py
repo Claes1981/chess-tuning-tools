@@ -15,7 +15,7 @@ from atomicwrites import AtomicWriter
 import random
 from skopt.utils import create_result
 #from scipy.stats import halfnorm
-
+from bask import acquisition
 from tune.db_workers import TuningClient, TuningServer
 from tune.io import load_tuning_config, prepare_engines_json, write_engines_json
 from tune.local import (
@@ -32,6 +32,17 @@ from tune.local import (
     update_model,
 )
 from tune.priors import create_priors
+
+ACQUISITION_FUNC = {
+    "ei": acquisition.ExpectedImprovement(),
+    "lcb": acquisition.LCB(),
+    "mean": acquisition.Expectation(),
+    "mes": acquisition.MaxValueSearch(),
+    "pvrs": acquisition.PVRS(),
+    "ts": acquisition.ThompsonSampling(),
+    "ttei": acquisition.TopTwoEI(),
+    "vr": acquisition.VarianceReduction(),
+}
 
 #watch.config(pdb=True)
 
@@ -510,7 +521,7 @@ def local(  # noqa: C901
         gp_priors=gp_priors,
     )
 
-    is_first_iteration_after_program_start=True
+    is_first_iteration_after_program_start = True
     # Main optimization loop:
     while True:
         if round == 0:
@@ -531,7 +542,11 @@ def local(  # noqa: C901
                     confidence=settings.get("confidence", confidence),
                 )
             plot_every_n = settings.get("plot_every", plot_every)
-            if plot_every_n > 0 and iteration % plot_every_n == 0 and (not is_first_iteration_after_program_start or plot_on_resume):
+            if (
+                plot_every_n > 0
+                and iteration % plot_every_n == 0
+                and (not is_first_iteration_after_program_start or plot_on_resume)
+            ):
                 plot_results(
                     optimizer=opt,
                     result_object=result_object,
@@ -698,7 +713,9 @@ def local(  # noqa: C901
         else:
             root_logger.info("Updating model.")
             if acq_function == "rand":
-                opt.acq_func = random.choice(["mes", "pvrs", "ei", "lcb", "ts"])
+                opt.acq_func = ACQUISITION_FUNC[
+                    random.choice(["mes", "pvrs", "ei", "lcb", "ts"])
+                ]
                 root_logger.debug(
                     f"Current random acquisition function: {opt.acq_func}"
                 )
@@ -723,7 +740,7 @@ def local(  # noqa: C901
             )
 
         iteration = len(X)
-        is_first_iteration_after_program_start=False
+        is_first_iteration_after_program_start = False
 
         #with AtomicWriter(data_path, mode="wb", overwrite=True).open() as f:
             #np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))

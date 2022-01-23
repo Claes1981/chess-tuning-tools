@@ -12,7 +12,7 @@ from prettytable import PrettyTable
 import dill
 import matplotlib.pyplot as plt
 import numpy as np
-from bask import Optimizer
+from bask import Optimizer #, acquisition
 #from bask.priors import make_roundflat
 from numpy.random import RandomState
 import random
@@ -51,6 +51,17 @@ __all__ = [
 ]
 
 LOGGER = "ChessTuner"
+
+#ACQUISITION_FUNC = {
+    #"ei": acquisition.ExpectedImprovement(),
+    #"lcb": acquisition.LCB(),
+    #"mean": acquisition.Expectation(),
+    #"mes": acquisition.MaxValueSearch(),
+    #"pvrs": acquisition.PVRS(),
+    #"ts": acquisition.ThompsonSampling(),
+    #"ttei": acquisition.TopTwoEI(),
+    #"vr": acquisition.VarianceReduction(),
+#}
 
 
 def elo_to_prob(elo, k=4.0):
@@ -471,6 +482,7 @@ def initialize_optimizer(
             if opt.space == old_opt.space:
                 old_opt.acq_func = opt.acq_func
                 old_opt.acq_func_kwargs = opt.acq_func_kwargs
+                #old_opt.n_points = opt.n_points
                 opt = old_opt
                 reinitialize = False
             else:
@@ -692,8 +704,12 @@ def plot_results(
     active_subspace_samples_x_raw = inputs_uniform(
         number_of_random_active_subspace_samples, lb, ub
     )
-    active_subspace_samples_x_raw = np.append(active_subspace_samples_x_raw, optimizer.space.transform(np.asarray(result_object.x_iters)), axis=0)
-    
+    active_subspace_samples_x_raw = np.append(
+        active_subspace_samples_x_raw,
+        optimizer.space.transform(np.asarray(result_object.x_iters)),
+        axis=0,
+    )
+
     active_subspaces_input_normalizer = Normalizer(lb, ub)
     active_subspace_samples_normalized_x = (
         active_subspaces_input_normalizer.fit_transform(active_subspace_samples_x_raw)
@@ -736,10 +752,14 @@ def plot_results(
     timestr = time.strftime("%Y%m%d-%H%M%S")
 
     active_subspace_figure = plt.figure(
-        constrained_layout=True, figsize=(20, 18 + active_subspaces_object.evects.shape[1] * 6)
+        constrained_layout=True,
+        figsize=(20, 18 + active_subspaces_object.evects.shape[1] * 6),
     )
     active_subspace_subfigures = active_subspace_figure.subfigures(
-        nrows=3, ncols=1, wspace=0.07, height_ratios=[1, active_subspaces_object.evects.shape[1], 3]
+        nrows=3,
+        ncols=1,
+        wspace=0.07,
+        height_ratios=[1, active_subspaces_object.evects.shape[1], 3],
     )
 
     #active_subspace_figure.tight_layout()
