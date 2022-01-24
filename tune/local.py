@@ -482,7 +482,7 @@ def initialize_optimizer(
             if opt.space == old_opt.space:
                 old_opt.acq_func = opt.acq_func
                 old_opt.acq_func_kwargs = opt.acq_func_kwargs
-                #old_opt.n_points = opt.n_points
+                old_opt.n_points = opt.n_points
                 opt = old_opt
                 reinitialize = False
             else:
@@ -711,8 +711,8 @@ def plot_results(
     )
 
     active_subspaces_input_normalizer = Normalizer(lb, ub)
-    active_subspace_samples_normalized_x = (
-        active_subspaces_input_normalizer.fit_transform(active_subspace_samples_x_raw)
+    active_subspace_samples_normalized_x = active_subspaces_input_normalizer.fit_transform(
+        active_subspace_samples_x_raw
     )
     if optimizer.gp.kernel.k1.k2.nu >= 1.5:
         for x_row in active_subspace_samples_x_raw:
