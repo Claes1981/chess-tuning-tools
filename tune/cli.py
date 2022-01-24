@@ -14,6 +14,7 @@ import numpy as np
 from atomicwrites import AtomicWriter
 import random
 from skopt.utils import create_result
+from scipy.special import erfinv
 #from scipy.stats import halfnorm
 from bask import acquisition
 from tune.db_workers import TuningClient, TuningServer
@@ -571,6 +572,22 @@ def local(  # noqa: C901
                     f"Predicted Elo: {np.around(-testing_current_value[0] * 100, 4)} +- "
                     f"{np.around(testing_current_std * 100, 4).item()}"
                 )
+                confidence_mult = erfinv(confidence) * np.sqrt(2)
+                lower_bound = np.around(
+                    -testing_current_value * 100
+                    - confidence_mult * testing_current_std * 100,
+                    4,
+                ).item()
+                upper_bound = np.around(
+                    -testing_current_value * 100
+                    + confidence_mult * testing_current_std * 100,
+                    4,
+                ).item()
+                root_logger.debug(
+                    f"{confidence * 100}% confidence interval of the Elo value: "
+                    f"({lower_bound}, "
+                    f"{upper_bound})"
+                )
             root_logger.info("Start experiment")
         else:
             point_dict = dict(zip(param_ranges.keys(), point))
@@ -584,6 +601,22 @@ def local(  # noqa: C901
                 root_logger.debug(
                     f"Predicted Elo: {np.around(-testing_current_value[0] * 100, 4)} +- "
                     f"{np.around(testing_current_std * 100, 4).item()}"
+                )
+                confidence_mult = erfinv(confidence) * np.sqrt(2)
+                lower_bound = np.around(
+                    -testing_current_value * 100
+                    - confidence_mult * testing_current_std * 100,
+                    4,
+                ).item()
+                upper_bound = np.around(
+                    -testing_current_value * 100
+                    + confidence_mult * testing_current_std * 100,
+                    4,
+                ).item()
+                root_logger.debug(
+                    f"{confidence * 100}% confidence interval of the Elo value: "
+                    f"({lower_bound}, "
+                    f"{upper_bound})"
                 )
             root_logger.info("Continue experiment")
 
