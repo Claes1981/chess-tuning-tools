@@ -297,7 +297,8 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     default=1.0,
     help="Scale the noise of the observations by multiplying it with this coefficient. "
     "Set to 0 for uniform noise for all values. "
-    "Experimental option. Attempt to workaround flattening issue, where the signal variance decreases each iteration.",
+    "Experimental option. Attempt to workaround flattening issue, "
+    "where the signal variance decreases each iteration.",
     show_default=True,
 )
 @click.option(
@@ -338,7 +339,8 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 @click.option(
     "--plot-on-resume/--no-plot-on-resume",
     default=False,
-    help="If True, also produce plots directly on resume, before more data is produced. Disabled by default to speed up the tuner.",
+    help="If True, also produce plots directly on resume, before more data is produced. "
+    "Disabled by default to speed up the tuner.",
     show_default=True,
 )
 @click.option(

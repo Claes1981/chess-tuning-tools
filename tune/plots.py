@@ -649,7 +649,8 @@ def plot_activesubspace_eigenvectors(
     """
     Plot the eigenvectors.
 
-    :param int n_evects: number of eigenvectors to plot. Default is active_subspaces_object.dim.
+    :param int n_evects: number of eigenvectors to plot.
+        Default is active_subspaces_object.dim.
     :param str filename: if specified, the plot is saved at `filename`.
     :param tuple(int,int) figsize: tuple in inches defining the figure size.
         Default is (8, 2 * n_evects).
