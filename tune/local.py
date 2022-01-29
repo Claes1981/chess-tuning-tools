@@ -14,24 +14,25 @@ import matplotlib.pyplot as plt
 import numpy as np
 from bask import Optimizer #, acquisition
 #from bask.priors import make_roundflat
+from matplotlib.transforms import Bbox
 from numpy.random import RandomState
 import random
 from athena.active import ActiveSubspaces
 from athena.utils import Normalizer
 from scipy.optimize import OptimizeResult
-from scipy.special import erfinv
 from scipy.stats import dirichlet #, halfnorm
 from skopt.space import Categorical, Dimension, Integer, Real, Space
 from skopt.utils import normalize_dimensions
 
 from tune.plots import (
     plot_objective,
+    plot_objective_1d,
     plot_activesubspace_eigenvalues,
     plot_activesubspace_eigenvectors,
     plot_activesubspace_sufficient_summary,
 )
 from tune.summary import confidence_intervals
-from tune.utils import TimeControl, expected_ucb
+from tune.utils import TimeControl, confidence_to_mult, expected_ucb
 
 __all__ = [
     "counts_to_penta",
@@ -572,7 +573,7 @@ def print_results(
             f"Estimated Elo: {np.around(-best_value * 100, 4)} +- "
             f"{np.around(best_std * 100, 4).item()}"
         )
-        confidence_mult = erfinv(confidence) * np.sqrt(2)
+        confidence_mult = confidence_to_mult(confidence)
         lower_bound = np.around(
             -best_value * 100 - confidence_mult * best_std * 100, 4
         ).item()
@@ -610,6 +611,7 @@ def plot_results(
     result_object: OptimizeResult,
     plot_path: str,
     parameter_names: Sequence[str],
+    confidence: float = 0.9,
 ) -> None:
     """Plot the current results of the optimizer.
 
@@ -623,38 +625,50 @@ def plot_results(
         Path to the directory to which the plots should be saved.
     parameter_names : Sequence of str
         Names of the parameters to use for plotting.
+    confidence : float
+        The confidence level of the normal distribution to plot in the 1d plot.
     """
     logger = logging.getLogger(LOGGER)
-    if optimizer.space.n_dims == 1:
-        logger.warning("Plotting for only 1 parameter is not supported yet.")
-        return
     plt.rcdefaults()
     logger.debug("Starting to compute the next partial dependence plot.")
-    plt.style.use("dark_background")
-    fig, ax = plt.subplots(
-        nrows=optimizer.space.n_dims,
-        ncols=optimizer.space.n_dims,
-        figsize=(3 * optimizer.space.n_dims, 3 * optimizer.space.n_dims),
-    )
-    fig.patch.set_facecolor("#36393f")
-    for i in range(optimizer.space.n_dims):
-        for j in range(optimizer.space.n_dims):
-            ax[i, j].set_facecolor("#36393f")
+
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    plot_objective(
-        result_object,
-        dimensions=parameter_names,
-        plot_standard_deviation=False,
-        fig=fig,
-        ax=ax,
-    )
+    dark_gray = "#36393f"
+    save_params = dict()
+    if optimizer.space.n_dims == 1:
+        fig, ax = plot_objective_1d(
+            result=result_object,
+            parameter_name=parameter_names[0],
+            confidence=confidence,
+        )
+        save_params["bbox_inches"] = Bbox([[0.5, -0.2], [9.25, 5.5]])
+    else:
+        plt.style.use("dark_background")
+        fig, ax = plt.subplots(
+            nrows=optimizer.space.n_dims,
+            ncols=optimizer.space.n_dims,
+            figsize=(3 * optimizer.space.n_dims, 3 * optimizer.space.n_dims),
+        )
+        for i in range(optimizer.space.n_dims):
+            for j in range(optimizer.space.n_dims):
+                ax[i, j].set_facecolor(dark_gray)
+        fig.patch.set_facecolor(dark_gray)
+        plot_objective(
+            result_object,
+            dimensions=parameter_names,
+            plot_standard_deviation=False,
+            fig=fig,
+            ax=ax,
+        )
     plotpath = pathlib.Path(plot_path)
     plotpath.mkdir(parents=True, exist_ok=True)
     full_plotpath = plotpath / f"{timestr}-{len(optimizer.Xi)}-partial_dependence.png"
+    dpi = 150 if optimizer.space.n_dims == 1 else 300
     plt.savefig(
         full_plotpath,
-        dpi=300,
-        facecolor="#36393f",
+        dpi=dpi,
+        facecolor=dark_gray,
+        **save_params,
     )
     logger.info(f"Saving a partial dependence plot to {full_plotpath}.")
     plt.close(fig)
