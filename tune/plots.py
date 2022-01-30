@@ -435,19 +435,19 @@ def plot_objective(
                 yi_min, yi_max = np.min(yi), np.max(yi)
                 ax[i, i].plot(xi, yi, color=colors[1])
                 if failures != 10:
-                    ax[i, i].axvline(min_x[i], linestyle="--", color=colors[3], lw=1)
                     ax[i, i].axvline(min_ucb[i], linestyle="--", color=colors[5], lw=1)
-                    ax[i, i].text(
-                        min_x[i],
-                        yi_min + 0.9 * (yi_max - yi_min),
-                        f"{np.around(min_x[i], 4)}",
-                        color=colors[3],
-                    )
+                    ax[i, i].axvline(min_x[i], linestyle="--", color=colors[3], lw=1)
                     ax[i, i].text(
                         min_ucb[i],
                         yi_min + 0.7 * (yi_max - yi_min),
                         f"{np.around(min_ucb[i], 4)}",
                         color=colors[5],
+                    )
+                    ax[i, i].text(
+                        min_x[i],
+                        yi_min + 0.9 * (yi_max - yi_min),
+                        f"{np.around(min_x[i], 4)}",
+                        color=colors[3],
                     )
 
             # lower triangle
@@ -472,10 +472,10 @@ def plot_objective(
                     ax[i, j].scatter(
                         next_point[j], next_point[i], c=["xkcd:pink"], s=20, lw=0.0
                     )
-                    ax[i, j].scatter(min_x[j], min_x[i], c=["r"], s=20, lw=0.0)
                     ax[i, j].scatter(
                         min_ucb[j], min_ucb[i], c=["xkcd:orange"], s=20, lw=0.0
                     )
+                    ax[i, j].scatter(min_x[j], min_x[i], c=["r"], s=20, lw=0.0)                    
                 z_min[i, j] = np.min(zi)
                 z_max[i, j] = np.max(zi)
                 z_ranges[i, j] = np.max(zi) - np.min(zi)
