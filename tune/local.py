@@ -424,7 +424,10 @@ def initialize_optimizer(
     random_state = setup_random_state(random_seed)
     #space = normalize_dimensions(parameter_ranges)
 
-    gp_kwargs = dict(normalize_y=normalize_y, warp_inputs=warp_inputs,)
+    gp_kwargs = dict(
+        normalize_y=normalize_y,
+        warp_inputs=warp_inputs,
+    )
     if acq_function == "rand":
         current_acq_func = random.choice(["mes", "pvrs", "ei", "lcb", "ts"])
     else:
@@ -434,7 +437,10 @@ def initialize_optimizer(
         acq_function_lcb_alpha = str(
             acq_function_lcb_alpha
         )  # Bayes-skopt expect alpha as a string, "inf", in case of infinite alpha.
-    acq_func_kwargs = dict(alpha=acq_function_lcb_alpha, n_thompson=500,)
+    acq_func_kwargs = dict(
+        alpha=acq_function_lcb_alpha,
+        n_thompson=500,
+    )
 
     #roundflat = make_roundflat(
                 #kernel_lengthscale_prior_lower_bound,
@@ -659,7 +665,10 @@ def plot_results(
     full_plotpath = plotpath / f"{timestr}-{len(optimizer.Xi)}-partial_dependence.png"
     dpi = 150 if optimizer.space.n_dims == 1 else 300
     plt.savefig(
-        full_plotpath, dpi=dpi, facecolor=dark_gray, **save_params,
+        full_plotpath,
+        dpi=dpi,
+        facecolor=dark_gray,
+        **save_params,
     )
     logger.info(f"Saving a partial dependence plot to {full_plotpath}.")
     plt.close(fig)
@@ -688,7 +697,10 @@ def plot_results(
         plotpath / f"{timestr}-{len(optimizer.Xi)}-standard_deviation.png"
     )
     plt.savefig(
-        standard_deviation_full_plotpath, dpi=300, facecolor=dark_gray, **save_params,
+        standard_deviation_full_plotpath,
+        dpi=300,
+        facecolor=dark_gray,
+        **save_params,
     )
     logger.info(
         f"Saving a standard deviation plot to {standard_deviation_full_plotpath}."
@@ -716,8 +728,8 @@ def plot_results(
     )
 
     active_subspaces_input_normalizer = Normalizer(lb, ub)
-    active_subspace_samples_normalized_x = active_subspaces_input_normalizer.fit_transform(
-        active_subspace_samples_x_raw
+    active_subspace_samples_normalized_x = (
+        active_subspaces_input_normalizer.fit_transform(active_subspace_samples_x_raw)
     )
     if optimizer.gp.kernel.k1.k2.nu >= 1.5:
         for x_row in active_subspace_samples_x_raw:
@@ -822,7 +834,10 @@ def plot_results(
         plotpath / f"{timestr}-{len(optimizer.Xi)}-active_subspace.png"
     )
     active_subspace_figure.savefig(
-        active_subspace_full_plotpath, dpi=300, facecolor=dark_gray, **save_params,
+        active_subspace_full_plotpath,
+        dpi=300,
+        facecolor=dark_gray,
+        **save_params,
     )
     logger.info(f"Saving an active subspace plot to {active_subspace_full_plotpath}.")
     plt.close(active_subspace_figure)
@@ -1031,7 +1046,9 @@ def run_match(
             yield line
 
 
-def is_debug_log(cutechess_line: str,) -> bool:
+def is_debug_log(
+    cutechess_line: str,
+) -> bool:
     """Check if the provided cutechess log line is a debug mode line.
 
     Parameters
@@ -1049,7 +1066,9 @@ def is_debug_log(cutechess_line: str,) -> bool:
     return False
 
 
-def check_log_for_errors(cutechess_output: List[str],) -> None:
+def check_log_for_errors(
+    cutechess_output: List[str],
+) -> None:
     """Parse the log output produced by cutechess-cli and scan for important errors.
 
     Parameters
