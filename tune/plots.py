@@ -311,6 +311,7 @@ def plot_objective(
     size=3,
     zscale="linear",
     dimensions=None,
+    next_point=None,
     plot_standard_deviation=False,
     n_random_restarts=100,
     alpha=0.25,
@@ -468,6 +469,9 @@ def plot_objective(
                     samples[:, j], samples[:, i], c="k", s=10, lw=0.0, alpha=alpha
                 )
                 if failures != 10:
+                    ax[i, j].scatter(
+                        next_point[j], next_point[i], c=["xkcd:pink"], s=20, lw=0.0
+                    )
                     ax[i, j].scatter(min_x[j], min_x[i], c=["r"], s=20, lw=0.0)
                     ax[i, j].scatter(
                         min_ucb[j], min_ucb[i], c=["xkcd:orange"], s=20, lw=0.0
@@ -717,6 +721,7 @@ def plot_activesubspace_sufficient_summary(
     inputs,
     outputs,
     result_object,
+    next_point=None,
     active_subspace_figure=None,
     active_subspace_sufficient_summary_axes=None,
     filename=None,
@@ -756,6 +761,7 @@ def plot_activesubspace_sufficient_summary(
     best_point, best_value = expected_ucb(result_object, alpha=0.0)
     tuner_sample_points = np.asarray(result_object.x_iters)
     best_point_normalized_zero_to_one = result_object.space.transform([best_point])
+    next_point_normalized_zero_to_one = result_object.space.transform([next_point])
     tuner_sample_points_normalized_zero_to_one = result_object.space.transform(
         tuner_sample_points
     )
@@ -763,6 +769,7 @@ def plot_activesubspace_sufficient_summary(
         #best_point_normalized_zero_to_one
     #)
     best_point_normalized_minus_one_to_one = best_point_normalized_zero_to_one * 2 - 1
+    next_point_normalized_minus_one_to_one = next_point_normalized_zero_to_one * 2 - 1
     #tuner_sample_points_normalized_minus_one_to_one = Normalizer(0, 1).fit_transform(
         #tuner_sample_points_normalized_zero_to_one
     #)
@@ -789,6 +796,9 @@ def plot_activesubspace_sufficient_summary(
         active_subspace_x = active_subspaces_object.transform(inputs)[0]
         active_subspace_best_point = active_subspaces_object.transform(
             best_point_normalized_minus_one_to_one
+        )[0]
+        active_subspace_next_point = active_subspaces_object.transform(
+            next_point_normalized_minus_one_to_one
         )[0]
         active_subspace_tuner_sample_points = active_subspaces_object.transform(
             tuner_sample_points_normalized_minus_one_to_one
@@ -821,6 +831,13 @@ def plot_activesubspace_sufficient_summary(
             s=20,
             lw=0.0,
             alpha=0.25,
+        )
+        active_subspace_sufficient_summary_axes.scatter(
+            active_subspace_next_point[0, 0],
+            active_subspace_next_point[0, 1],
+            c=["xkcd:pink"],
+            s=20,
+            lw=0.0,
         )
         active_subspace_sufficient_summary_axes.scatter(
             active_subspace_best_point[0, 0],

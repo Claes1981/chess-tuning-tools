@@ -656,6 +656,7 @@ def plot_results(
         plot_objective(
             result_object,
             dimensions=parameter_names,
+            next_point=optimizer._next_x,
             plot_standard_deviation=False,
             fig=fig,
             ax=ax,
@@ -689,6 +690,7 @@ def plot_results(
     plot_objective(
         result_object,
         dimensions=parameter_names,
+        next_point=optimizer._next_x,
         plot_standard_deviation=True,
         fig=standard_deviation_figure,
         ax=standard_deviation_axes,
@@ -822,6 +824,7 @@ def plot_results(
         active_subspace_samples_normalized_x,
         active_subspace_samples_y,
         result_object,
+        next_point=optimizer._next_x,
         active_subspace_figure=active_subspace_figure,
         active_subspace_sufficient_summary_axes=active_subspace_sufficient_summary_axes,
         #figsize=(6, 4),
