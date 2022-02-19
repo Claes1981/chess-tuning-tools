@@ -702,7 +702,7 @@ def plot_results(
     plotpath = pathlib.Path(plot_path)
     for subdir in ["landscapes", "elo", "optima"]:
         (plotpath / subdir).mkdir(parents=True, exist_ok=True)
-    full_plotpath = plotpath / f"landscapes/landscape-{timestr}-{current_iteration}-partial_dependence.png"
+    full_plotpath = plotpath / f"landscapes/partial_dependence-{timestr}-{current_iteration}.png"
     dpi = 150 if optimizer.space.n_dims == 1 else 300
     plt.savefig(
         full_plotpath,
@@ -754,7 +754,7 @@ def plot_results(
         ax=standard_deviation_axes,
     )
     standard_deviation_full_plotpath = (
-        plotpath / f"{timestr}-{current_iteration}-standard_deviation.png"
+        plotpath / f"landscapes/standard_deviation-{timestr}-{current_iteration}.png"
     )
     plt.savefig(
         standard_deviation_full_plotpath,
@@ -892,7 +892,7 @@ def plot_results(
 
     #plt.show()
     active_subspace_full_plotpath = (
-        plotpath / f"{timestr}-{current_iteration}-active_subspace.png"
+        plotpath / f"landscapes/active_subspace-{timestr}-{current_iteration}.png"
     )
     active_subspace_figure.savefig(
         active_subspace_full_plotpath,
