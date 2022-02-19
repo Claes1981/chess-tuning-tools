@@ -12,7 +12,7 @@ from skopt.plots import _format_scatter_plot_axes
 from skopt.space import Space
 #from athena.utils import Normalizer
 
-from tune.utils import confidence_to_mult, expected_ucb
+from tune.utils import confidence_to_mult, expected_ucb, latest_iterations
 
 __all__ = [
     "partial_dependence",
@@ -592,9 +592,10 @@ def plot_optima(
         - if the number of iterations is not matching the number of optima
         - if a fig, but no ax is passed
     """
-    n_points, n_parameters = optima.shape
-    if n_points != len(iterations):
+    if optima.shape[0] != len(iterations):
         raise ValueError("Iteration array does not match optima array.")
+    iterations, optima = latest_iterations(iterations, optima)
+    n_points, n_parameters = optima.shape
     if parameter_names is not None and len(parameter_names) != n_parameters:
         raise ValueError(
             "Number of parameter names does not match the number of parameters."
@@ -755,7 +756,7 @@ def plot_performance(
         - if the number of iterations is not matching the number of optima
         - if a fig, but no ax is passed
     """
-    iterations, elo, elo_std = performance.T
+    iterations, elo, elo_std = latest_iterations(*performance.T)
     if colors is None:
         colors = plt.cm.get_cmap("Set3").colors
     if fig is None:

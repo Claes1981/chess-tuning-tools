@@ -17,6 +17,7 @@ from skopt.utils import create_result
 from scipy.special import erfinv
 #from scipy.stats import halfnorm
 from bask import acquisition
+
 from tune.db_workers import TuningClient, TuningServer
 from tune.io import load_tuning_config, prepare_engines_json, write_engines_json
 from tune.local import (
@@ -546,7 +547,7 @@ def local(  # noqa: C901
                         confidence=settings.get("confidence", confidence),
                     )
                     optima.append(current_optimum)
-                    performance.append([iteration, estimated_elo, estimated_std])
+                    performance.append((int(iteration), estimated_elo, estimated_std))
                 except ValueError:
                     pass
             plot_every_n = settings.get("plot_every", plot_every)
@@ -564,6 +565,7 @@ def local(  # noqa: C901
                     plot_path=settings.get("plot_path", plot_path),
                     parameter_names=list(param_ranges.keys()),
                     confidence=settings.get("confidence", confidence),
+                    current_iteration=iteration,
                 )
 
         if point is None:
@@ -701,6 +703,7 @@ def local(  # noqa: C901
         X.append(point)
         y.append(score)
         noise.append(error_variance)
+        iteration += 1
 
         # Update data structures and persist to disk:
         with AtomicWriter(data_path, mode="wb", overwrite=True).open() as f:
@@ -711,6 +714,7 @@ def local(  # noqa: C901
                 np.array(noise),
                 np.array(optima),
                 np.array(performance),
+                np.array(iteration),
             )
         with AtomicWriter(model_path, mode="wb", overwrite=True).open() as f:
             dill.dump(opt, f)
@@ -790,7 +794,7 @@ def local(  # noqa: C901
                 ),
             )
 
-        iteration = len(X)
+        #iteration = len(X)
         is_first_iteration_after_program_start = False
 
         #with AtomicWriter(data_path, mode="wb", overwrite=True).open() as f:
