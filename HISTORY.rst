@@ -2,6 +2,19 @@
 History
 =======
 
+0.9.0 (2022-02-11)
+------------------
+
+Local tuner
+~~~~~~~~~~~
+
+- Add a plot which shows the optima predicted by the tuner across the
+  iterations (#172). This can be useful to gauge convergence.
+- Add a plot which shows the estimated Elo (+ confidence interval) of the
+  predicted optima (#176).
+- Tuner saves optima and their Elo performance (including standard deviation)
+  to disk now (#171).
+
 0.8.3 (2022-01-30)
 ------------------
 

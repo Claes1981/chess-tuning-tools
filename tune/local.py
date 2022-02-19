@@ -27,6 +27,8 @@ from skopt.utils import normalize_dimensions
 from tune.plots import (
     plot_objective,
     plot_objective_1d,
+    plot_optima,
+    plot_performance,
     plot_activesubspace_eigenvalues,
     plot_activesubspace_eigenvectors,
     plot_activesubspace_sufficient_summary,
@@ -248,7 +250,7 @@ def initialize_data(
     data_path: Optional[str] = None,
     intermediate_data_path: Optional[str] = None,
     resume: bool = True,
-) -> Tuple[list, list, list, int]:
+) -> Tuple[list, list, list, int, list, list]:
     """Initialize data structures needed for tuning. Either empty or resumed from disk.
 
     Parameters
@@ -280,6 +282,8 @@ def initialize_data(
     X = []
     y = []
     noise = []
+    optima = []
+    performance = []
     point = []
     iteration = 0
     round = 0
@@ -298,6 +302,10 @@ def initialize_data(
                 X = importa["arr_0"].tolist()
                 y = importa["arr_1"].tolist()
                 noise = importa["arr_2"].tolist()
+                if "arr_3" in importa:
+                    optima = importa["arr_3"].tolist()
+                if "arr_4" in importa:
+                    performance = importa["arr_4"].tolist()
             if len(X[0]) != space.n_dims:
                 raise ValueError(
                     f"Number of parameters ({len(X[0])}) are not matching "
@@ -323,7 +331,7 @@ def initialize_data(
                 y = y_reduced
                 noise = noise_reduced
             iteration = len(X)
-    return X, y, noise, iteration, round, counts_array, point
+    return X, y, noise, iteration, optima, performance, round, counts_array, point
 
 
 def setup_random_state(seed: int) -> np.random.RandomState:
@@ -546,7 +554,7 @@ def print_results(
     result_object: OptimizeResult,
     parameter_names: Sequence[str],
     confidence: float = 0.9,
-) -> None:
+) -> Tuple[np.ndarray, float, float]:
     """Log the current results of the optimizer.
 
     Parameters
@@ -559,6 +567,11 @@ def print_results(
         Names of the parameters to use for printing.
     confidence : float, default=0.9
         Confidence used for the confidence intervals.
+
+    Raises
+    ------
+    ValueError
+        If computation of the optimum was not successful due to numerical reasons.
     """
     logger = logging.getLogger(LOGGER)
     try:
@@ -569,8 +582,9 @@ def print_results(
                 optimizer.space.transform([best_point]), return_std=True
             )
         logger.info(f"Current optimum:\n{best_point_dict}")
+        estimated_elo = -best_value * 100
         logger.info(
-            f"Estimated Elo: {np.around(-best_value * 100, 4)} +- "
+            f"Estimated Elo: {np.around(estimated_elo, 4)} +- "
             f"{np.around(best_std * 100, 4).item()}"
         )
         confidence_mult = confidence_to_mult(confidence)
@@ -598,17 +612,22 @@ def print_results(
             f"{confidence * 100}% confidence intervals of the parameters:"
             f"\n{confidence_out}"
         )
-    except ValueError:
+        return best_point, estimated_elo, float(best_std * 100)
+    except ValueError as e:
         logger.info(
             "Computing current optimum was not successful. "
             "This can happen in rare cases and running the "
             "tuner again usually works."
         )
+        raise e
 
 
 def plot_results(
     optimizer: Optimizer,
     result_object: OptimizeResult,
+    iterations: np.ndarray,
+    elos: np.ndarray,
+    optima: np.ndarray,
     plot_path: str,
     parameter_names: Sequence[str],
     confidence: float = 0.9,
@@ -621,6 +640,12 @@ def plot_results(
         Fitted Optimizer object.
     result_object : scipy.optimize.OptimizeResult
         Result object containing the data and the last fitted model.
+    iterations : np.ndarray
+        Array containing the iterations at which optima were collected.
+    elos : np.ndarray, shape=(n_iterations, 2)
+        Array containing the estimated Elo of the optima and the standard error.
+    optima : np.ndarray
+        Array containing the predicted optimal parameters.
     plot_path : str
         Path to the directory to which the plots should be saved.
     parameter_names : Sequence of str
@@ -634,6 +659,8 @@ def plot_results(
 
     timestr = time.strftime("%Y%m%d-%H%M%S")
     dark_gray = "#36393f"
+
+    # First save the landscape:
     save_params = dict()
     if optimizer.space.n_dims == 1:
         fig, ax = plot_objective_1d(
@@ -662,8 +689,9 @@ def plot_results(
             ax=ax,
         )
     plotpath = pathlib.Path(plot_path)
-    plotpath.mkdir(parents=True, exist_ok=True)
-    full_plotpath = plotpath / f"{timestr}-{len(optimizer.Xi)}-partial_dependence.png"
+    for subdir in ["landscapes", "elo", "optima"]:
+        (plotpath / subdir).mkdir(parents=True, exist_ok=True)
+    full_plotpath = plotpath / f"landscapes/landscape-{timestr}-{len(optimizer.Xi)}-partial_dependence.png"
     dpi = 150 if optimizer.space.n_dims == 1 else 300
     plt.savefig(
         full_plotpath,
@@ -672,6 +700,25 @@ def plot_results(
         **save_params,
     )
     logger.info(f"Saving a partial dependence plot to {full_plotpath}.")
+    plt.close(fig)
+
+    # Plot the history of optima:
+    fig, ax = plot_optima(
+        iterations=iterations,
+        optima=optima,
+        space=optimizer.space,
+        parameter_names=parameter_names,
+    )
+    full_plotpath = plotpath / f"optima/optima-{timestr}-{len(optimizer.Xi)}.png"
+    fig.savefig(full_plotpath, dpi=150, facecolor=dark_gray)
+    plt.close(fig)
+
+    # Plot the predicted Elo performance of the optima:
+    fig, ax = plot_performance(
+        performance=np.hstack([iterations[:, None], elos]), confidence=confidence
+    )
+    full_plotpath = plotpath / f"elo/elo-{timestr}-{len(optimizer.Xi)}.png"
+    fig.savefig(full_plotpath, dpi=150, facecolor=dark_gray)
     plt.close(fig)
 
     logger.debug("Starting to compute the next standard deviation plot.")
