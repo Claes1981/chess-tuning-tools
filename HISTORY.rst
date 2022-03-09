@@ -2,6 +2,17 @@
 History
 =======
 
+0.9.1 (2022-03-06)
+------------------
+
+Local tuner
+~~~~~~~~~~~
+
+- Fix a bug where the Elo and optima plots were showing incorrect iterations,
+  if the user reduced parameter ranges (#183).
+- Only use scientific notation in the optima plots, if the parameter is
+  optimized on a log scale (#182).
+
 0.9.0 (2022-02-11)
 ------------------
 
