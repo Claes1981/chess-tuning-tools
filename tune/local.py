@@ -702,7 +702,9 @@ def plot_results(
     plotpath = pathlib.Path(plot_path)
     for subdir in ["landscapes", "elo", "optima"]:
         (plotpath / subdir).mkdir(parents=True, exist_ok=True)
-    full_plotpath = plotpath / f"landscapes/partial_dependence-{timestr}-{current_iteration}.png"
+    full_plotpath = (
+        plotpath / f"landscapes/partial_dependence-{timestr}-{current_iteration}.png"
+    )
     dpi = 150 if optimizer.space.n_dims == 1 else 300
     plt.savefig(
         full_plotpath,

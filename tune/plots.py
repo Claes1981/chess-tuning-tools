@@ -479,7 +479,7 @@ def plot_objective(
                     ax[i, j].scatter(
                         min_ucb[j], min_ucb[i], c=["xkcd:orange"], s=20, lw=0.0
                     )
-                    ax[i, j].scatter(min_x[j], min_x[i], c=["r"], s=20, lw=0.0)                    
+                    ax[i, j].scatter(min_x[j], min_x[i], c=["r"], s=20, lw=0.0)
                 z_min[i, j] = np.min(zi)
                 z_max[i, j] = np.max(zi)
                 z_ranges[i, j] = np.max(zi) - np.min(zi)
@@ -609,7 +609,10 @@ def plot_optima(
         n_rows = int(np.ceil(n_parameters / n_cols))
         figsize = (n_cols * plot_width, aspect_ratio * plot_width * n_rows)
         fig, ax = plt.subplots(
-            figsize=figsize, nrows=n_rows, ncols=n_cols, sharex=True,
+            figsize=figsize,
+            nrows=n_rows,
+            ncols=n_cols,
+            sharex=True,
         )
 
         margin_left = 1.0
