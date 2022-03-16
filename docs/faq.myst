@@ -84,11 +84,51 @@ set ``"rounds"`` to ``100000 / 1000 / 2 = 50``.
 In any case, you should monitor the suite of plots and the log output, to make
 sure that the tuning process has converged.
 
+### How do I know if the tuning process has converged?
+There are several indicators that can be used to check whether the tuning process
+has converged:
+
+- Check the optima plots to see if the predicted optimal parameter values do not
+  have a visible trend and roughly follow a tight random walk.
+  There should also no jumps between different local optima anymore.
+- Check the landscape plot to see if the sampled points have formed a
+  concentrated distribution around the optimum.
+  The orange and red dots (corresponding to the global optimum and the
+  conservative optimum) should be close to each other.
+- Check the log output to see if the confidence intervals for the parameters
+  are not too wide.
+- Ensure that the confidence interval of the predicted Elo performance aligns
+  roughly with the targeted optimality.
 
 ### Can I increase the number of games per iteration later in the tune?
 It is possible, but it will bias the estimated Elo values to slightly more
 extreme ones. This could lead the model to temporarily over-/underevalute
 certain regions until enough new data points were collected.
+
+### How can I pass my own points to the tuner to evaluate?
+```{note}
+:class: margin
+The parameter values have to be within the bounds specified in the config file.
+```
+Starting with 0.9.2, you can pass your own points to the tuner to evaluate.
+To do this, you need to create a .csv file using the ``--evaluate-points``
+option (``-p`` for short).
+Each row in the file should contain the parameters
+in the same order as specified in the config file of the tune.
+It is also possible to add an additional integer column to the file, which
+will indicate the number of rounds to run each point for.
+
+Here is an example of how a .csv file for a three parameter tune could look
+like:
+
+    0.3,125,0.0,25
+    0.4,1000,0.5,50
+    0.5,1000,0.0,50
+
+The first point would be evaluated using 25 rounds (50 games), while the
+second and third point would be evaluated using 50 rounds (100 games).
+
+
 
 ## Problems while tuning
 

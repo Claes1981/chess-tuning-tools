@@ -18,6 +18,7 @@ from scipy.special import erfinv
 #from scipy.stats import halfnorm
 from bask import acquisition
 
+import tune
 from tune.db_workers import TuningClient, TuningServer
 from tune.io import load_tuning_config, prepare_engines_json, write_engines_json
 from tune.local import (
@@ -26,6 +27,7 @@ from tune.local import (
     initialize_data,
     initialize_optimizer,
     is_debug_log,
+    load_points_to_evaluate,
     parse_experiment_result,
     plot_results,
     print_results,
@@ -161,7 +163,8 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     "--acq-function",
     default="mes",
     help="Acquisition function to use for selecting points to try. "
-    "Can be {mes, pvrs, ei, ts, vr, lcb, rand}.",
+    "Can be one of: {mes, pvrs, ei, ts, vr, lcb, mean, ttei, rand}. "
+    "Consult the parameter reference and the FAQ for more information.",
     show_default=True,
 )
 @click.option(
@@ -325,6 +328,16 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     show_default=True,
 )
 @click.option(
+    "-p",
+    "--evaluate-points",
+    default=None,
+    type=click.Path(exists=False),
+    help="Path to a .csv file (without header row) with points to evaluate. An optional"
+    " last column can be used to request a different number of rounds for each "
+    "point.",
+    show_default=False,
+)
+@click.option(
     "--plot-every",
     default=1,
     help="Plot the current optimization landscape every n-th iteration. "
@@ -411,6 +424,7 @@ def local(  # noqa: C901
     acq_function_lcb_alpha=1.96,
     confidence=0.9,
     data_path=None,
+    evaluate_points=None,
     gp_burnin=5,
     gp_samples=300,
     gp_initial_burnin=100,
@@ -446,6 +460,7 @@ def local(  # noqa: C901
 
     Parameters defined in the `tuning_config` file always take precedence.
     """
+
     json_dict = json.load(tuning_config)
     settings, commands, fixed_params, param_ranges = load_tuning_config(json_dict)
     root_logger = setup_logger(
@@ -534,6 +549,12 @@ def local(  # noqa: C901
         gp_initial_samples=settings.get("gp_initial_samples", gp_initial_samples),
         gp_priors=gp_priors,
     )
+    extra_points = load_points_to_evaluate(
+        space=opt.space, csv_file=evaluate_points, rounds=settings.get("rounds", 10),
+    )
+    root_logger.debug(
+        f"Loaded {len(extra_points)} extra points to evaluate: {extra_points}"
+    )
 
     is_first_iteration_after_program_start = True
     # Main optimization loop:
@@ -582,7 +603,22 @@ def local(  # noqa: C901
             round = 0  # If previous tested point is not present, start over iteration.
             counts_array = np.array([0, 0, 0, 0, 0])
         if round == 0:
-            point = opt.ask()  # Ask optimizer for next point.
+            used_extra_point = False
+            # If there are extra points to evaluate, evaluate them first in FIFO order:
+            if len(extra_points) > 0:
+                point, n_rounds = extra_points.pop(0)
+                # Log that we are evaluating the extra point:
+                root_logger.info(
+                    f"Evaluating extra point {dict(zip(param_ranges.keys(), point))} for "
+                    f"{n_rounds} rounds."
+                )
+                used_extra_point = True
+            else:
+                # Ask optimizer for next point:
+                point = opt.ask()
+                n_rounds = settings.get("rounds", 10)
+            match_settings = settings.copy()
+            match_settings["rounds"] = n_rounds
             point_dict = dict(zip(param_ranges.keys(), point))
             root_logger.info("Testing {}".format(point_dict))
             if len(y) > 0 and opt.gp.chain_ is not None:
@@ -613,6 +649,8 @@ def local(  # noqa: C901
                 )
             root_logger.info("Start experiment")
         else:
+            match_settings = settings.copy()
+            match_settings["rounds"] = n_rounds
             point_dict = dict(zip(param_ranges.keys(), point))
             root_logger.info("Testing {}".format(point_dict))
             if len(y) > 0 and opt.gp.chain_ is not None:
@@ -677,7 +715,7 @@ def local(  # noqa: C901
             out_exp = []
             out_all = []
             for output_line in run_match(
-                **settings, tuning_config_name=tuning_config.name
+                **match_settings, tuning_config_name=tuning_config.name
             ):
                 line = output_line.rstrip()
                 is_debug = is_debug_log(line)
@@ -803,6 +841,10 @@ def local(  # noqa: C901
                     "gp_initial_samples", gp_initial_samples
                 ),
             )
+
+        # If we used an extra point, we need to reset n_initial_points of the optimizer:
+        if used_extra_point:
+            opt._n_initial_points += 1
 
         #iteration = len(X)
         is_first_iteration_after_program_start = False
