@@ -27,11 +27,12 @@ def test_parse_experiment_result():
     Elo difference: -31.4 +/- 57.1, LOS: 13.9 %, DrawRatio: 31.0 %
     Finished match
     """
-    score, error = parse_experiment_result(
+    score, error, draw_rate = parse_experiment_result(
         teststr, n_dirichlet_samples=1000, random_state=0
     )
     assert_almost_equal(score, 0.0)
     assert_almost_equal(error, 0.887797821633887)
+    assert_almost_equal(draw_rate, 1 / 4)
 
     # Test cutechess 1.2.0 output:
     teststr = """Started game 1 of 4 (engine1 vs engine2)
@@ -52,11 +53,12 @@ def test_parse_experiment_result():
     Elo difference: -88.7 +/- nan, LOS: 28.2 %, DrawRatio: 25.0 %
     Finished match
     """
-    score, error = parse_experiment_result(
+    score, error, draw_rate = parse_experiment_result(
         teststr, n_dirichlet_samples=1000, random_state=0
     )
     assert_almost_equal(score, 0.38764005203222596)
     assert_almost_equal(error, 0.6255020676255081)
+    assert_almost_equal(draw_rate, 1.5 / 5)
 
     teststr = """Indexing opening suite...
     Started game 1 of 40 (engine1 vs engine2)
@@ -90,11 +92,12 @@ def test_parse_experiment_result():
     Finished game 10 (engine2 vs engine1): 1/2-1/2 {Draw by adjudication}
     Score of engine1 vs engine2: 10 - 0 - 0  [0.450] 10
     """
-    score, error = parse_experiment_result(
+    score, error, draw_rate = parse_experiment_result(
         teststr, n_dirichlet_samples=1000, random_state=0
     )
     assert_almost_equal(score, -2.7958800173440745)
     assert_almost_equal(error, 1.9952678343378125)
+    assert_almost_equal(draw_rate, 1 / 8)
 
     # Test if the result is correct in case the order of finished games is not linear.
     # This can happen with concurrency > 1
@@ -116,11 +119,12 @@ def test_parse_experiment_result():
     Elo difference: -88.7 +/- nan, LOS: 28.2 %, DrawRatio: 25.0 %
     Finished match
     """
-    score, error = parse_experiment_result(
+    score, error, draw_rate = parse_experiment_result(
         teststr, n_dirichlet_samples=1000, random_state=0
     )
     assert_almost_equal(score, 0.38764005203222596)
     assert_almost_equal(error, 0.6255020676255081)
+    assert_almost_equal(draw_rate, 1.5 / 5)
 
 
 def test_reduce_ranges():
@@ -138,7 +142,9 @@ def test_reduce_ranges():
 def test_initialize_data(tmp_path):
     # Test basic functionality without resume:
     X, y, noise, iteration, optima, performance = initialize_data(
-        parameter_ranges=[(0.0, 1.0)], data_path=None, resume=False,
+        parameter_ranges=[(0.0, 1.0)],
+        data_path=None,
+        resume=False,
     )
     assert len(X) == 0
     assert len(y) == 0
@@ -167,13 +173,17 @@ def test_initialize_data(tmp_path):
     # Check if resume=False is recognized correctly
     # (outputs should be empty despite data_path being given):
     X, _, _, _, _, _ = initialize_data(
-        parameter_ranges=[(0.0, 1.0)], data_path=testfile, resume=False,
+        parameter_ranges=[(0.0, 1.0)],
+        data_path=testfile,
+        resume=False,
     )
     assert len(X) == 0
 
     # Check if we get the data back we saved with resume=True:
     X, y, noise, iteration, optima, performance = initialize_data(
-        parameter_ranges=[(0.0, 1.0)], data_path=testfile, resume=True,
+        parameter_ranges=[(0.0, 1.0)],
+        data_path=testfile,
+        resume=True,
     )
     assert int(iteration) == 5
     assert np.allclose(X, X_in)
@@ -184,7 +194,9 @@ def test_initialize_data(tmp_path):
 
     # Check if we get the correct subset, if we reduce the parameter range:
     X, y, noise, iteration, _, _ = initialize_data(
-        parameter_ranges=[(0.0, 0.5)], data_path=testfile, resume=True,
+        parameter_ranges=[(0.0, 0.5)],
+        data_path=testfile,
+        resume=True,
     )
     assert int(iteration) == 5
     assert np.allclose(X, np.array([[0.0], [0.5]]))
@@ -194,14 +206,20 @@ def test_initialize_data(tmp_path):
     # Check if the ValueError is raised correctly:
     with pytest.raises(ValueError):
         _ = initialize_data(
-            parameter_ranges=[(0.0, 1.0)] * 2, data_path=testfile, resume=True,
+            parameter_ranges=[(0.0, 1.0)] * 2,
+            data_path=testfile,
+            resume=True,
         )
 
 
 def test_initialize_optimizer(tmp_path):
     # First test the minimal functionality without data and resume=False
     opt = initialize_optimizer(
-        X=[], y=[], noise=[], parameter_ranges=[(0.0, 1.0)], resume=False,
+        X=[],
+        y=[],
+        noise=[],
+        parameter_ranges=[(0.0, 1.0)],
+        resume=False,
     )
     assert len(opt.Xi) == 0
 
@@ -259,13 +277,20 @@ def test_initialize_optimizer(tmp_path):
 
 
 def test_update_model():
-    opt = Optimizer(dimensions=[(0.0, 1.0)], n_points=10, random_state=0,)
+    opt = Optimizer(
+        dimensions=[(0.0, 1.0)],
+        n_points=10,
+        random_state=0,
+    )
     points = [[0.0], [1.0], [0.5]]
     scores = [-1.0, 1.0, 0.0]
     variances = [0.3, 0.2, 0.4]
     for p, s, v in zip(points, scores, variances):
         update_model(
-            optimizer=opt, point=p, score=s, variance=v,
+            optimizer=opt,
+            point=p,
+            score=s,
+            variance=v,
         )
     assert len(opt.Xi) == 3
     assert np.allclose(opt.Xi, points)

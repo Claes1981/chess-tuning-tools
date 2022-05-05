@@ -163,7 +163,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     "--acq-function",
     default="mes",
     help="Acquisition function to use for selecting points to try. "
-    "Can be one of: {mes, pvrs, ei, ts, vr, lcb, mean, ttei, rand}. "
+    "Can be one of: {mes, pvrs, ei, ts, vr, lcb, mean, ttei, rand} "
     "Consult the parameter reference and the FAQ for more information.",
     show_default=True,
 )
@@ -466,18 +466,20 @@ def local(  # noqa: C901
     root_logger = setup_logger(
         verbose=verbose, logfile=settings.get("logfile", logfile)
     )
+    # First log the version of chess-tuning-tools:
+    #root_logger.info(f"chess-tuning-tools version: {tune.__version__}")
+    root_logger.debug(
+        f"Chess Tuning Tools version: {importlib.metadata.version('chess-tuning-tools')}, Bayes-skopt version: {importlib.metadata.version('bask')}, Scikit-optimize version: {importlib.metadata.version('scikit-optimize')}, Scikit-learn version: {importlib.metadata.version('scikit-learn')}, SciPy version: {importlib.metadata.version('scipy')}"
+    )
+    #root_logger.debug(
+        #f"Chess Tuning Tools version: {pkg_resources.get_distribution('chess-tuning-tools').parsed_version}"
+    #)
     root_logger.debug(f"Got the following tuning settings:\n{json_dict}")
     root_logger.debug(
         f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, Acquisition function lcb alpha: {acq_function_lcb_alpha}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, GP signal prior scale: {gp_signal_prior_scale}, GP noise prior scale: {gp_noise_prior_scale}, GP lengthscale prior lower bound: {gp_lengthscale_prior_lb}, GP lengthscale prior upper bound: {gp_lengthscale_prior_ub}, Warp inputs: {warp_inputs}, Normalize y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
     )
     #root_logger.debug(
         #f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Kernel lengthscale prior lower bound: {kernel_lengthscale_prior_lower_bound}, Kernel lengthscale prior upper bound: {kernel_lengthscale_prior_upper_bound}, Kernel lengthscale prior lower steepness: {kernel_lengthscale_prior_lower_steepness}, Kernel lengthscale prior upper steepness: {kernel_lengthscale_prior_upper_steepness}, Warp inputs: {warp_inputs}, Normalize y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
-    #)
-    root_logger.debug(
-        f"Chess Tuning Tools version: {importlib.metadata.version('chess-tuning-tools')}, Bayes-skopt version: {importlib.metadata.version('bask')}, Scikit-optimize version: {importlib.metadata.version('scikit-optimize')}, Scikit-learn version: {importlib.metadata.version('scikit-learn')}, SciPy version: {importlib.metadata.version('scipy')}"
-    )
-    #root_logger.debug(
-        #f"Chess Tuning Tools version: {pkg_resources.get_distribution('chess-tuning-tools').parsed_version}"
     #)
 
     # Initialize/import data structures:
@@ -550,7 +552,9 @@ def local(  # noqa: C901
         gp_priors=gp_priors,
     )
     extra_points = load_points_to_evaluate(
-        space=opt.space, csv_file=evaluate_points, rounds=settings.get("rounds", 10),
+        space=opt.space,
+        csv_file=evaluate_points,
+        rounds=settings.get("rounds", 10),
     )
     root_logger.debug(
         f"Loaded {len(extra_points)} extra points to evaluate: {extra_points}"
@@ -744,10 +748,12 @@ def local(  # noqa: C901
 
         # Parse cutechess-cli output and report results (Elo and standard deviation):
         root_logger.debug(f"WW, WD, WL/DD, LD, LL experiment counts: {counts_array}")
-        score, error_variance = counts_to_penta(counts=counts_array)
+        score, error_variance, draw_rate = counts_to_penta(counts=counts_array)
         root_logger.info(
             "Got Elo: {} +- {}".format(-score * 100, np.sqrt(error_variance) * 100)
         )
+        root_logger.info("Estimated draw rate: {:.2%}".format(draw_rate))
+
         X.append(point)
         y.append(score)
         noise.append(error_variance)
