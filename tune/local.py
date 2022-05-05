@@ -1007,6 +1007,7 @@ def run_match(
     engine2_restart: str = "on",
     timemargin: Optional[Union[str, int]] = None,
     opening_file: Optional[str] = None,
+    tuning_config_name: str = None,
     adjudicate_draws: bool = False,
     draw_movenumber: int = 1,
     draw_movecount: int = 10,
