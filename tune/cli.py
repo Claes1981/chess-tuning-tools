@@ -606,8 +606,8 @@ def local(  # noqa: C901
         if point is None:
             round = 0  # If previous tested point is not present, start over iteration.
             counts_array = np.array([0, 0, 0, 0, 0])
+        used_extra_point = False
         if round == 0:
-            used_extra_point = False
             # If there are extra points to evaluate, evaluate them first in FIFO order:
             if len(extra_points) > 0:
                 point, n_rounds = extra_points.pop(0)
