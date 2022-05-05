@@ -653,6 +653,7 @@ def local(  # noqa: C901
                 )
             root_logger.info("Start experiment")
         else:
+            n_rounds = settings.get("rounds", 10)
             match_settings = settings.copy()
             match_settings["rounds"] = n_rounds
             point_dict = dict(zip(param_ranges.keys(), point))
