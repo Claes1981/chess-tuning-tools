@@ -9,6 +9,7 @@ from logging import Logger
 from typing import (
     Any,
     Callable,
+    Iterable,
     Iterator,
     List,
     Optional,
@@ -77,8 +78,7 @@ LOGGER = "ChessTuner"
     #"vr": acquisition.VarianceReduction(),
 #}
 
-
-def elo_to_prob(elo, k=4.0):
+def elo_to_prob(elo: np.ndarray, k: float = 4.0) -> np.ndarray:
     """Convert an Elo score (logit space) to a probability.
 
     Parameters
@@ -101,10 +101,10 @@ def elo_to_prob(elo, k=4.0):
     """
     if k <= 0:
         raise ValueError("k must be positive")
-    return 1 / (1 + np.power(10, -elo / k))
+    return np.atleast_1d(1 / (1 + np.power(10, -elo / k)))
 
 
-def prob_to_elo(p, k=4.0):
+def prob_to_elo(p: np.ndarray, k: float = 4.0) -> np.ndarray:
     """Convert a win probability to an Elo score (logit space).
 
     Parameters
@@ -127,12 +127,12 @@ def prob_to_elo(p, k=4.0):
     """
     if k <= 0:
         raise ValueError("k must be positive")
-    return k * np.log10(-p / (p - 1))
+    return np.atleast_1d(k * np.log10(-p / (p - 1)))
 
 
 def counts_to_penta(
     counts: np.ndarray,
-    prior_counts: Optional[np.ndarray] = None,
+    prior_counts: Optional[Iterable[float]] = None,
     n_dirichlet_samples: int = 1000000,
     score_scale: float = 4.0,
     random_state: Union[int, RandomState, None] = None,
@@ -167,11 +167,13 @@ def counts_to_penta(
     """
     if prior_counts is None:
         prior_counts = np.array([0.14, 0.19, 0.34, 0.19, 0.14]) * 2.5
-    elif len(prior_counts) != 5:
-        raise ValueError("Argument prior_counts should contain 5 elements.")
+    else:
+        prior_counts = np.array(prior_counts)
+        if len(prior_counts) != 5:
+            raise ValueError("Argument prior_counts should contain 5 elements.")
     dist = dirichlet(alpha=counts + prior_counts)
     scores = [0.0, 0.25, 0.5, 0.75, 1.0]
-    score = prob_to_elo(dist.mean().dot(scores), k=score_scale)
+    score = float(prob_to_elo(dist.mean().dot(scores), k=score_scale))
     error = prob_to_elo(
         dist.rvs(n_dirichlet_samples, random_state=random_state).dot(scores),
         k=score_scale,
@@ -1296,13 +1298,13 @@ def check_log_for_errors(
 
 
 def parse_experiment_result(
-    outstr,
-    prior_counts=None,
-    n_dirichlet_samples=1000000,
-    score_scale=4.0,
-    random_state=None,
-    **kwargs,
-):
+    outstr: str,
+    prior_counts: Optional[Sequence[float]] = None,
+    n_dirichlet_samples: int = 1000000,
+    score_scale: float = 4.0,
+    random_state: Union[int, RandomState, None] = None,
+    **kwargs: Any,
+) -> Tuple[float, float, float]:
     """Parse cutechess-cli result output to extract mean score and error.
 
     Here we use a simple pentanomial model to exploit paired openings.
@@ -1345,6 +1347,8 @@ def parse_experiment_result(
     error : float
         Estimated standard error of the score. Estimated by repeated draws
         from a Dirichlet distribution.
+    draw_rate : float
+        Estimated draw rate of the match.
     """
     wdl_strings = re.findall(r"Score of.*:\s*([0-9]+\s-\s[0-9]+\s-\s[0-9]+)", outstr)
     array = np.array(
@@ -1359,6 +1363,7 @@ def parse_experiment_result(
     diffs = diffs[np.argsort(finished)]
 
     counts = {"WW": 0, "WD": 0, "WL/DD": 0, "LD": 0, "LL": 0}
+    DD = 0  # Track DD separately to compute draw rate
     for i in range(0, len(diffs) - 1, 2):
         match = diffs[i] + diffs[i + 1]
         if match[0] == 2:
@@ -1372,6 +1377,7 @@ def parse_experiment_result(
             counts["LD"] += 1
         elif match[2] == 2:
             counts["WL/DD"] += 1
+            DD += 1
         else:
             counts["LL"] += 1
     counts_array = np.array(list(counts.values()))
@@ -1383,7 +1389,10 @@ def parse_experiment_result(
         random_state=random_state,
         **kwargs,
     )
-    return score, error, counts_array
+    draw_rate = (DD + 0.5 * counts["WD"] + 0.5 * counts["LD"] + 1.0) / (
+        counts_array.sum() + 3.0
+    )
+    return score, error, draw_rate, counts_array
 
 
 def update_model(
