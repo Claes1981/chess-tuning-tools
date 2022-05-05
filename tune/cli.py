@@ -733,6 +733,7 @@ def local(  # noqa: C901
             (
                 match_score,
                 match_error_variance,
+                match_draw_rate,
                 match_counts_array,
             ) = parse_experiment_result(out_exp, **settings)
 
@@ -748,11 +749,11 @@ def local(  # noqa: C901
 
         # Parse cutechess-cli output and report results (Elo and standard deviation):
         root_logger.debug(f"WW, WD, WL/DD, LD, LL experiment counts: {counts_array}")
-        score, error_variance, draw_rate = counts_to_penta(counts=counts_array)
+        score, error_variance = counts_to_penta(counts=counts_array)
         root_logger.info(
             "Got Elo: {} +- {}".format(-score * 100, np.sqrt(error_variance) * 100)
         )
-        root_logger.info("Estimated draw rate: {:.2%}".format(draw_rate))
+        #root_logger.info("Estimated draw rate: {:.2%}".format(draw_rate))
 
         X.append(point)
         y.append(score)
