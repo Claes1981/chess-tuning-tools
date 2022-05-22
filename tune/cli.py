@@ -787,7 +787,7 @@ def local(  # noqa: C901
             # Reset optimizer.
             del opt
             if acq_function == "rand":
-                current_acq_func = random.choice(["mes", "pvrs", "ei", "lcb", "ts"])
+                current_acq_func = random.choice(["ts", "lcb", "pvrs", "mes", "ei", "mean"])
                 root_logger.debug(
                     f"Current random acquisition function: {current_acq_func}"
                 )
@@ -825,7 +825,7 @@ def local(  # noqa: C901
             root_logger.info("Updating model.")
             if acq_function == "rand":
                 opt.acq_func = ACQUISITION_FUNC[
-                    random.choice(["mes", "pvrs", "ei", "lcb", "ts"])
+                    random.choice(["ts", "lcb", "pvrs", "mes", "ei", "mean"])
                 ]
                 root_logger.debug(
                     f"Current random acquisition function: {opt.acq_func}"

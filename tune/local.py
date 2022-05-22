@@ -517,7 +517,7 @@ def initialize_optimizer(
         warp_inputs=warp_inputs,
     )
     if acq_function == "rand":
-        current_acq_func = random.choice(["mes", "pvrs", "ei", "lcb", "ts"])
+        current_acq_func = random.choice(["ts", "lcb", "pvrs", "mes", "ei", "mean"])
     else:
         current_acq_func = acq_function
 
