@@ -992,6 +992,7 @@ def inputs_uniform(n_samples, lb, ub):
 
 
 def run_match(
+    cutechesscli_command: Optional[str] = "cutechess-cli",
     rounds: int = 1,
     engine1_tc: Optional[Union[str, TimeControl]] = None,
     engine2_tc: Optional[Union[str, TimeControl]] = None,
@@ -1026,6 +1027,8 @@ def run_match(
 
     Parameters
     ----------
+    cutechesscli_command : str, default="cutechess-cli"
+        Command (with or without path) to start the cutecess-cli executable.
     rounds : int, default=1
         Number of rounds to play in the match (each round consists of 2 games).
     engine1_tc : str or TimeControl object, default=None
@@ -1116,7 +1119,7 @@ def run_match(
     out : str
         Results of the cutechess-cli match streamed as str.
     """
-    string_array = ["cutechess-cli"]
+    string_array = [cutechesscli_command]
     string_array.extend(("-concurrency", str(concurrency)))
 
     if (
