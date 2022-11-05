@@ -780,6 +780,8 @@ def local(  # noqa: C901
             intermediate_data_path, mode="wb", overwrite=True
         ).open() as f:
             np.savez_compressed(f, np.array(round), counts_array, point)
+        
+        root_logger.debug(f"Number of data points: {len(X)}")
 
         # Update model with the new data:
         if reset:
