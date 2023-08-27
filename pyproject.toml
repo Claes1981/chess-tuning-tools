@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "chess-tuning-tools"
-version = "0.9.5+6801a90"
+version = "0.9.5+1082c02"
 description = "A collection of tools for local and distributed tuning of chess engines."
 authors = ["Karlson Pfannschmidt", "Claes Fransson"]
 license = "Apache-2.0"
@@ -27,7 +27,7 @@ scikit-optimize = "^0.9"
 atomicwrites = ">=1.4.0"
 scikit-learn = "^1"
 dill = ">=0.3.4"
-athena-mathlab = "^0.1.2"
+athena-mathlab = ">=0.1.2"
 prettytable = "^3.0"
 importlib_metadata = {version = ">=1.4", python = "~3.7"}
 joblib = {version = ">=0.16.0", optional = true}
