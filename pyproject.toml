@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "chess-tuning-tools"
-version = "0.9.5+52c1aec"
+version = "0.9.5+6801a90"
 description = "A collection of tools for local and distributed tuning of chess engines."
 authors = ["Karlson Pfannschmidt", "Claes Fransson"]
 license = "Apache-2.0"
@@ -18,7 +18,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.10"
+python = ">=3.8"
 bask = ">=0.9.3"
 Click = ">=7.1.2"
 numpy = ">=1.19.1,<1.24"
