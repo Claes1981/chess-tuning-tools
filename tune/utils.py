@@ -44,7 +44,7 @@ def expected_ucb(res, n_random_starts=100, alpha=1.96, random_state=None):
         mu, std = reg.predict(x.reshape(1, -1), return_std=True)
         return (mu + alpha * std)[0]
 
-    xs = [res.space.transform([res.x]).tolist()]
+    xs = res.space.transform([res.x]).tolist()
     if n_random_starts > 0:
         xs.extend(
             res.space.transform(
