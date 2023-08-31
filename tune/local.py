@@ -1119,7 +1119,9 @@ def run_match(
     out : str
         Results of the cutechess-cli match streamed as str.
     """
-    string_array = [cutechesscli_command]
+    string_array = ["/usr/bin/nice"]
+    string_array.append("--5")
+    string_array.append(cutechesscli_command)
     string_array.extend(("-concurrency", str(concurrency)))
 
     if (
