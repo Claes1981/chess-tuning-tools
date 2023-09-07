@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "chess-tuning-tools"
-version = "0.9.5+d55d5a0"
+version = "0.0.0"
 description = "A collection of tools for local and distributed tuning of chess engines."
 authors = ["Karlson Pfannschmidt", "Claes Fransson"]
 license = "Apache-2.0"
@@ -18,8 +18,8 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8"
-bask = ">=0.9.3"
+python = ">=3.8,<4.0"
+bask = { version = ">=0.9.3", python = ">=3.8,<3.10" }
 Click = ">=7.1.2"
 numpy = ">=1.19.1,<1.24"
 scipy = ">=1.5.2"
@@ -69,7 +69,7 @@ tune = "tune.cli:cli"
 enable = true
 vcs = "git"
 style = "semver"
-format = "v{base}+{distance}.{commit}"
+format = "0.9.5+{commit}"
 
 [build-system]
 requires = ["poetry>=0.12", "poetry-dynamic-versioning"]
