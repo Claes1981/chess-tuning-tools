@@ -996,7 +996,7 @@ def plot_activesubspace_eigenvectors(
         if labels:
             ax.set_xticklabels(labels)
 
-        ax.set_ylabel("Active eigenvector {}".format(i + 1))
+        ax.set_ylabel(f"Active eigenvector {i + 1}")
         ax.grid(linestyle="dotted")
         ax.axis([0, n_pars + 1, -1 - 0.1, 1 + 0.1])
 
