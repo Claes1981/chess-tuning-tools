@@ -628,13 +628,13 @@ def local(  # noqa: C901
             point_dict = dict(zip(param_ranges.keys(), point))
             root_logger.info("Testing {}".format(point_dict))
             if len(y) > 0 and opt.gp.chain_ is not None:
-                testing_current_value = opt.gp.predict(opt.space.transform([point]))
+                testing_current_value = opt.gp.predict(opt.space.transform([point]))[0]
                 with opt.gp.noise_set_to_zero():
                     _, testing_current_std = opt.gp.predict(
                         opt.space.transform([point]), return_std=True
                     )
                 root_logger.debug(
-                    f"Predicted Elo: {np.around(-testing_current_value[0] * 100, 4)} +- "
+                    f"Predicted Elo: {np.around(-testing_current_value * 100, 4)} +- "
                     f"{np.around(testing_current_std * 100, 4).item()}"
                 )
                 confidence_mult = erfinv(confidence) * np.sqrt(2)
@@ -661,13 +661,13 @@ def local(  # noqa: C901
             point_dict = dict(zip(param_ranges.keys(), point))
             root_logger.info("Testing {}".format(point_dict))
             if len(y) > 0 and opt.gp.chain_ is not None:
-                testing_current_value = opt.gp.predict(opt.space.transform([point]))
+                testing_current_value = opt.gp.predict(opt.space.transform([point]))[0]
                 with opt.gp.noise_set_to_zero():
                     _, testing_current_std = opt.gp.predict(
                         opt.space.transform([point]), return_std=True
                     )
                 root_logger.debug(
-                    f"Predicted Elo: {np.around(-testing_current_value[0] * 100, 4)} +- "
+                    f"Predicted Elo: {np.around(-testing_current_value * 100, 4)} +- "
                     f"{np.around(testing_current_std * 100, 4).item()}"
                 )
                 confidence_mult = erfinv(confidence) * np.sqrt(2)
