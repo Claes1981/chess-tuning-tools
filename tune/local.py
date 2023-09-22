@@ -1236,16 +1236,18 @@ def check_if_pause() -> None:
     # e g 05:00-10:00
     #     14:30-18:30
     # and is in the same directory as the program
-    with open('pause_times.txt', 'r') as file:
-        intervals = file.read().strip().split('\n')
+    with open("pause_times.txt", "r") as file:
+        intervals = file.read().strip().split("\n")
 
     for interval in intervals:
-        start_time, end_time = interval.split('-')
-        start_hour, start_minute = map(int, start_time.split(':'))
-        end_hour, end_minute = map(int, end_time.split(':'))
+        start_time, end_time = interval.split("-")
+        start_hour, start_minute = map(int, start_time.split(":"))
+        end_hour, end_minute = map(int, end_time.split(":"))
         # Check if it is time to pause the program and
         # check if the interval spans over midnight
-        if end_hour < start_hour or (end_hour == start_hour and end_minute < start_minute):
+        if end_hour < start_hour or (
+            end_hour == start_hour and end_minute < start_minute
+        ):
             # Split the interval into two separate intervals, one for each day
             pause_between_times(start_hour, start_minute, 23, 59)
             pause_between_times(0, 0, end_hour, end_minute)
@@ -1257,8 +1259,26 @@ def pause_between_times(start_hour, start_minute, end_hour, end_minute):
     current_time = time.localtime()
     current_hour, current_minute = current_time.tm_hour, current_time.tm_min
 
-    if (current_hour >= start_hour and (current_hour != start_hour or current_minute >= start_minute)) and (current_hour < end_hour or (current_hour == end_hour and current_minute < end_minute)):
-        target_time = time.struct_time((current_time.tm_year, current_time.tm_mon, current_time.tm_mday, end_hour, end_minute, 0, current_time.tm_wday, current_time.tm_yday, current_time.tm_isdst))
+    if (
+        current_hour >= start_hour
+        and (current_hour != start_hour or current_minute >= start_minute)
+    ) and (
+        current_hour < end_hour
+        or (current_hour == end_hour and current_minute < end_minute)
+    ):
+        target_time = time.struct_time(
+            (
+                current_time.tm_year,
+                current_time.tm_mon,
+                current_time.tm_mday,
+                end_hour,
+                end_minute,
+                0,
+                current_time.tm_wday,
+                current_time.tm_yday,
+                current_time.tm_isdst,
+            )
+        )
         target_timestamp = time.mktime(target_time)
         current_timestamp = time.mktime(current_time)
         sleep_time = target_timestamp - current_timestamp
@@ -1299,7 +1319,6 @@ def check_log_for_errors(
     """
     logger = logging.getLogger(LOGGER)
     for line in cutechess_output:
-
         # Check for forwarded errors:
         pattern = r"[0-9]+ [<>].+: error (.+)"
         match = re.search(pattern=pattern, string=line)

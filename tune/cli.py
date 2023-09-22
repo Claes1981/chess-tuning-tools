@@ -793,7 +793,9 @@ def local(  # noqa: C901
             # Reset optimizer.
             del opt
             if acq_function == "rand":
-                current_acq_func = random.choice(["ts", "lcb", "pvrs", "mes", "ei", "mean"])
+                current_acq_func = random.choice(
+                    ["ts", "lcb", "pvrs", "mes", "ei", "mean"]
+                )
                 root_logger.debug(
                     f"Current random acquisition function: {current_acq_func}"
                 )
