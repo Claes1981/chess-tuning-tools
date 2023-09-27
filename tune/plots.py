@@ -968,6 +968,7 @@ def plot_activesubspace_eigenvectors(
             "The eigenvectors have not been computed."
             "You have to perform the fit method."
         )
+    # print(f"active_subspaces_object.evects={active_subspaces_object.evects}")
     if n_evects is None:
         n_evects = active_subspaces_object.dim
     if n_evects > active_subspaces_object.evects.shape[0]:
