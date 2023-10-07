@@ -63,9 +63,12 @@ def _evenly_sample(dim, n_points):
 def partial_dependence(
     space,
     model,
+    regression_object,
+    polynomial_features_object,
     i,
     j=None,
     plot_standard_deviation=False,
+    plot_polynomial_regression=False,
     sample_points=None,
     n_samples=250,
     n_points=40,
@@ -161,6 +164,14 @@ def partial_dependence(
                 with model.noise_set_to_zero():
                     _, std = model.predict(rvs_, return_std=True)
                 yi.append(np.mean(std))
+            elif plot_polynomial_regression:
+                yi.append(
+                    np.mean(
+                        regression_object.predict(
+                            polynomial_features_object.transform(rvs_)
+                        )
+                    )
+                )
             else:
                 yi.append(np.mean(model.predict(rvs_)))
 
@@ -181,6 +192,14 @@ def partial_dependence(
                     with model.noise_set_to_zero():
                         _, std = model.predict(rvs_, return_std=True)
                         row.append(np.mean(std))
+                elif plot_polynomial_regression:
+                    row.append(
+                        np.mean(
+                            regression_object.predict(
+                                polynomial_features_object.transform(rvs_)
+                            )
+                        )
+                    )
                 else:
                     row.append(np.mean(model.predict(rvs_)))
             zi.append(row)
@@ -309,6 +328,8 @@ def plot_objective_1d(
 
 def plot_objective(
     result,
+    regression_object,
+    polynomial_features_object,
     levels=20,
     n_points=200,
     n_samples=30,
@@ -317,6 +338,7 @@ def plot_objective(
     dimensions=None,
     next_point=None,
     plot_standard_deviation=False,
+    plot_polynomial_regression=False,
     n_random_restarts=100,
     alpha=0.25,
     margin=0.65,
@@ -430,9 +452,12 @@ def plot_objective(
                 xi, yi = partial_dependence(
                     space,
                     result.models[-1],
+                    regression_object,
+                    polynomial_features_object,
                     i,
                     j=None,
                     plot_standard_deviation=plot_standard_deviation,
+                    plot_polynomial_regression=plot_polynomial_regression,
                     sample_points=rvs_transformed,
                     n_points=n_points,
                 )
@@ -459,9 +484,12 @@ def plot_objective(
                 xi, yi, zi = partial_dependence(
                     space,
                     result.models[-1],
+                    regression_object,
+                    polynomial_features_object,
                     i,
                     j,
                     plot_standard_deviation,
+                    plot_polynomial_regression,
                     rvs_transformed,
                     n_points,
                 )

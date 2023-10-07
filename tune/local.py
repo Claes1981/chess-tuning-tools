@@ -35,6 +35,8 @@ from scipy.optimize import OptimizeResult
 from scipy.stats import dirichlet #, halfnorm
 from skopt.space import Categorical, Dimension, Integer, Real, Space
 from skopt.utils import normalize_dimensions
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
 
 from tune.plots import (
     plot_objective,
@@ -739,6 +741,7 @@ def plot_results(
         If None, the current iteration is assumed to be the amount of points collected.
     """
     logger = logging.getLogger(LOGGER)
+
     plt.rcdefaults()
     logger.debug("Starting to compute the next partial dependence plot.")
 
@@ -770,9 +773,12 @@ def plot_results(
         fig.patch.set_facecolor(dark_gray)
         plot_objective(
             result_object,
+            regression_object=None,
+            polynomial_features_object=None,
             dimensions=parameter_names,
             next_point=optimizer._next_x,
             plot_standard_deviation=False,
+            plot_polynomial_regression=False,
             fig=fig,
             ax=ax,
         )
@@ -790,6 +796,92 @@ def plot_results(
         **save_params,
     )
     logger.info(f"Saving a partial dependence plot to {full_plotpath}.")
+    plt.close(fig)
+
+    logger.debug(
+        "Starting to compute the next polynomial regression partial dependence plot."
+    )
+
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+
+    polynomial_features = PolynomialFeatures(degree=2)
+    samples_polynomial_features_transformed = polynomial_features.fit_transform(
+        optimizer.space.transform(np.asarray(optimizer.Xi))
+    )
+
+    print(
+        "polynomial_features.n_output_features_=",
+        polynomial_features.n_output_features_,
+    )
+
+    LinearRegression_polynomial = LinearRegression()
+    LinearRegression_polynomial.fit(
+        samples_polynomial_features_transformed,
+        np.asarray(optimizer.yi),
+        1 / np.asarray(optimizer.noisei),
+    )
+
+    print(
+        "LinearRegression_polynomial.score=",
+        LinearRegression_polynomial.score(
+            samples_polynomial_features_transformed,
+            np.asarray(optimizer.yi),
+            1 / np.asarray(optimizer.noisei),
+        ),
+    )
+
+    # breakpoint()
+
+    LinearRegression_polynomial_predicted_scores = LinearRegression_polynomial.predict(
+        samples_polynomial_features_transformed
+    )
+    LinearRegression_polynomial_residuals = (
+        np.asarray(optimizer.yi) - LinearRegression_polynomial_predicted_scores
+    )
+    LinearRegression_polynomial_weighted_residuals = (
+        LinearRegression_polynomial_residuals
+        * np.sqrt(1 / np.asarray(optimizer.noisei))
+    )
+
+    # Save the landscape:
+    plt.style.use("dark_background")
+    fig, ax = plt.subplots(
+        nrows=optimizer.space.n_dims,
+        ncols=optimizer.space.n_dims,
+        figsize=(3 * optimizer.space.n_dims, 3 * optimizer.space.n_dims),
+    )
+    for i in range(optimizer.space.n_dims):
+        for j in range(optimizer.space.n_dims):
+            ax[i, j].set_facecolor(dark_gray)
+    fig.patch.set_facecolor(dark_gray)
+    plot_objective(
+        result_object,
+        regression_object=LinearRegression_polynomial,
+        polynomial_features_object=polynomial_features,
+        dimensions=parameter_names,
+        next_point=optimizer._next_x,
+        plot_standard_deviation=False,
+        plot_polynomial_regression=True,
+        fig=fig,
+        ax=ax,
+    )
+    plotpath = pathlib.Path(plot_path)
+    for subdir in ["landscapes", "elo", "optima"]:
+        (plotpath / subdir).mkdir(parents=True, exist_ok=True)
+    full_plotpath = (
+        plotpath
+        / f"landscapes/partial_dependence_polynomial_regression-{timestr}-{current_iteration}.png"
+    )
+    dpi = 150 if optimizer.space.n_dims == 1 else 300
+    plt.savefig(
+        full_plotpath,
+        dpi=dpi,
+        facecolor=dark_gray,
+        **save_params,
+    )
+    logger.info(
+        f"Saving a polynomial regression partial dependence plot to {full_plotpath}."
+    )
     plt.close(fig)
 
     # Plot the history of optima:
@@ -826,9 +918,12 @@ def plot_results(
 
     plot_objective(
         result_object,
+        regression_object=None,
+        polynomial_features_object=None,
         dimensions=parameter_names,
         next_point=optimizer._next_x,
         plot_standard_deviation=True,
+        plot_polynomial_regression=False,
         fig=standard_deviation_figure,
         ax=standard_deviation_axes,
     )
