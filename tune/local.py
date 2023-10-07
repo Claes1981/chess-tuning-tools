@@ -809,7 +809,7 @@ def plot_results(
         optimizer.space.transform(np.asarray(optimizer.Xi))
     )
 
-    print(
+    logger.debug(
         "polynomial_features.n_output_features_=",
         polynomial_features.n_output_features_,
     )
@@ -821,7 +821,7 @@ def plot_results(
         1 / np.asarray(optimizer.noisei),
     )
 
-    print(
+    logger.debug(
         "LinearRegression_polynomial.score=",
         LinearRegression_polynomial.score(
             samples_polynomial_features_transformed,
