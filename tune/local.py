@@ -810,8 +810,8 @@ def plot_results(
     )
 
     logger.debug(
-        "polynomial_features.n_output_features_=",
-        polynomial_features.n_output_features_,
+        f"polynomial_features.n_output_features_= "
+        {polynomial_features.n_output_features_}
     )
 
     LinearRegression_polynomial = LinearRegression()
@@ -822,12 +822,12 @@ def plot_results(
     )
 
     logger.debug(
-        "LinearRegression_polynomial.score=",
-        LinearRegression_polynomial.score(
+        f"LinearRegression_polynomial.score= "
+        {LinearRegression_polynomial.score(
             samples_polynomial_features_transformed,
             np.asarray(optimizer.yi),
             1 / np.asarray(optimizer.noisei),
-        ),
+        )}
     )
 
     # breakpoint()
