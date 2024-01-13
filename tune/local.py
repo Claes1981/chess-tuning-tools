@@ -329,7 +329,7 @@ def initialize_data(
     data_path: Optional[str] = None,
     intermediate_data_path: Optional[str] = None,
     resume: bool = True,
-) -> Tuple[list, list, list, int, list, list]:
+) -> Tuple[list, list, list, int, list, list, int, list, list]:
     """Initialize data structures needed for tuning. Either empty or resumed from disk.
 
     Parameters
