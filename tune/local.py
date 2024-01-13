@@ -376,6 +376,9 @@ def initialize_data(
                 round = importa["arr_0"]
                 counts_array = importa["arr_1"]
                 point = importa["arr_2"].tolist()
+                for i in range(len(point)):
+                    if isinstance(point[i], float) and point[i].is_integer():
+                        point[i] = int(point[i])
         if path.exists():
             with np.load(path) as importa:
                 X = importa["arr_0"].tolist()
