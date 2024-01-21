@@ -613,6 +613,9 @@ def local(  # noqa: C901
             # If there are extra points to evaluate, evaluate them first in FIFO order:
             if len(extra_points) > 0:
                 point, n_rounds = extra_points.pop(0)
+                for i in range(len(point)):
+                    if isinstance(point[i], float) and point[i].is_integer():
+                        point[i] = int(point[i])
                 # Log that we are evaluating the extra point:
                 root_logger.info(
                     f"Evaluating extra point {dict(zip(param_ranges.keys(), point))} for "
