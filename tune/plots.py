@@ -956,6 +956,7 @@ def plot_activesubspace_eigenvalues(
         )
 
     active_subspace_eigenvalues_axes.grid(linestyle="dotted")
+    active_subspace_eigenvalues_axes.set_facecolor("#36393f")
     #eigen_values_fig.tight_layout
 
     #if filename:
@@ -1028,6 +1029,7 @@ def plot_activesubspace_eigenvectors(
         ax.set_ylabel(f"Active eigenvector {i + 1}")
         ax.grid(linestyle="dotted")
         ax.axis([0, n_pars + 1, -1 - 0.1, 1 + 0.1])
+        ax.set_facecolor("#36393f")
 
     active_subspace_eigenvectors_axes.flat[-1].set_xlabel("Eigenvector components")
     #fig.tight_layout()
@@ -1196,6 +1198,7 @@ def plot_activesubspace_sufficient_summary(
             "Sufficient summary plots cannot be made in more than 2 dimensions."
         )
 
+    active_subspace_sufficient_summary_axes.set_facecolor("#36393f")
     active_subspace_sufficient_summary_axes.grid(linestyle="dotted")
     #sufficient_summary_fig.tight_layout()
 

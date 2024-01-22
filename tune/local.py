@@ -996,7 +996,7 @@ def plot_results(
             outputs=active_subspace_samples_y,
         )
 
-    plt.style.use("default")
+    plt.style.use("dark_background")
 
     active_subspace_figure = plt.figure(
         constrained_layout=True,
