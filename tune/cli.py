@@ -747,7 +747,9 @@ def local(  # noqa: C901
             with AtomicWriter(
                 intermediate_data_path, mode="wb", overwrite=True
             ).open() as f:
-                np.savez_compressed(f, np.array(round), np.array(counts_array), np.array(point))
+                np.savez_compressed(
+                    f, np.array(round), np.array(counts_array), np.array(point)
+                )
 
             check_if_pause()
 
@@ -786,7 +788,9 @@ def local(  # noqa: C901
         with AtomicWriter(
             intermediate_data_path, mode="wb", overwrite=True
         ).open() as f:
-            np.savez_compressed(f, np.array(round), np.array(counts_array), np.array(point))
+            np.savez_compressed(
+                f, np.array(round), np.array(counts_array), np.array(point)
+            )
 
         root_logger.debug(f"Number of data points: {len(X)}")
 
