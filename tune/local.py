@@ -772,8 +772,8 @@ def plot_results(
         )
         for i in range(optimizer.space.n_dims):
             for j in range(optimizer.space.n_dims):
-                ax[i, j].set_facecolor(dark_gray)
-        fig.patch.set_facecolor(dark_gray)
+                ax[i, j].set_facecolor("xkcd:dark grey")
+        fig.patch.set_facecolor("xkcd:dark grey")
         plot_objective(
             result_object,
             regression_object=None,
@@ -795,7 +795,7 @@ def plot_results(
     plt.savefig(
         full_plotpath,
         dpi=dpi,
-        facecolor=dark_gray,
+        facecolor="xkcd:dark grey",
         **save_params,
     )
     logger.info(f"Saving a partial dependence plot to {full_plotpath}.")
@@ -849,8 +849,8 @@ def plot_results(
     )
     for i in range(optimizer.space.n_dims):
         for j in range(optimizer.space.n_dims):
-            ax[i, j].set_facecolor(dark_gray)
-    fig.patch.set_facecolor(dark_gray)
+            ax[i, j].set_facecolor("xkcd:dark grey")
+    fig.patch.set_facecolor("xkcd:dark grey")
     plot_objective(
         result_object,
         regression_object=LinearRegression_polynomial,
@@ -873,7 +873,7 @@ def plot_results(
     plt.savefig(
         full_plotpath,
         dpi=dpi,
-        facecolor=dark_gray,
+        facecolor="xkcd:dark grey",
         **save_params,
     )
     logger.info(
@@ -889,7 +889,7 @@ def plot_results(
         parameter_names=parameter_names,
     )
     full_plotpath = plotpath / f"optima/optima-{timestr}-{current_iteration}.png"
-    fig.savefig(full_plotpath, dpi=150, facecolor=dark_gray)
+    fig.savefig(full_plotpath, dpi=150, facecolor="xkcd:dark grey")
     plt.close(fig)
 
     # Plot the predicted Elo performance of the optima:
@@ -897,7 +897,7 @@ def plot_results(
         performance=np.hstack([iterations[:, None], elos]), confidence=confidence
     )
     full_plotpath = plotpath / f"elo/elo-{timestr}-{current_iteration}.png"
-    fig.savefig(full_plotpath, dpi=150, facecolor=dark_gray)
+    fig.savefig(full_plotpath, dpi=150, facecolor="xkcd:dark grey")
     plt.close(fig)
 
     logger.debug("Starting to compute the next standard deviation plot.")
@@ -908,10 +908,10 @@ def plot_results(
         ncols=optimizer.space.n_dims,
         figsize=(3 * optimizer.space.n_dims, 3 * optimizer.space.n_dims),
     )
-    standard_deviation_figure.patch.set_facecolor("#36393f")
+    standard_deviation_figure.patch.set_facecolor("xkcd:dark grey")
     for i in range(optimizer.space.n_dims):
         for j in range(optimizer.space.n_dims):
-            standard_deviation_axes[i, j].set_facecolor("#36393f")
+            standard_deviation_axes[i, j].set_facecolor("xkcd:dark grey")
 
     plot_objective(
         result_object,
@@ -930,7 +930,7 @@ def plot_results(
     plt.savefig(
         standard_deviation_full_plotpath,
         dpi=300,
-        facecolor=dark_gray,
+        facecolor="xkcd:dark grey",
         **save_params,
     )
     logger.info(
@@ -1010,7 +1010,7 @@ def plot_results(
     )
 
     #active_subspace_figure.tight_layout()
-    #active_subspace_figure.patch.set_facecolor("#36393f")
+    #active_subspace_figure.patch.set_facecolor("xkcd:dark grey")
     active_subspace_eigenvalues_axes = active_subspace_subfigures[0].subplots(1, 1)
     active_subspace_eigenvalues_axes = plot_activesubspace_eigenvalues(
         active_subspaces_object,
@@ -1068,7 +1068,7 @@ def plot_results(
     active_subspace_figure.savefig(
         active_subspace_full_plotpath,
         dpi=300,
-        facecolor=dark_gray,
+        facecolor="xkcd:dark grey",
         **save_params,
     )
     logger.info(f"Saving an active subspace plot to {active_subspace_full_plotpath}.")

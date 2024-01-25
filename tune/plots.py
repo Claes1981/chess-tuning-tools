@@ -258,8 +258,8 @@ def plot_objective_1d(
         gs_kw = dict(width_ratios=(1,), height_ratios=[5, 1], hspace=0.05)
         fig, ax = plt.subplots(figsize=figsize, nrows=2, gridspec_kw=gs_kw, sharex=True)
         for a in ax:
-            a.set_facecolor("#36393f")
-        fig.patch.set_facecolor("#36393f")
+            a.set_facecolor("xkcd:dark grey")
+        fig.patch.set_facecolor("xkcd:dark grey")
     gp = result.models[-1]
 
     # Compute the optima of the objective function:
@@ -659,9 +659,9 @@ def plot_optima(
         )
         ax = np.atleast_2d(ax).reshape(n_rows, n_cols)
         for a in ax.reshape(-1):
-            a.set_facecolor("#36393f")
+            a.set_facecolor("xkcd:dark grey")
             a.grid(which="major", color="#ffffff", alpha=0.1)
-        fig.patch.set_facecolor("#36393f")
+        fig.patch.set_facecolor("xkcd:dark grey")
         fig.suptitle(
             "Predicted best parameters over time",
             y=1 - 0.5 * margin_top / figsize[1],
@@ -729,7 +729,7 @@ def plot_optima(
             y=transformed_point[1] - 0.02,
             s=s,
             bbox=dict(
-                facecolor="#36393f",
+                facecolor="xkcd:dark grey",
                 edgecolor="None",
                 alpha=0.5,
                 boxstyle="square,pad=0.1",
@@ -814,9 +814,9 @@ def plot_performance(
             bottom=margin_bottom / figsize[1],
             top=1 - margin_top / figsize[1],
         )
-        ax.set_facecolor("#36393f")
+        ax.set_facecolor("xkcd:dark grey")
         ax.grid(which="major", color="#ffffff", alpha=0.1)
-        fig.patch.set_facecolor("#36393f")
+        fig.patch.set_facecolor("xkcd:dark grey")
         ax.set_title("Elo of the predicted best parameters over time")
     elif ax is None:
         raise ValueError("Axes must be specified if a figure is provided.")
@@ -956,7 +956,7 @@ def plot_activesubspace_eigenvalues(
         )
 
     active_subspace_eigenvalues_axes.grid(linestyle="dotted")
-    active_subspace_eigenvalues_axes.set_facecolor("#36393f")
+    active_subspace_eigenvalues_axes.set_facecolor("xkcd:dark grey")
     #eigen_values_fig.tight_layout
 
     #if filename:
@@ -1029,7 +1029,7 @@ def plot_activesubspace_eigenvectors(
         ax.set_ylabel(f"Active eigenvector {i + 1}")
         ax.grid(linestyle="dotted")
         ax.axis([0, n_pars + 1, -1 - 0.1, 1 + 0.1])
-        ax.set_facecolor("#36393f")
+        ax.set_facecolor("xkcd:dark grey")
 
     active_subspace_eigenvectors_axes.flat[-1].set_xlabel("Eigenvector components")
     #fig.tight_layout()
@@ -1198,7 +1198,7 @@ def plot_activesubspace_sufficient_summary(
             "Sufficient summary plots cannot be made in more than 2 dimensions."
         )
 
-    active_subspace_sufficient_summary_axes.set_facecolor("#36393f")
+    active_subspace_sufficient_summary_axes.set_facecolor("xkcd:dark grey")
     active_subspace_sufficient_summary_axes.grid(linestyle="dotted")
     #sufficient_summary_fig.tight_layout()
 
