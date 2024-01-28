@@ -962,8 +962,12 @@ def plot_results(
     active_subspace_samples_normalized_x = (
         active_subspaces_input_normalizer.fit_transform(active_subspace_samples_x_raw)
     )
-    active_subspace_samples_y_values = np.zeros(np.shape(active_subspace_samples_x_raw)[0])
-    active_subspace_samples_gradients = np.zeros(np.shape(active_subspace_samples_x_raw))
+    active_subspace_samples_y_values = np.zeros(
+        np.shape(active_subspace_samples_x_raw)[0]
+    )
+    active_subspace_samples_gradients = np.zeros(
+        np.shape(active_subspace_samples_x_raw)
+    )
 
     if optimizer.gp.kernel.k1.k2.nu >= 1.5:
         for row_number, x_row in enumerate(active_subspace_samples_x_raw):
@@ -982,8 +986,8 @@ def plot_results(
             #     )
             # active_subspace_samples_y_values.append(y_row)
             # active_subspace_samples_gradients.append(grad_row)
-            active_subspace_samples_y_values[row_number]=y_row
-            active_subspace_samples_gradients[row_number]=grad_row
+            active_subspace_samples_y_values[row_number] = y_row
+            active_subspace_samples_gradients[row_number] = grad_row
 
         active_subspaces_object = ActiveSubspaces(dim=2, method="exact", n_boot=1000)
         active_subspaces_object.fit(gradients=active_subspace_samples_gradients)
