@@ -942,8 +942,8 @@ def plot_results(
     timestr = time.strftime("%Y%m%d-%H%M%S")
     number_of_random_active_subspace_samples = 10000 - len(result_object.x_iters)
     number_of_input_dimensions = optimizer.space.n_dims
-    active_subspace_samples_gradient = []
-    active_subspace_samples_y = []
+    # active_subspace_samples_y_values = []
+    # active_subspace_samples_gradients = []
 
     # Uniformly distributed inputs
     lb = 0 * np.ones(number_of_input_dimensions)  # lower bounds
@@ -962,38 +962,45 @@ def plot_results(
     active_subspace_samples_normalized_x = (
         active_subspaces_input_normalizer.fit_transform(active_subspace_samples_x_raw)
     )
+    active_subspace_samples_y_values = np.zeros(np.shape(active_subspace_samples_x_raw)[0])
+    active_subspace_samples_gradients = np.zeros(np.shape(active_subspace_samples_x_raw))
+
     if optimizer.gp.kernel.k1.k2.nu >= 1.5:
-        for x_row in active_subspace_samples_x_raw:
+        for row_number, x_row in enumerate(active_subspace_samples_x_raw):
             y_row, grad_row = optimizer.gp.predict(
                 np.reshape(x_row, (1, -1)), return_mean_grad=True
             )
-            if active_subspace_samples_gradient == []:
-                active_subspace_samples_gradient = grad_row
-                active_subspace_samples_y = y_row
-            else:
-                active_subspace_samples_gradient = np.vstack(
-                    [active_subspace_samples_gradient, grad_row]
-                )
-                active_subspace_samples_y = np.vstack(
-                    [active_subspace_samples_y, y_row]
-                )
+            # if active_subspace_samples_gradients == []:
+            #     active_subspace_samples_gradients = grad_row
+            #     active_subspace_samples_y_values = y_row
+            # else:
+            #     active_subspace_samples_gradients = np.vstack(
+            #         [active_subspace_samples_gradients, grad_row]
+            #     )
+            #     active_subspace_samples_y_values = np.vstack(
+            #         [active_subspace_samples_y_values, y_row]
+            #     )
+            # active_subspace_samples_y_values.append(y_row)
+            # active_subspace_samples_gradients.append(grad_row)
+            active_subspace_samples_y_values[row_number]=y_row
+            active_subspace_samples_gradients[row_number]=grad_row
 
         active_subspaces_object = ActiveSubspaces(dim=2, method="exact", n_boot=1000)
-        active_subspaces_object.fit(gradients=active_subspace_samples_gradient)
+        active_subspaces_object.fit(gradients=active_subspace_samples_gradients)
     else:
         for x_row in active_subspace_samples_x_raw:
             y_row = optimizer.gp.predict(np.reshape(x_row, (1, -1)))
-            if active_subspace_samples_y == []:
-                active_subspace_samples_y = y_row
+            if active_subspace_samples_y_values == []:
+                active_subspace_samples_y_values = y_row
             else:
-                active_subspace_samples_y = np.vstack(
-                    [active_subspace_samples_y, y_row]
+                active_subspace_samples_y_values = np.vstack(
+                    [active_subspace_samples_y_values, y_row]
                 )
 
         active_subspaces_object = ActiveSubspaces(dim=2, method="local", n_boot=1000)
         active_subspaces_object.fit(
             inputs=active_subspace_samples_normalized_x,
-            outputs=active_subspace_samples_y,
+            outputs=active_subspace_samples_y_values,
         )
 
     plt.style.use("dark_background")
@@ -1051,7 +1058,7 @@ def plot_results(
     active_subspace_sufficient_summary_axes = plot_activesubspace_sufficient_summary(
         active_subspaces_object,
         active_subspace_samples_normalized_x,
-        active_subspace_samples_y,
+        active_subspace_samples_y_values,
         result_object,
         next_point=optimizer._next_x,
         active_subspace_figure=active_subspace_figure,
