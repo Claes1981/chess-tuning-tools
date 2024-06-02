@@ -922,7 +922,7 @@ def plot_results(
         regression_object=None,
         polynomial_features_object=None,
         n_points=10,
-        n_samples=100,
+        n_samples=30,
         dimensions=parameter_names,
         next_point=optimizer._next_x,
         plot_standard_deviation=True,
