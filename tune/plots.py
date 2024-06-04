@@ -628,7 +628,7 @@ def plot_objective(
                 )
                 if plot_standard_deviation:
                     z_min_standard_deviation[i, j] = np.min(zi_standard_deviation)
-                    z_max__standard_deviation[i, j] = np.max(zi_standard_deviation)
+                    z_max_standard_deviation[i, j] = np.max(zi_standard_deviation)
                     z_ranges_standard_deviation[i, j] = np.max(zi_standard_deviation) - np.min(zi_standard_deviation)
                     standard_deviation_axes[i, j].text(
                         0.5,
