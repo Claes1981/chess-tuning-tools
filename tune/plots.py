@@ -151,7 +151,8 @@ def partial_dependence(
         # We sample evenly instead of randomly. This is necessary when using
         # categorical values
         xi, xi_transformed = _evenly_sample(space.dimensions[i], n_points)
-        yi = []
+        yi_partial_dependence = []
+        yi_standard_deviation = []
         for x_ in xi_transformed:
             rvs_ = np.array(sample_points)  # copy
             # We replace the values in the dimension that we want to keep
@@ -162,10 +163,11 @@ def partial_dependence(
             # is implemented.
             if plot_standard_deviation:
                 with model.noise_set_to_zero():
-                    _, std = model.predict(rvs_, return_std=True)
-                yi.append(np.mean(std))
+                    y, std = model.predict(rvs_, return_std=True)
+                yi_partial_dependence.append(np.mean(y))
+                yi_standard_deviation.append(np.mean(std))
             elif plot_polynomial_regression:
-                yi.append(
+                yi_partial_dependence.append(
                     np.mean(
                         regression_object.predict(
                             polynomial_features_object.transform(rvs_)
@@ -173,27 +175,30 @@ def partial_dependence(
                     )
                 )
             else:
-                yi.append(np.mean(model.predict(rvs_)))
+                yi_partial_dependence.append(np.mean(model.predict(rvs_)))
 
-        return xi, yi
+        return xi, yi_partial_dependence, yi_standard_deviation
 
     else:
         xi, xi_transformed = _evenly_sample(space.dimensions[j], n_points)
         yi, yi_transformed = _evenly_sample(space.dimensions[i], n_points)
 
-        zi = []
+        zi_partial_dependence = []
+        zi_standard_deviation = []
         for x_ in xi_transformed:
-            row = []
+            row_partial_dependence = []
+            row_standard_deviation = []
             for y_ in yi_transformed:
                 rvs_ = np.array(sample_points)  # copy
                 rvs_[:, dim_locs[j] : dim_locs[j + 1]] = x_
                 rvs_[:, dim_locs[i] : dim_locs[i + 1]] = y_
                 if plot_standard_deviation:
                     with model.noise_set_to_zero():
-                        _, std = model.predict(rvs_, return_std=True)
-                        row.append(np.mean(std))
+                        z, std = model.predict(rvs_, return_std=True)
+                    row_partial_dependence.append(np.mean(z))
+                    row_standard_deviation.append(np.mean(std))
                 elif plot_polynomial_regression:
-                    row.append(
+                    row_partial_dependence.append(
                         np.mean(
                             regression_object.predict(
                                 polynomial_features_object.transform(rvs_)
@@ -201,10 +206,11 @@ def partial_dependence(
                         )
                     )
                 else:
-                    row.append(np.mean(model.predict(rvs_)))
-            zi.append(row)
+                    row_partial_dependence.append(np.mean(model.predict(rvs_)))
+            zi_partial_dependence.append(row_partial_dependence)
+            zi_standard_deviation.append(row_standard_deviation)
 
-        return xi, yi, np.array(zi).T
+        return xi, yi, np.array(zi_partial_dependence).T, np.array(zi_standard_deviation).T
 
 
 def plot_objective_1d(
@@ -343,8 +349,10 @@ def plot_objective(
     alpha=0.25,
     margin=0.65,
     colors=None,
-    fig=None,
-    ax=None,
+    partial_dependence_figure=None,
+    partial_dependence_axes=None,
+    standard_deviation_figure=None,
+    standard_deviation_axes=None,
 ):
     """Pairwise partial dependence plot of the objective function.
     The diagonal shows the partial dependence for dimension `i` with
@@ -386,14 +394,14 @@ def plot_objective(
         Margin in inches around the plot.
     * `colors` [list of tuples, default=None]
         Colors to use for the optima.
-    * `fig` [Matplotlib figure, default=None]
-        Figure to use for plotting. If None, it will create one.
-    * `ax` [k x k axes, default=None]
+    * `partial_dependence_figure` [Matplotlib figure, default=None]
+        Figure to use for plotting the partial dependence. If None, it will create one.
+    * `partial_dependence_axes` [k x k axes, default=None]
         Axes on which to plot the marginals. If None, it will create appropriate
         axes.
     Returns
     -------
-    * `ax`: [`Axes`]:
+    * `partial_dependence_axes`: [`Axes`]:
         The matplotlib axes.
     """
     if colors is None:
@@ -414,15 +422,29 @@ def plot_objective(
         raise ValueError(
             "Valid values for zscale are 'linear' and 'log'," " not '%s'." % zscale
         )
-    if fig is None:
-        fig, ax = plt.subplots(
+    if partial_dependence_figure is None:
+        partial_dependence_figure, partial_dependence_axes = plt.subplots(
             space.n_dims,
             space.n_dims,
             figsize=(size * space.n_dims, size * space.n_dims),
         )
-    width, height = fig.get_size_inches()
+    if plot_standard_deviation and standard_deviation_figure is None:
+        standard_deviation_figure, standard_deviation_axes = plt.subplots(
+            space.n_dims,
+            space.n_dims,
+            figsize=(size * space.n_dims, size * space.n_dims),
+        )
+    width, height = partial_dependence_figure.get_size_inches()
 
-    fig.subplots_adjust(
+    partial_dependence_figure.subplots_adjust(
+        left=margin / width,
+        right=1 - margin / width,
+        bottom=margin / height,
+        top=1 - margin / height,
+        hspace=0.1,
+        wspace=0.1,
+    )
+    standard_deviation_figure.subplots_adjust(
         left=margin / width,
         right=1 - margin / width,
         bottom=margin / height,
@@ -449,7 +471,7 @@ def plot_objective(
     for i in range(space.n_dims):
         for j in range(space.n_dims):
             if i == j:
-                xi, yi = partial_dependence(
+                xi, yi_partial_dependence, yi_standard_deviation = partial_dependence(
                     space,
                     result.models[-1],
                     regression_object,
@@ -461,27 +483,43 @@ def plot_objective(
                     sample_points=rvs_transformed,
                     n_points=n_points,
                 )
-                yi_min, yi_max = np.min(yi), np.max(yi)
-                ax[i, i].plot(xi, yi, color=colors[1])
+                yi_min_partial_dependence, yi_max_partial_dependence = np.min(yi_partial_dependence), np.max(yi_partial_dependence)
+                yi_min_standard_deviation, yi_max_standard_deviation = np.min(yi_standard_deviation), np.max(yi_standard_deviation)
+                partial_dependence_axes[i, i].plot(xi, yi_partial_dependence, color=colors[1])
+                standard_deviation_axes[i, i].plot(xi, yi_standard_deviation, color=colors[1])
                 if failures != 10:
-                    ax[i, i].axvline(min_ucb[i], linestyle="--", color=colors[5], lw=1)
-                    ax[i, i].axvline(min_x[i], linestyle="--", color=colors[3], lw=1)
-                    ax[i, i].text(
+                    partial_dependence_axes[i, i].axvline(min_ucb[i], linestyle="--", color=colors[5], lw=1)
+                    standard_deviation_axes[i, i].axvline(min_ucb[i], linestyle="--", color=colors[5], lw=1)
+                    partial_dependence_axes[i, i].axvline(min_x[i], linestyle="--", color=colors[3], lw=1)
+                    standard_deviation_axes[i, i].axvline(min_x[i], linestyle="--", color=colors[3], lw=1)
+                    partial_dependence_axes[i, i].text(
                         min_ucb[i],
-                        yi_min + 0.7 * (yi_max - yi_min),
+                        yi_min_partial_dependence + 0.7 * (yi_max_partial_dependence - yi_min_partial_dependence),
                         f"{np.around(min_ucb[i], 4)}",
                         color=colors[5],
                     )
-                    ax[i, i].text(
+                    standard_deviation_axes[i, i].text(
+                        min_ucb[i],
+                        yi_min_standard_deviation + 0.7 * (yi_max_standard_deviation - yi_min_standard_deviation),
+                        f"{np.around(min_ucb[i], 4)}",
+                        color=colors[5],
+                    )
+                    partial_dependence_axes[i, i].text(
                         min_x[i],
-                        yi_min + 0.9 * (yi_max - yi_min),
+                        yi_min_partial_dependence + 0.9 * (yi_max_partial_dependence - yi_min_partial_dependence),
+                        f"{np.around(min_x[i], 4)}",
+                        color=colors[3],
+                    )
+                    standard_deviation_axes[i, i].text(
+                        min_x[i],
+                        yi_min_standard_deviation + 0.9 * (yi_max_standard_deviation - yi_min_standard_deviation),
                         f"{np.around(min_x[i], 4)}",
                         color=colors[3],
                     )
 
             # lower triangle
             elif i > j:
-                xi, yi, zi = partial_dependence(
+                xi, yi, zi_partial_dependence, zi_standard_deviation = partial_dependence(
                     space,
                     result.models[-1],
                     regression_object,
@@ -493,29 +531,42 @@ def plot_objective(
                     rvs_transformed,
                     n_points,
                 )
-                contour_plot[i, j] = ax[i, j].contourf(
-                    xi, yi, zi, levels, locator=locator, cmap="viridis_r"
+                contour_plot_partial_dependence[i, j] = partial_dependence_axes[i, j].contourf(
+                    xi, yi, zi_partial_dependence, levels, locator=locator, cmap="viridis_r"
                 )
-                #fig.colorbar(contour_plot[i, j], ax=ax[i, j])
-                ax[i, j].scatter(
+                contour_plot_standard_deviation[i, j] = standard_deviation_axes[i, j].contourf(
+                    xi, yi, zi_standard_deviation, levels, locator=locator, cmap="viridis_r"
+                )
+                #partial_dependence_figure.colorbar(contour_plot_partial_dependence[i, j], ax=partial_dependence_axes[i, j])
+                partial_dependence_axes[i, j].scatter(
+                    samples[:, j], samples[:, i], c="k", s=10, lw=0.0, alpha=alpha
+                )
+                standard_deviation_axes[i, j].scatter(
                     samples[:, j], samples[:, i], c="k", s=10, lw=0.0, alpha=alpha
                 )
                 if failures != 10:
-                    ax[i, j].scatter(
+                    partial_dependence_axes[i, j].scatter(
                         next_point[j], next_point[i], c=["xkcd:pink"], s=20, lw=0.0
                     )
-                    ax[i, j].scatter(
+                    standard_deviation_axes[i, j].scatter(
+                        next_point[j], next_point[i], c=["xkcd:pink"], s=20, lw=0.0
+                    )
+                    partial_dependence_axes[i, j].scatter(
                         min_ucb[j], min_ucb[i], c=["xkcd:orange"], s=20, lw=0.0
                     )
-                    ax[i, j].scatter(min_x[j], min_x[i], c=["r"], s=20, lw=0.0)
-                z_min[i, j] = np.min(zi)
-                z_max[i, j] = np.max(zi)
-                z_ranges[i, j] = np.max(zi) - np.min(zi)
-                ax[i, j].text(
+                    standard_deviation_axes[i, j].scatter(
+                        min_ucb[j], min_ucb[i], c=["xkcd:orange"], s=20, lw=0.0
+                    )
+                    partial_dependence_axes[i, j].scatter(min_x[j], min_x[i], c=["r"], s=20, lw=0.0)
+                    standard_deviation_axes[i, j].scatter(min_x[j], min_x[i], c=["r"], s=20, lw=0.0)
+                z_min_partial_dependence[i, j] = np.min(zi_partial_dependence)
+                z_max_partial_dependence[i, j] = np.max(zi_partial_dependence)
+                z_ranges_partial_dependence[i, j] = np.max(zi_partial_dependence) - np.min(zi_partial_dependence)
+                partial_dependence_axes[i, j].text(
                     0.5,
                     0.5,
                     np.format_float_positional(
-                        z_ranges[i, j],
+                        z_ranges_partial_dependence[i, j],
                         precision=2,
                         unique=False,
                         fractional=False,
@@ -523,7 +574,24 @@ def plot_objective(
                     ),
                     horizontalalignment="center",
                     verticalalignment="center",
-                    transform=ax[i, j].transAxes,
+                    transform=partial_dependence_axes[i, j].transAxes,
+                )
+                z_min_standard_deviation[i, j] = np.min(zi_standard_deviation)
+                z_max__standard_deviation[i, j] = np.max(zi_standard_deviation)
+                z_ranges_standard_deviation[i, j] = np.max(zi_standard_deviation) - np.min(zi_standard_deviation)
+                standard_deviation_axes[i, j].text(
+                    0.5,
+                    0.5,
+                    np.format_float_positional(
+                        z_ranges_standard_deviation[i, j],
+                        precision=2,
+                        unique=False,
+                        fractional=False,
+                        trim="k",
+                    ),
+                    horizontalalignment="center",
+                    verticalalignment="center",
+                    transform=standard_deviation_axes[i, j].transAxes,
                 )
     # Get all dimensions.
     plot_dims = []
@@ -534,34 +602,56 @@ def plot_objective(
     for i in range(space.n_dims):
         for j in range(space.n_dims):
             if i > j:
-                contour_plot[i, j].set_clim(vmin=np.min(z_min), vmax=np.max(z_max))
-    fig.colorbar(
+                contour_plot_partial_dependence[i, j].set_clim(vmin=np.min(z_min_partial_dependence), vmax=np.max(z_max_partial_dependence))
+                contour_plot_standard_deviation[i, j].set_clim(vmin=np.min(z_min_standard_deviation), vmax=np.max(z_max_standard_deviation))
+    partial_dependence_figure.colorbar(
         plt.cm.ScalarMappable(
-            norm=matplotlib.colors.Normalize(vmin=np.min(z_min), vmax=np.max(z_max)),
+            norm=matplotlib.colors.Normalize(vmin=np.min(z_min_partial_dependence), vmax=np.max(z_max_partial_dependence)),
             cmap="viridis_r",
         ),
-        ax=ax[np.triu_indices(space.n_dims, k=1)],
+        ax=partial_dependence_axes[np.triu_indices(space.n_dims, k=1)],
         shrink=0.7,
     )
-    #plt.cm.ScalarMappable.set_clim(self, vmin=np.min(z_min), vmax=np.max(z_max))
-    #fig.colorbar(contour_plot[1, 0], ax=ax[np.triu_indices(space.n_dims, k=1)])
-    if plot_standard_deviation:
-        return _format_scatter_plot_axes(
-            ax,
+    standard_deviation_figure.colorbar(
+        plt.cm.ScalarMappable(
+            norm=matplotlib.colors.Normalize(vmin=np.min(z_min_standard_deviation), vmax=np.max(z_max_standard_deviation)),
+            cmap="viridis_r",
+        ),
+        ax=standard_deviation_axes[np.triu_indices(space.n_dims, k=1)],
+        shrink=0.7,
+    )
+    #plt.cm.ScalarMappable.set_clim(self, vmin=np.min(z_min_partial_dependence), vmax=np.max(z_max_partial_dependence))
+    #partial_dependence_figure.colorbar(contour_plot_partial_dependence[1, 0], ax=partial_dependence_axes[np.triu_indices(space.n_dims, k=1)])
+    # if plot_standard_deviation:
+    #     return _format_scatter_plot_axes(
+    #         ax,
+    #         space,
+    #         ylabel="Standard deviation",
+    #         plot_dims=plot_dims,
+    #         dim_labels=dimensions,
+    #     )
+    # else:
+    #     return _format_scatter_plot_axes(
+    #         ax,
+    #         space,
+    #         ylabel="Partial dependence",
+    #         plot_dims=plot_dims,
+    #         dim_labels=dimensions,
+    #     )
+    return _format_scatter_plot_axes(
+            partial_dependence_axes,
+            space,
+            ylabel="Partial dependence",
+            plot_dims=plot_dims,
+            dim_labels=dimensions,
+        ),
+        _format_scatter_plot_axes(
+            standard_deviation_axes,
             space,
             ylabel="Standard deviation",
             plot_dims=plot_dims,
             dim_labels=dimensions,
         )
-    else:
-        return _format_scatter_plot_axes(
-            ax,
-            space,
-            ylabel="Partial dependence",
-            plot_dims=plot_dims,
-            dim_labels=dimensions,
-        )
-
 
 def plot_optima(
     iterations: np.ndarray,

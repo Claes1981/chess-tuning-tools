@@ -765,15 +765,23 @@ def plot_results(
         save_params["bbox_inches"] = Bbox([[0.5, -0.2], [9.25, 5.5]])
     else:
         plt.style.use("dark_background")
-        fig, ax = plt.subplots(
+        partial_dependence_figure, partial_dependence_axes = plt.subplots(
             nrows=optimizer.space.n_dims,
             ncols=optimizer.space.n_dims,
             figsize=(3 * optimizer.space.n_dims, 3 * optimizer.space.n_dims),
         )
+        standard_deviation_figure, standard_deviation_axes = plt.subplots(
+            nrows=optimizer.space.n_dims,
+            ncols=optimizer.space.n_dims,
+            figsize=(3 * optimizer.space.n_dims, 3 * optimizer.space.n_dims),
+        )
+
         for i in range(optimizer.space.n_dims):
             for j in range(optimizer.space.n_dims):
-                ax[i, j].set_facecolor("xkcd:dark grey")
-        fig.patch.set_facecolor("xkcd:dark grey")
+                partial_dependence_axes[i, j].set_facecolor("xkcd:dark grey")
+                standard_deviation_axes[i, j].set_facecolor("xkcd:dark grey")
+        partial_dependence_figure.patch.set_facecolor("xkcd:dark grey")
+        standard_deviation_figure.patch.set_facecolor("xkcd:dark grey")
         plot_objective(
             result_object,
             regression_object=None,
@@ -782,26 +790,39 @@ def plot_results(
             n_samples=100,
             dimensions=parameter_names,
             next_point=optimizer._next_x,
-            plot_standard_deviation=False,
+            plot_standard_deviation=True,
             plot_polynomial_regression=False,
-            fig=fig,
-            ax=ax,
+            partial_dependence_figure=partial_dependence_figure,
+            partial_dependence_axes=partial_dependence_axes,
+            standard_deviation_figure=standard_deviation_figure,
+            standard_deviation_axes=standard_deviation_axes,
         )
     plotpath = pathlib.Path(plot_path)
     for subdir in ["landscapes", "elo", "optima"]:
         (plotpath / subdir).mkdir(parents=True, exist_ok=True)
-    full_plotpath = (
+    full_plotpath_partial_dependence = (
         plotpath / f"landscapes/partial_dependence-{timestr}-{current_iteration}.png"
     )
+    full_plotpath_standard_deviation = (
+        plotpath / f"landscapes/standard_deviation-{timestr}-{current_iteration}.png"
+    )
     dpi = 150 if optimizer.space.n_dims == 1 else 300
-    plt.savefig(
-        full_plotpath,
+    partial_dependence_figure.savefig(
+        full_plotpath_partial_dependence,
         dpi=dpi,
         facecolor="xkcd:dark grey",
         **save_params,
     )
-    logger.info(f"Saving a partial dependence plot to {full_plotpath}.")
-    plt.close(fig)
+    logger.info(f"Saving a partial dependence plot to {full_plotpath_partial_dependence}.")
+    plt.close(partial_dependence_figure)
+    standard_deviation_figure.savefig(
+        full_plotpath_standard_deviation,
+        dpi=dpi,
+        facecolor="xkcd:dark grey",
+        **save_params,
+    )
+    logger.info(f"Saving a standard deviation plot to {full_plotpath_standard_deviation}.")
+    plt.close(standard_deviation_figure)
 
     logger.debug(
         "Starting to compute the next polynomial regression partial dependence plot."
@@ -904,45 +925,45 @@ def plot_results(
     fig.savefig(full_plotpath, dpi=150, facecolor="xkcd:dark grey")
     plt.close(fig)
 
-    logger.debug("Starting to compute the next standard deviation plot.")
-    timestr = time.strftime("%Y%m%d-%H%M%S")
-    plt.style.use("dark_background")
-    standard_deviation_figure, standard_deviation_axes = plt.subplots(
-        nrows=optimizer.space.n_dims,
-        ncols=optimizer.space.n_dims,
-        figsize=(3 * optimizer.space.n_dims, 3 * optimizer.space.n_dims),
-    )
-    standard_deviation_figure.patch.set_facecolor("xkcd:dark grey")
-    for i in range(optimizer.space.n_dims):
-        for j in range(optimizer.space.n_dims):
-            standard_deviation_axes[i, j].set_facecolor("xkcd:dark grey")
-
-    plot_objective(
-        result_object,
-        regression_object=None,
-        polynomial_features_object=None,
-        n_points=10,
-        n_samples=30,
-        dimensions=parameter_names,
-        next_point=optimizer._next_x,
-        plot_standard_deviation=True,
-        plot_polynomial_regression=False,
-        fig=standard_deviation_figure,
-        ax=standard_deviation_axes,
-    )
-    standard_deviation_full_plotpath = (
-        plotpath / f"landscapes/standard_deviation-{timestr}-{current_iteration}.png"
-    )
-    plt.savefig(
-        standard_deviation_full_plotpath,
-        dpi=300,
-        facecolor="xkcd:dark grey",
-        **save_params,
-    )
-    logger.info(
-        f"Saving a standard deviation plot to {standard_deviation_full_plotpath}."
-    )
-    plt.close(standard_deviation_figure)
+    # logger.debug("Starting to compute the next standard deviation plot.")
+    # timestr = time.strftime("%Y%m%d-%H%M%S")
+    # plt.style.use("dark_background")
+    # standard_deviation_figure, standard_deviation_axes = plt.subplots(
+    #     nrows=optimizer.space.n_dims,
+    #     ncols=optimizer.space.n_dims,
+    #     figsize=(3 * optimizer.space.n_dims, 3 * optimizer.space.n_dims),
+    # )
+    # standard_deviation_figure.patch.set_facecolor("xkcd:dark grey")
+    # for i in range(optimizer.space.n_dims):
+    #     for j in range(optimizer.space.n_dims):
+    #         standard_deviation_axes[i, j].set_facecolor("xkcd:dark grey")
+    #
+    # plot_objective(
+    #     result_object,
+    #     regression_object=None,
+    #     polynomial_features_object=None,
+    #     n_points=10,
+    #     n_samples=30,
+    #     dimensions=parameter_names,
+    #     next_point=optimizer._next_x,
+    #     plot_standard_deviation=True,
+    #     plot_polynomial_regression=False,
+    #     fig=standard_deviation_figure,
+    #     ax=standard_deviation_axes,
+    # )
+    # standard_deviation_full_plotpath = (
+    #     plotpath / f"landscapes/standard_deviation-{timestr}-{current_iteration}.png"
+    # )
+    # plt.savefig(
+    #     standard_deviation_full_plotpath,
+    #     dpi=300,
+    #     facecolor="xkcd:dark grey",
+    #     **save_params,
+    # )
+    # logger.info(
+    #     f"Saving a standard deviation plot to {standard_deviation_full_plotpath}."
+    # )
+    # plt.close(standard_deviation_figure)
     plt.rcdefaults()
 
     timestr = time.strftime("%Y%m%d-%H%M%S")
