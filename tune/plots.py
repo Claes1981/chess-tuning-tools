@@ -698,8 +698,7 @@ def plot_objective(
                 ylabel="Partial dependence",
                 plot_dims=plot_dims,
                 dim_labels=dimensions,
-            ),
-            _format_scatter_plot_axes(
+            ), _format_scatter_plot_axes(
                 standard_deviation_axes,
                 space,
                 ylabel="Standard deviation",
