@@ -693,19 +693,19 @@ def plot_objective(
     #     )
     if plot_standard_deviation:
         return _format_scatter_plot_axes(
-            partial_dependence_axes,
-            space,
-            ylabel="Partial dependence",
-            plot_dims=plot_dims,
-            dim_labels=dimensions,
-        ),
-        _format_scatter_plot_axes(
-            standard_deviation_axes,
-            space,
-            ylabel="Standard deviation",
-            plot_dims=plot_dims,
-            dim_labels=dimensions,
-        )
+                partial_dependence_axes,
+                space,
+                ylabel="Partial dependence",
+                plot_dims=plot_dims,
+                dim_labels=dimensions,
+            ),
+            _format_scatter_plot_axes(
+                standard_deviation_axes,
+                space,
+                ylabel="Standard deviation",
+                plot_dims=plot_dims,
+                dim_labels=dimensions,
+            )
     else:
         return _format_scatter_plot_axes(
             partial_dependence_axes,
