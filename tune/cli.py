@@ -1,4 +1,5 @@
 """Console script for chess_tuning_tools."""
+
 import json
 import logging
 import sys
