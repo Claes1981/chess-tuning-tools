@@ -884,8 +884,10 @@ def plot_results(
         next_point=optimizer._next_x,
         plot_standard_deviation=False,
         plot_polynomial_regression=True,
-        fig=fig,
-        ax=ax,
+        partial_dependence_figure=fig,
+        partial_dependence_axes=ax,
+        standard_deviation_figure=None,
+        standard_deviation_axes=None,
     )
     plotpath = pathlib.Path(plot_path)
     for subdir in ["landscapes", "elo", "optima"]:
