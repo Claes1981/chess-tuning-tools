@@ -463,7 +463,7 @@ def plot_objective(
             hspace=0.1,
             wspace=0.1,
         )
-    )
+
     failures = 0
     while True:
         try:
