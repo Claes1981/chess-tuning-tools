@@ -417,12 +417,18 @@ def plot_objective(
     if colors is None:
         colors = plt.cm.get_cmap("Set3").colors
     space = result.space
-    contour_plot = np.empty((space.n_dims, space.n_dims), dtype=object)
+    contour_plot_partial_dependence = np.empty((space.n_dims, space.n_dims), dtype=object)
     samples = np.asarray(result.x_iters)
     rvs_transformed = space.transform(space.rvs(n_samples=n_samples))
-    z_min = np.full((space.n_dims, space.n_dims), np.inf)
-    z_max = np.full((space.n_dims, space.n_dims), np.NINF)
-    z_ranges = np.zeros((space.n_dims, space.n_dims))
+    z_min_partial_dependence = np.full((space.n_dims, space.n_dims), np.inf)
+    z_max_partial_dependence = np.full((space.n_dims, space.n_dims), np.NINF)
+    z_ranges_partial_dependence = np.zeros((space.n_dims, space.n_dims))
+    if plot_standard_deviation:
+        contour_plot_standard_deviation = np.empty((space.n_dims, space.n_dims), dtype=object)
+        z_min_standard_deviation = np.full((space.n_dims, space.n_dims), np.inf)
+        z_max_standard_deviation = np.full((space.n_dims, space.n_dims), np.NINF)
+        z_ranges_standard_deviation = np.zeros((space.n_dims, space.n_dims))
+
 
     if zscale == "log":
         locator = LogLocator()
