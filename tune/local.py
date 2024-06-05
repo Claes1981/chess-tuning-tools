@@ -813,7 +813,9 @@ def plot_results(
         facecolor="xkcd:dark grey",
         **save_params,
     )
-    logger.info(f"Saving a partial dependence plot to {full_plotpath_partial_dependence}.")
+    logger.info(
+        f"Saving a partial dependence plot to {full_plotpath_partial_dependence}."
+    )
     plt.close(partial_dependence_figure)
     standard_deviation_figure.savefig(
         full_plotpath_standard_deviation,
@@ -821,7 +823,9 @@ def plot_results(
         facecolor="xkcd:dark grey",
         **save_params,
     )
-    logger.info(f"Saving a standard deviation plot to {full_plotpath_standard_deviation}.")
+    logger.info(
+        f"Saving a standard deviation plot to {full_plotpath_standard_deviation}."
+    )
     plt.close(standard_deviation_figure)
 
     logger.debug(
