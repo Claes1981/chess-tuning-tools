@@ -794,6 +794,9 @@ def local(  # noqa: C901
             )
 
         root_logger.debug(f"Number of data points: {len(X)}")
+        root_logger.debug(
+            f"Number of different data points: {len(np.unique(np.array(X), axis=0))}"
+        )
 
         # Update model with the new data:
         if reset:
