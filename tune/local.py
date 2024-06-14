@@ -22,6 +22,7 @@ from prettytable import PrettyTable
 
 import dill
 import matplotlib.pyplot as plt
+import corner
 import numpy as np
 import pandas as pd
 from bask import Optimizer #, acquisition
@@ -744,6 +745,38 @@ def plot_results(
         If None, the current iteration is assumed to be the amount of points collected.
     """
     logger = logging.getLogger(LOGGER)
+    logger.debug(
+        f"Hyperparameters Markov chain Monte Carlo mean acceptance fraction: {np.mean(optimizer.gp._sampler.acceptance_fraction)}"
+    )
+    logger.debug(
+        f"Integrated autocorrelation time estimates: {optimizer.gp._sampler.get_autocorr_time(quiet=True)}"
+    )
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    plotpath = pathlib.Path(plot_path)
+    for subdir in ["landscapes", "elo", "optima", "hyperparameters"]:
+        (plotpath / subdir).mkdir(parents=True, exist_ok=True)
+    full_plotpath = (
+        plotpath
+        / f"hyperparameters/marginalized-distribution-{timestr}-{current_iteration}.png"
+    )
+    dpi = 150 if optimizer.space.n_dims == 1 else 50
+    save_params = dict()
+    corner.corner(
+        optimizer.gp.chain_,
+        show_titles=True,
+        plot_datapoints=True,
+        quantiles=[0.16, 0.5, 0.84],
+    )
+    plt.savefig(
+        full_plotpath,
+        dpi=dpi,
+        facecolor="xkcd:dark grey",
+        **save_params,
+    )
+    logger.info(
+        f"Saving a hyperparameters marginalized distributions corner plot to {full_plotpath}."
+    )
+    plt.close()
 
     plt.rcdefaults()
     logger.debug("Starting to compute the next partial dependence plot.")
