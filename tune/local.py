@@ -1682,6 +1682,7 @@ def update_model(
                 n_samples=n_samples,
                 gp_samples=gp_samples,
                 gp_burnin=gp_burnin,
+                progress=True,
             )
             later = datetime.now()
             difference = (later - now).total_seconds()
