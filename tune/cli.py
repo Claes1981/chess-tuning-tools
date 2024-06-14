@@ -590,8 +590,8 @@ def local(  # noqa: C901
             if (
                 plot_every_n > 0
                 and iteration % plot_every_n == 0
-                and (not is_first_iteration_after_program_start or plot_on_resume)
-            ):
+                and not is_first_iteration_after_program_start
+            ) or (is_first_iteration_after_program_start and plot_on_resume):
                 plot_results(
                     optimizer=opt,
                     result_object=result_object,
