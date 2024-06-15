@@ -851,6 +851,7 @@ def local(  # noqa: C901
                 gp_initial_burnin=settings.get("gp_burnin", gp_burnin),
                 gp_initial_samples=settings.get("gp_samples", gp_samples),
                 gp_walkers_per_thread=settings.get("gp_walkers_per_thread", gp_walkers_per_thread),
+                gp_priors=gp_priors,
             )
         else:
             root_logger.info("Updating model.")
