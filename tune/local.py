@@ -461,6 +461,7 @@ def initialize_optimizer(
     model_path: Optional[str] = None,
     gp_initial_burnin: int = 100,
     gp_initial_samples: int = 300,
+    gp_walkers_per_thread: int = 100,
     gp_priors: Optional[List[Callable[[float], float]]] = None,
 ) -> Optimizer:
     """Create an Optimizer object and if needed resume and/or reinitialize.
@@ -604,6 +605,7 @@ def initialize_optimizer(
             gp_burnin=gp_initial_burnin,
             gp_samples=gp_initial_samples,
             n_samples=acq_function_samples,
+            n_walkers_per_thread=gp_walkers_per_thread,
             progress=True,
         )
         logger.info("Importing finished.")
@@ -1639,6 +1641,7 @@ def update_model(
     gp_samples: int = 300,
     gp_initial_burnin: int = 100,
     gp_initial_samples: int = 300,
+    gp_walkers_per_thread: int = 100,
 ) -> None:
     """Update the optimizer model with the newest data.
 
@@ -1682,6 +1685,7 @@ def update_model(
                 n_samples=n_samples,
                 gp_samples=gp_samples,
                 gp_burnin=gp_burnin,
+                n_walkers_per_thread=gp_walkers_per_thread,
                 progress=True,
             )
             later = datetime.now()

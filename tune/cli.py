@@ -211,7 +211,7 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     default=300,
     type=int,
     help="Number of model parameters to sample for the model. "
-    "This is used during tuning and it should be a multiple of 100.",
+    "This is used during tuning and it should be a multiple of --gp-walkers-per-thread.",
     show_default=True,
 )
 @click.option(
@@ -228,7 +228,16 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     type=int,
     help="Number of model parameters to sample for the initial model. "
     "This is only used when resuming or for the first model. "
-    "Should be a multiple of 100.",
+    "Should be a multiple of --gp-walkers-per-thread.",
+    show_default=True,
+)
+@click.option(
+    "--gp-walkers-per-thread",
+    default=100,
+    type=int,
+    help="Number of MCMC ensemble walkers to employ during inference. "
+    "Since multithreaded MCMC is not implemented, this equals "
+    "number of MCMC walkers per thread.",
     show_default=True,
 )
 #@click.option(
@@ -430,6 +439,7 @@ def local(  # noqa: C901
     gp_samples=300,
     gp_initial_burnin=100,
     gp_initial_samples=300,
+    gp_walkers_per_thread=100,
     #kernel_lengthscale_prior_lower_bound=0.1,
     #kernel_lengthscale_prior_upper_bound=0.5,
     #kernel_lengthscale_prior_lower_steepness=2.0,
@@ -477,7 +487,7 @@ def local(  # noqa: C901
     #)
     root_logger.debug(f"Got the following tuning settings:\n{json_dict}")
     root_logger.debug(
-        f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, Acquisition function lcb alpha: {acq_function_lcb_alpha}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, GP signal prior scale: {gp_signal_prior_scale}, GP noise prior scale: {gp_noise_prior_scale}, GP lengthscale prior lower bound: {gp_lengthscale_prior_lb}, GP lengthscale prior upper bound: {gp_lengthscale_prior_ub}, Warp inputs: {warp_inputs}, Normalize y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
+        f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, Acquisition function lcb alpha: {acq_function_lcb_alpha}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, GP number of walkers per thread: {gp_walkers_per_thread}, GP signal prior scale: {gp_signal_prior_scale}, GP noise prior scale: {gp_noise_prior_scale}, GP lengthscale prior lower bound: {gp_lengthscale_prior_lb}, GP lengthscale prior upper bound: {gp_lengthscale_prior_ub}, Warp inputs: {warp_inputs}, Normalize y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
     )
     #root_logger.debug(
         #f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Kernel lengthscale prior lower bound: {kernel_lengthscale_prior_lower_bound}, Kernel lengthscale prior upper bound: {kernel_lengthscale_prior_upper_bound}, Kernel lengthscale prior lower steepness: {kernel_lengthscale_prior_lower_steepness}, Kernel lengthscale prior upper steepness: {kernel_lengthscale_prior_upper_steepness}, Warp inputs: {warp_inputs}, Normalize y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
@@ -550,6 +560,7 @@ def local(  # noqa: C901
         model_path=model_path,
         gp_initial_burnin=settings.get("gp_initial_burnin", gp_initial_burnin),
         gp_initial_samples=settings.get("gp_initial_samples", gp_initial_samples),
+        gp_walkers_per_thread=settings.get("gp_walkers_per_thread", gp_walkers_per_thread),
         gp_priors=gp_priors,
     )
     extra_points = load_points_to_evaluate(
@@ -839,6 +850,7 @@ def local(  # noqa: C901
                 model_path=None,
                 gp_initial_burnin=settings.get("gp_burnin", gp_burnin),
                 gp_initial_samples=settings.get("gp_samples", gp_samples),
+                gp_walkers_per_thread=settings.get("gp_walkers_per_thread", gp_walkers_per_thread),
             )
         else:
             root_logger.info("Updating model.")
@@ -867,6 +879,7 @@ def local(  # noqa: C901
                 gp_initial_samples=settings.get(
                     "gp_initial_samples", gp_initial_samples
                 ),
+                gp_walkers_per_thread=settings.get("gp_walkers_per_thread", gp_walkers_per_thread),
             )
 
         # If we used an extra point, we need to reset n_initial_points of the optimizer:
