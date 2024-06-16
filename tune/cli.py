@@ -5,9 +5,9 @@ import logging
 import sys
 from datetime import datetime
 
-#from watchpoints import watch
+# from watchpoints import watch
 import importlib.metadata
-#import pkg_resources
+# import pkg_resources
 
 import click
 import dill
@@ -16,7 +16,8 @@ from atomicwrites import AtomicWriter
 import random
 from skopt.utils import create_result
 from scipy.special import erfinv
-#from scipy.stats import halfnorm
+
+# from scipy.stats import halfnorm
 from bask import acquisition
 
 import tune
@@ -50,7 +51,7 @@ ACQUISITION_FUNC = {
     "vr": acquisition.VarianceReduction(),
 }
 
-#watch.config(pdb=True)
+# watch.config(pdb=True)
 
 @click.group()
 def cli():
@@ -440,10 +441,10 @@ def local(  # noqa: C901
     gp_initial_burnin=100,
     gp_initial_samples=300,
     gp_walkers_per_thread=100,
-    #kernel_lengthscale_prior_lower_bound=0.1,
-    #kernel_lengthscale_prior_upper_bound=0.5,
-    #kernel_lengthscale_prior_lower_steepness=2.0,
-    #kernel_lengthscale_prior_upper_steepness=1.0,
+    # kernel_lengthscale_prior_lower_bound=0.1,
+    # kernel_lengthscale_prior_upper_bound=0.5,
+    # kernel_lengthscale_prior_lower_steepness=2.0,
+    # kernel_lengthscale_prior_upper_steepness=1.0,
     gp_signal_prior_scale=4.0,
     gp_noise_prior_scale=0.0006,
     gp_lengthscale_prior_lb=0.1,
@@ -478,7 +479,7 @@ def local(  # noqa: C901
         verbose=verbose, logfile=settings.get("logfile", logfile)
     )
     # First log the version of chess-tuning-tools:
-    #root_logger.info(f"chess-tuning-tools version: {tune.__version__}")
+    # root_logger.info(f"chess-tuning-tools version: {tune.__version__}")
     root_logger.debug(
         f"Chess Tuning Tools version: {importlib.metadata.version('chess-tuning-tools')}, Bayes-skopt version: {importlib.metadata.version('bask')}, Scikit-optimize version: {importlib.metadata.version('scikit-optimize')}, Scikit-learn version: {importlib.metadata.version('scikit-learn')}, SciPy version: {importlib.metadata.version('scipy')}"
     )
@@ -544,10 +545,10 @@ def local(  # noqa: C901
         random_seed=settings.get("random_seed", random_seed),
         warp_inputs=settings.get("warp_inputs", warp_inputs),
         normalize_y=settings.get("normalize_y", normalize_y),
-        #kernel_lengthscale_prior_lower_bound=settings.get("kernel_lengthscale_prior_lower_bound", kernel_lengthscale_prior_lower_bound),
-        #kernel_lengthscale_prior_upper_bound=settings.get("kernel_lengthscale_prior_upper_bound", kernel_lengthscale_prior_upper_bound),
-        #kernel_lengthscale_prior_lower_steepness=settings.get("kernel_lengthscale_prior_lower_steepness", kernel_lengthscale_prior_lower_steepness),
-        #kernel_lengthscale_prior_upper_steepness=settings.get("kernel_lengthscale_prior_upper_steepness", kernel_lengthscale_prior_upper_steepness),
+        # kernel_lengthscale_prior_lower_bound=settings.get("kernel_lengthscale_prior_lower_bound", kernel_lengthscale_prior_lower_bound),
+        # kernel_lengthscale_prior_upper_bound=settings.get("kernel_lengthscale_prior_upper_bound", kernel_lengthscale_prior_upper_bound),
+        # kernel_lengthscale_prior_lower_steepness=settings.get("kernel_lengthscale_prior_lower_steepness", kernel_lengthscale_prior_lower_steepness),
+        # kernel_lengthscale_prior_upper_steepness=settings.get("kernel_lengthscale_prior_upper_steepness", kernel_lengthscale_prior_upper_steepness),
         n_points=settings.get("n_points", n_points),
         n_initial_points=settings.get("n_initial_points", n_initial_points),
         acq_function=settings.get("acq_function", acq_function),
@@ -585,7 +586,7 @@ def local(  # noqa: C901
         # If a model has been fit, print/plot results so far:
         if len(y) > 0 and opt.gp.chain_ is not None:
             result_object = create_result(Xi=X, yi=y, space=opt.space, models=[opt.gp])
-            #root_logger.debug(f"result_object:\n{result_object}")
+            # root_logger.debug(f"result_object:\n{result_object}")
             result_every_n = settings.get("result_every", result_every)
             if result_every_n > 0 and iteration % result_every_n == 0:
                 try:
@@ -777,7 +778,7 @@ def local(  # noqa: C901
         root_logger.info(
             "Got Elo: {} +- {}".format(-score * 100, np.sqrt(error_variance) * 100)
         )
-        #root_logger.info("Estimated draw rate: {:.2%}".format(draw_rate))
+        # root_logger.info("Estimated draw rate: {:.2%}".format(draw_rate))
 
         X.append(point)
         y.append(score)
@@ -834,10 +835,10 @@ def local(  # noqa: C901
                 random_seed=settings.get("random_seed", random_seed),
                 warp_inputs=settings.get("warp_inputs", warp_inputs),
                 normalize_y=settings.get("normalize_y", normalize_y),
-                #kernel_lengthscale_prior_lower_bound=settings.get("kernel_lengthscale_prior_lower_bound", kernel_lengthscale_prior_lower_bound),
-                #kernel_lengthscale_prior_upper_bound=settings.get("kernel_lengthscale_prior_upper_bound", kernel_lengthscale_prior_upper_bound),
-                #kernel_lengthscale_prior_lower_steepness=settings.get("kernel_lengthscale_prior_lower_steepness", kernel_lengthscale_prior_lower_steepness),
-                #kernel_lengthscale_prior_upper_steepness=settings.get("kernel_lengthscale_prior_upper_steepness", kernel_lengthscale_prior_upper_steepness),
+                # kernel_lengthscale_prior_lower_bound=settings.get("kernel_lengthscale_prior_lower_bound", kernel_lengthscale_prior_lower_bound),
+                # kernel_lengthscale_prior_upper_bound=settings.get("kernel_lengthscale_prior_upper_bound", kernel_lengthscale_prior_upper_bound),
+                # kernel_lengthscale_prior_lower_steepness=settings.get("kernel_lengthscale_prior_lower_steepness", kernel_lengthscale_prior_lower_steepness),
+                # kernel_lengthscale_prior_upper_steepness=settings.get("kernel_lengthscale_prior_upper_steepness", kernel_lengthscale_prior_upper_steepness),
                 n_points=settings.get("n_points", n_points),
                 n_initial_points=settings.get("n_initial_points", n_initial_points),
                 acq_function=current_acq_func,
@@ -893,7 +894,7 @@ def local(  # noqa: C901
         if used_extra_point:
             opt._n_initial_points += 1
 
-        #iteration = len(X)
+        # iteration = len(X)
         is_first_iteration_after_program_start = False
 
         #with AtomicWriter(data_path, mode="wb", overwrite=True).open() as f:
