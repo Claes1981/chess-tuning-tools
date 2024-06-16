@@ -747,12 +747,6 @@ def plot_results(
         If None, the current iteration is assumed to be the amount of points collected.
     """
     logger = logging.getLogger(LOGGER)
-    logger.debug(
-        f"Hyperparameters Markov chain Monte Carlo mean acceptance fraction: {np.mean(optimizer.gp._sampler.acceptance_fraction)}"
-    )
-    logger.debug(
-        f"Integrated autocorrelation time estimates: {optimizer.gp._sampler.get_autocorr_time(quiet=True)}"
-    )
     timestr = time.strftime("%Y%m%d-%H%M%S")
     plotpath = pathlib.Path(plot_path)
     for subdir in ["landscapes", "elo", "optima", "hyperparameters"]:
