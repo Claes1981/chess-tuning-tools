@@ -902,10 +902,10 @@ def local(  # noqa: C901
         with AtomicWriter(model_path, mode="wb", overwrite=True).open() as f:
             dill.dump(opt, f)
         
-        logger.debug(
+        root_logger.debug(
             f"Hyperparameters Markov chain Monte Carlo mean acceptance fraction: {np.mean(opt.gp._sampler.acceptance_fraction)}"
         )
-        logger.debug(
+        root_logger.debug(
             f"Integrated autocorrelation time estimates: {opt.gp._sampler.get_autocorr_time(quiet=True)}"
         )
 
