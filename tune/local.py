@@ -764,9 +764,10 @@ def plot_results(
     dpi = 150 if optimizer.space.n_dims == 1 else 50
     save_params = dict()
     corner.corner(
-        optimizer.gp.chain_,
+        np.exp(optimizer.gp.chain_),
         show_titles=True,
         plot_datapoints=True,
+        axes_scale="log",
         quantiles=[0.16, 0.5, 0.84],
     )
     plt.savefig(
