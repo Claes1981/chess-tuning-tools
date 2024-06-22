@@ -863,90 +863,93 @@ def plot_results(
     )
     plt.close(confidence_interval_width_figure)
 
-    logger.debug(
-        "Starting to compute the next polynomial regression partial dependence plot."
-    )
-
-    timestr = time.strftime("%Y%m%d-%H%M%S")
-
     polynomial_features = PolynomialFeatures(degree=2)
     samples_polynomial_features_transformed = polynomial_features.fit_transform(
         optimizer.space.transform(np.asarray(optimizer.Xi))
     )
 
-    logger.debug(
-        f"polynomial_features.n_output_features_= {polynomial_features.n_output_features_}"
-    )
+    if (
+        len(np.unique(np.array(optimizer.Xi), axis=0))
+        >= polynomial_features.n_output_features_
+    ):
 
-    LinearRegression_polynomial = LinearRegression()
-    LinearRegression_polynomial.fit(
-        samples_polynomial_features_transformed,
-        np.asarray(optimizer.yi),
-        1 / np.asarray(optimizer.noisei),
-    )
+        logger.debug(
+            "Starting to compute the next polynomial regression partial dependence plot."
+        )
 
-    logger.debug(
-        f"LinearRegression_polynomial.score= {LinearRegression_polynomial.score(samples_polynomial_features_transformed, np.asarray(optimizer.yi), 1 / np.asarray(optimizer.noisei))}"
-    )
+        timestr = time.strftime("%Y%m%d-%H%M%S")
 
-    # breakpoint()
+        logger.debug(
+            f"polynomial_features.n_output_features_= {polynomial_features.n_output_features_}"
+        )
 
-    LinearRegression_polynomial_predicted_scores = LinearRegression_polynomial.predict(
-        samples_polynomial_features_transformed
-    )
-    LinearRegression_polynomial_residuals = (
-        np.asarray(optimizer.yi) - LinearRegression_polynomial_predicted_scores
-    )
-    LinearRegression_polynomial_weighted_residuals = (
-        LinearRegression_polynomial_residuals
-        * np.sqrt(1 / np.asarray(optimizer.noisei))
-    )
+        LinearRegression_polynomial = LinearRegression()
+        LinearRegression_polynomial.fit(
+            samples_polynomial_features_transformed,
+            np.asarray(optimizer.yi),
+            1 / np.asarray(optimizer.noisei),
+        )
 
-    # Save the landscape:
-    plt.style.use("dark_background")
-    fig, ax = plt.subplots(
-        nrows=optimizer.space.n_dims,
-        ncols=optimizer.space.n_dims,
-        figsize=(3 * optimizer.space.n_dims, 3 * optimizer.space.n_dims),
-    )
-    for i in range(optimizer.space.n_dims):
-        for j in range(optimizer.space.n_dims):
-            ax[i, j].set_facecolor("xkcd:dark grey")
-    fig.patch.set_facecolor("xkcd:dark grey")
-    plot_objective(
-        result_object,
-        regression_object=LinearRegression_polynomial,
-        polynomial_features_object=polynomial_features,
-        n_points=20,
-        n_samples=500,
-        dimensions=parameter_names,
-        next_point=optimizer._next_x,
-        plot_confidence_interval_width=False,
-        plot_polynomial_regression=True,
-        partial_dependence_figure=fig,
-        partial_dependence_axes=ax,
-        confidence_interval_width_figure=None,
-        confidence_interval_width_axes=None,
-        confidence=confidence,
-    )
-    plotpath = pathlib.Path(plot_path)
-    for subdir in ["landscapes", "elo", "optima"]:
-        (plotpath / subdir).mkdir(parents=True, exist_ok=True)
-    full_plotpath = (
-        plotpath
-        / f"landscapes/partial_dependence_polynomial_regression-{timestr}-{current_iteration}.png"
-    )
-    dpi = 150 if optimizer.space.n_dims == 1 else 300
-    plt.savefig(
-        full_plotpath,
-        dpi=dpi,
-        facecolor="xkcd:dark grey",
-        **save_params,
-    )
-    logger.info(
-        f"Saving a polynomial regression partial dependence plot to {full_plotpath}."
-    )
-    plt.close(fig)
+        logger.debug(
+            f"LinearRegression_polynomial.score= {LinearRegression_polynomial.score(samples_polynomial_features_transformed, np.asarray(optimizer.yi), 1 / np.asarray(optimizer.noisei))}"
+        )
+
+        LinearRegression_polynomial_predicted_scores = (
+            LinearRegression_polynomial.predict(samples_polynomial_features_transformed)
+        )
+        LinearRegression_polynomial_residuals = (
+            np.asarray(optimizer.yi) - LinearRegression_polynomial_predicted_scores
+        )
+        LinearRegression_polynomial_weighted_residuals = (
+            LinearRegression_polynomial_residuals
+            * np.sqrt(1 / np.asarray(optimizer.noisei))
+        )
+
+        # Save the landscape:
+        plt.style.use("dark_background")
+        fig, ax = plt.subplots(
+            nrows=optimizer.space.n_dims,
+            ncols=optimizer.space.n_dims,
+            figsize=(3 * optimizer.space.n_dims, 3 * optimizer.space.n_dims),
+        )
+        for i in range(optimizer.space.n_dims):
+            for j in range(optimizer.space.n_dims):
+                ax[i, j].set_facecolor("xkcd:dark grey")
+        fig.patch.set_facecolor("xkcd:dark grey")
+        plot_objective(
+            result_object,
+            regression_object=LinearRegression_polynomial,
+            polynomial_features_object=polynomial_features,
+            n_points=20,
+            n_samples=500,
+            dimensions=parameter_names,
+            next_point=optimizer._next_x,
+            plot_confidence_interval_width=False,
+            plot_polynomial_regression=True,
+            partial_dependence_figure=fig,
+            partial_dependence_axes=ax,
+            confidence_interval_width_figure=None,
+            confidence_interval_width_axes=None,
+            confidence=confidence,
+        )
+        plotpath = pathlib.Path(plot_path)
+        for subdir in ["landscapes", "elo", "optima"]:
+            (plotpath / subdir).mkdir(parents=True, exist_ok=True)
+        full_plotpath = (
+            plotpath
+            / f"landscapes/partial_dependence_polynomial_regression-{timestr}-{current_iteration}.png"
+        )
+        dpi = 150 if optimizer.space.n_dims == 1 else 300
+        plt.savefig(
+            full_plotpath,
+            dpi=dpi,
+            facecolor="xkcd:dark grey",
+            **save_params,
+        )
+        logger.info(
+            f"Saving a polynomial regression partial dependence plot to {full_plotpath}."
+        )
+        plt.close(fig)
 
     # Plot the history of optima:
     fig, ax = plot_optima(
