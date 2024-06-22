@@ -526,12 +526,11 @@ def plot_objective(
                         sample_points=rvs_transformed,
                         n_points=n_points,
                     )
+                yi_elo = -np.array(yi_partial_dependence) * 100
                 yi_min_partial_dependence, yi_max_partial_dependence = np.min(
-                    yi_partial_dependence
-                ), np.max(yi_partial_dependence)
-                partial_dependence_axes[i, i].plot(
-                    xi, yi_partial_dependence, color=colors[1]
-                )
+                    yi_elo
+                ), np.max(yi_elo)
+                partial_dependence_axes[i, i].plot(xi, yi_elo, color=colors[1])
                 if plot_confidence_interval_width:
                     yi_confidence_interval_width = (
                         2
@@ -629,15 +628,16 @@ def plot_objective(
                         rvs_transformed,
                         n_points,
                     )
+                zi_elo = -np.array(zi_partial_dependence) * 100
                 contour_plot_partial_dependence[i, j] = partial_dependence_axes[
                     i, j
                 ].contourf(
                     xi,
                     yi,
-                    zi_partial_dependence,
+                    zi_elo,
                     levels,
                     locator=locator,
-                    cmap="viridis_r",
+                    cmap="viridis",
                 )
                 #partial_dependence_figure.colorbar(contour_plot_partial_dependence[i, j], ax=partial_dependence_axes[i, j])
                 partial_dependence_axes[i, j].scatter(
@@ -683,11 +683,9 @@ def plot_objective(
                         confidence_interval_width_axes[i, j].scatter(
                             min_x[j], min_x[i], c=["r"], s=20, lw=0.0
                         )
-                z_min_partial_dependence[i, j] = np.min(zi_partial_dependence)
-                z_max_partial_dependence[i, j] = np.max(zi_partial_dependence)
-                z_ranges_partial_dependence[i, j] = np.max(
-                    zi_partial_dependence
-                ) - np.min(zi_partial_dependence)
+                z_min_partial_dependence[i, j] = np.min(zi_elo)
+                z_max_partial_dependence[i, j] = np.max(zi_elo)
+                z_ranges_partial_dependence[i, j] = np.max(zi_elo) - np.min(zi_elo)
                 partial_dependence_axes[i, j].text(
                     0.5,
                     0.5,
@@ -750,7 +748,7 @@ def plot_objective(
                 vmin=np.min(z_min_partial_dependence),
                 vmax=np.max(z_max_partial_dependence),
             ),
-            cmap="viridis_r",
+            cmap="viridis",
         ),
         ax=partial_dependence_axes[np.triu_indices(space.n_dims, k=1)],
         shrink=0.7,
@@ -1355,7 +1353,7 @@ def plot_activesubspace_sufficient_summary(
     if active_subspaces_object.dim == 1:
         active_subspace_sufficient_summary_axes.scatter(
             active_subspaces_object.transform(inputs)[0],
-            outputs,
+            -outputs * 100,
             c="blue",
             s=40,
             alpha=0.9,
@@ -1391,13 +1389,13 @@ def plot_activesubspace_sufficient_summary(
         contour_plot = active_subspace_sufficient_summary_axes.tricontourf(
             active_subspace_x[:, 0],
             active_subspace_x[:, 1],
-            outputs.reshape(-1),
+            -outputs.reshape(-1) * 100,
             levels=20,
             alpha=0.9,
-            cmap="viridis_r",
+            cmap="viridis",
             edgecolors="k",
-            vmin=np.min(outputs),
-            vmax=np.max(outputs),
+            vmin=np.min(-outputs * 100),
+            vmax=np.max(-outputs * 100),
         )
         active_subspace_sufficient_summary_axes.scatter(
             active_subspace_tuner_sample_points[:, 0],
