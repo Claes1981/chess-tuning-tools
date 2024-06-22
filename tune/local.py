@@ -800,7 +800,7 @@ def plot_results(
             ncols=optimizer.space.n_dims,
             figsize=(3 * optimizer.space.n_dims, 3 * optimizer.space.n_dims),
         )
-        standard_deviation_figure, standard_deviation_axes = plt.subplots(
+        confidence_interval_width_figure, confidence_interval_width_axes = plt.subplots(
             nrows=optimizer.space.n_dims,
             ncols=optimizer.space.n_dims,
             figsize=(3 * optimizer.space.n_dims, 3 * optimizer.space.n_dims),
@@ -809,10 +809,10 @@ def plot_results(
         for i in range(optimizer.space.n_dims):
             for j in range(optimizer.space.n_dims):
                 partial_dependence_axes[i, j].set_facecolor("xkcd:dark grey")
-                standard_deviation_axes[i, j].set_facecolor("xkcd:dark grey")
+                confidence_interval_width_axes[i, j].set_facecolor("xkcd:dark grey")
         partial_dependence_figure.patch.set_facecolor("xkcd:dark grey")
-        standard_deviation_figure.patch.set_facecolor("xkcd:dark grey")
-        plot_objective(
+        confidence_interval_width_figure.patch.set_facecolor("xkcd:dark grey")
+        partial_dependence_axes, confidence_interval_width_axes = plot_objective(
             result_object,
             regression_object=None,
             polynomial_features_object=None,
@@ -820,12 +820,13 @@ def plot_results(
             n_samples=100,
             dimensions=parameter_names,
             next_point=optimizer._next_x,
-            plot_standard_deviation=True,
+            plot_confidence_interval_width=True,
             plot_polynomial_regression=False,
             partial_dependence_figure=partial_dependence_figure,
             partial_dependence_axes=partial_dependence_axes,
-            standard_deviation_figure=standard_deviation_figure,
-            standard_deviation_axes=standard_deviation_axes,
+            confidence_interval_width_figure=confidence_interval_width_figure,
+            confidence_interval_width_axes=confidence_interval_width_axes,
+            confidence=confidence,
         )
     plotpath = pathlib.Path(plot_path)
     for subdir in ["landscapes", "elo", "optima"]:
@@ -833,8 +834,9 @@ def plot_results(
     full_plotpath_partial_dependence = (
         plotpath / f"landscapes/partial_dependence-{timestr}-{current_iteration}.png"
     )
-    full_plotpath_standard_deviation = (
-        plotpath / f"landscapes/standard_deviation-{timestr}-{current_iteration}.png"
+    full_plotpath_confidence_interval_width = (
+        plotpath
+        / f"landscapes/confidence_interval_width-{timestr}-{current_iteration}.png"
     )
     dpi = 150 if optimizer.space.n_dims == 1 else 300
     partial_dependence_figure.savefig(
@@ -847,16 +849,16 @@ def plot_results(
         f"Saving a partial dependence plot to {full_plotpath_partial_dependence}."
     )
     plt.close(partial_dependence_figure)
-    standard_deviation_figure.savefig(
-        full_plotpath_standard_deviation,
+    confidence_interval_width_figure.savefig(
+        full_plotpath_confidence_interval_width,
         dpi=dpi,
         facecolor="xkcd:dark grey",
         **save_params,
     )
     logger.info(
-        f"Saving a standard deviation plot to {full_plotpath_standard_deviation}."
+        f"Saving a confidence interval width plot to {full_plotpath_confidence_interval_width}."
     )
-    plt.close(standard_deviation_figure)
+    plt.close(confidence_interval_width_figure)
 
     logger.debug(
         "Starting to compute the next polynomial regression partial dependence plot."
@@ -916,12 +918,13 @@ def plot_results(
         n_samples=500,
         dimensions=parameter_names,
         next_point=optimizer._next_x,
-        plot_standard_deviation=False,
+        plot_confidence_interval_width=False,
         plot_polynomial_regression=True,
         partial_dependence_figure=fig,
         partial_dependence_axes=ax,
-        standard_deviation_figure=None,
-        standard_deviation_axes=None,
+        confidence_interval_width_figure=None,
+        confidence_interval_width_axes=None,
+        confidence=confidence,
     )
     plotpath = pathlib.Path(plot_path)
     for subdir in ["landscapes", "elo", "optima"]:

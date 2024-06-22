@@ -67,7 +67,7 @@ def partial_dependence(
     polynomial_features_object,
     i,
     j=None,
-    plot_standard_deviation=False,
+    plot_confidence_interval_width=False,
     plot_polynomial_regression=False,
     sample_points=None,
     n_samples=250,
@@ -152,7 +152,7 @@ def partial_dependence(
         # categorical values
         xi, xi_transformed = _evenly_sample(space.dimensions[i], n_points)
         yi_partial_dependence = []
-        if plot_standard_deviation:
+        if plot_confidence_interval_width:
             yi_standard_deviation = []
         for x_ in xi_transformed:
             rvs_ = np.array(sample_points)  # copy
@@ -162,7 +162,7 @@ def partial_dependence(
             # In case of `x_eval=None` rvs conists of random samples.
             # Calculating the mean of these samples is how partial dependence
             # is implemented.
-            if plot_standard_deviation:
+            if plot_confidence_interval_width:
                 with model.noise_set_to_zero():
                     y, std = model.predict(rvs_, return_std=True)
                 yi_partial_dependence.append(np.mean(y))
@@ -178,7 +178,7 @@ def partial_dependence(
             else:
                 yi_partial_dependence.append(np.mean(model.predict(rvs_)))
 
-        if plot_standard_deviation:
+        if plot_confidence_interval_width:
             return xi, yi_partial_dependence, yi_standard_deviation
         else:
             return xi, yi_partial_dependence
@@ -188,17 +188,17 @@ def partial_dependence(
         yi, yi_transformed = _evenly_sample(space.dimensions[i], n_points)
 
         zi_partial_dependence = []
-        if plot_standard_deviation:
+        if plot_confidence_interval_width:
             zi_standard_deviation = []
         for x_ in xi_transformed:
             row_partial_dependence = []
-            if plot_standard_deviation:
+            if plot_confidence_interval_width:
                 row_standard_deviation = []
             for y_ in yi_transformed:
                 rvs_ = np.array(sample_points)  # copy
                 rvs_[:, dim_locs[j] : dim_locs[j + 1]] = x_
                 rvs_[:, dim_locs[i] : dim_locs[i + 1]] = y_
-                if plot_standard_deviation:
+                if plot_confidence_interval_width:
                     with model.noise_set_to_zero():
                         z, std = model.predict(rvs_, return_std=True)
                     row_partial_dependence.append(np.mean(z))
@@ -214,10 +214,10 @@ def partial_dependence(
                 else:
                     row_partial_dependence.append(np.mean(model.predict(rvs_)))
             zi_partial_dependence.append(row_partial_dependence)
-            if plot_standard_deviation:
+            if plot_confidence_interval_width:
                 zi_standard_deviation.append(row_standard_deviation)
 
-        if plot_standard_deviation:
+        if plot_confidence_interval_width:
             return (
                 xi,
                 yi,
@@ -358,7 +358,7 @@ def plot_objective(
     zscale="linear",
     dimensions=None,
     next_point=None,
-    plot_standard_deviation=False,
+    plot_confidence_interval_width=False,
     plot_polynomial_regression=False,
     n_random_restarts=100,
     alpha=0.25,
@@ -366,8 +366,9 @@ def plot_objective(
     colors=None,
     partial_dependence_figure=None,
     partial_dependence_axes=None,
-    standard_deviation_figure=None,
-    standard_deviation_axes=None,
+    confidence_interval_width_figure=None,
+    confidence_interval_width_axes=None,
+    confidence=0.9,
 ):
     """Pairwise partial dependence plot of the objective function.
     The diagonal shows the partial dependence for dimension `i` with
@@ -430,14 +431,13 @@ def plot_objective(
     z_min_partial_dependence = np.full((space.n_dims, space.n_dims), np.inf)
     z_max_partial_dependence = np.full((space.n_dims, space.n_dims), np.NINF)
     z_ranges_partial_dependence = np.zeros((space.n_dims, space.n_dims))
-    if plot_standard_deviation:
-        contour_plot_standard_deviation = np.empty(
+    if plot_confidence_interval_width:
+        contour_plot_confidence_interval_width = np.empty(
             (space.n_dims, space.n_dims), dtype=object
         )
-        z_min_standard_deviation = np.full((space.n_dims, space.n_dims), np.inf)
-        z_max_standard_deviation = np.full((space.n_dims, space.n_dims), np.NINF)
-        z_ranges_standard_deviation = np.zeros((space.n_dims, space.n_dims))
-
+        z_min_confidence_interval_width = np.full((space.n_dims, space.n_dims), np.inf)
+        z_max_confidence_interval_width = np.full((space.n_dims, space.n_dims), np.NINF)
+        z_ranges_confidence_interval_width = np.zeros((space.n_dims, space.n_dims))
 
     if zscale == "log":
         locator = LogLocator()
@@ -453,8 +453,8 @@ def plot_objective(
             space.n_dims,
             figsize=(size * space.n_dims, size * space.n_dims),
         )
-    if plot_standard_deviation and standard_deviation_figure is None:
-        standard_deviation_figure, standard_deviation_axes = plt.subplots(
+    if plot_confidence_interval_width and confidence_interval_width_figure is None:
+        confidence_interval_width_figure, confidence_interval_width_axes = plt.subplots(
             space.n_dims,
             space.n_dims,
             figsize=(size * space.n_dims, size * space.n_dims),
@@ -469,8 +469,8 @@ def plot_objective(
         hspace=0.1,
         wspace=0.1,
     )
-    if plot_standard_deviation:
-        standard_deviation_figure.subplots_adjust(
+    if plot_confidence_interval_width:
+        confidence_interval_width_figure.subplots_adjust(
             left=margin / width,
             right=1 - margin / width,
             bottom=margin / height,
@@ -498,7 +498,7 @@ def plot_objective(
     for i in range(space.n_dims):
         for j in range(space.n_dims):
             if i == j:
-                if plot_standard_deviation:
+                if plot_confidence_interval_width:
                     xi, yi_partial_dependence, yi_standard_deviation = (
                         partial_dependence(
                             space,
@@ -507,7 +507,7 @@ def plot_objective(
                             polynomial_features_object,
                             i,
                             j=None,
-                            plot_standard_deviation=plot_standard_deviation,
+                            plot_confidence_interval_width=plot_confidence_interval_width,
                             plot_polynomial_regression=plot_polynomial_regression,
                             sample_points=rvs_transformed,
                             n_points=n_points,
@@ -521,7 +521,7 @@ def plot_objective(
                         polynomial_features_object,
                         i,
                         j=None,
-                        plot_standard_deviation=plot_standard_deviation,
+                        plot_confidence_interval_width=plot_confidence_interval_width,
                         plot_polynomial_regression=plot_polynomial_regression,
                         sample_points=rvs_transformed,
                         n_points=n_points,
@@ -532,12 +532,21 @@ def plot_objective(
                 partial_dependence_axes[i, i].plot(
                     xi, yi_partial_dependence, color=colors[1]
                 )
-                if plot_standard_deviation:
-                    yi_min_standard_deviation, yi_max_standard_deviation = np.min(
-                        yi_standard_deviation
-                    ), np.max(yi_standard_deviation)
-                    standard_deviation_axes[i, i].plot(
-                        xi, yi_standard_deviation, color=colors[1]
+                if plot_confidence_interval_width:
+                    yi_confidence_interval_width = (
+                        2
+                        * confidence_to_mult(confidence)
+                        * np.array(yi_standard_deviation)
+                        * 100
+                    )
+                    (
+                        yi_min_confidence_interval_width,
+                        yi_max_confidence_interval_width,
+                    ) = np.min(yi_confidence_interval_width), np.max(
+                        yi_confidence_interval_width
+                    )
+                    confidence_interval_width_axes[i, i].plot(
+                        xi, yi_confidence_interval_width, color=colors[1]
                     )
                 if failures != 10:
                     partial_dependence_axes[i, i].axvline(
@@ -560,33 +569,39 @@ def plot_objective(
                         f"{np.around(min_x[i], 4)}",
                         color=colors[3],
                     )
-                    if plot_standard_deviation:
-                        standard_deviation_axes[i, i].axvline(
+                    if plot_confidence_interval_width:
+                        confidence_interval_width_axes[i, i].axvline(
                             min_ucb[i], linestyle="--", color=colors[5], lw=1
                         )
-                        standard_deviation_axes[i, i].axvline(
+                        confidence_interval_width_axes[i, i].axvline(
                             min_x[i], linestyle="--", color=colors[3], lw=1
                         )
-                        standard_deviation_axes[i, i].text(
+                        confidence_interval_width_axes[i, i].text(
                             min_ucb[i],
-                            yi_min_standard_deviation
+                            yi_min_confidence_interval_width
                             + 0.7
-                            * (yi_max_standard_deviation - yi_min_standard_deviation),
+                            * (
+                                yi_max_confidence_interval_width
+                                - yi_min_confidence_interval_width
+                            ),
                             f"{np.around(min_ucb[i], 4)}",
                             color=colors[5],
                         )
-                        standard_deviation_axes[i, i].text(
+                        confidence_interval_width_axes[i, i].text(
                             min_x[i],
-                            yi_min_standard_deviation
+                            yi_min_confidence_interval_width
                             + 0.9
-                            * (yi_max_standard_deviation - yi_min_standard_deviation),
+                            * (
+                                yi_max_confidence_interval_width
+                                - yi_min_confidence_interval_width
+                            ),
                             f"{np.around(min_x[i], 4)}",
                             color=colors[3],
                         )
 
             # lower triangle
             elif i > j:
-                if plot_standard_deviation:
+                if plot_confidence_interval_width:
                     xi, yi, zi_partial_dependence, zi_standard_deviation = (
                         partial_dependence(
                             space,
@@ -595,7 +610,7 @@ def plot_objective(
                             polynomial_features_object,
                             i,
                             j,
-                            plot_standard_deviation,
+                            plot_confidence_interval_width,
                             plot_polynomial_regression,
                             rvs_transformed,
                             n_points,
@@ -609,7 +624,7 @@ def plot_objective(
                         polynomial_features_object,
                         i,
                         j,
-                        plot_standard_deviation,
+                        plot_confidence_interval_width,
                         plot_polynomial_regression,
                         rvs_transformed,
                         n_points,
@@ -628,18 +643,24 @@ def plot_objective(
                 partial_dependence_axes[i, j].scatter(
                     samples[:, j], samples[:, i], c="k", s=10, lw=0.0, alpha=alpha
                 )
-                if plot_standard_deviation:
-                    contour_plot_standard_deviation[i, j] = standard_deviation_axes[
+                if plot_confidence_interval_width:
+                    zi_confidence_interval_width = (
+                        2
+                        * confidence_to_mult(confidence)
+                        * np.array(zi_standard_deviation)
+                        * 100
+                    )
+                    contour_plot_confidence_interval_width[
                         i, j
-                    ].contourf(
+                    ] = confidence_interval_width_axes[i, j].contourf(
                         xi,
                         yi,
-                        zi_standard_deviation,
+                        zi_confidence_interval_width,
                         levels,
                         locator=locator,
                         cmap="viridis_r",
                     )
-                    standard_deviation_axes[i, j].scatter(
+                    confidence_interval_width_axes[i, j].scatter(
                         samples[:, j], samples[:, i], c="k", s=10, lw=0.0, alpha=alpha
                     )
                 if failures != 10:
@@ -652,14 +673,14 @@ def plot_objective(
                     partial_dependence_axes[i, j].scatter(
                         min_x[j], min_x[i], c=["r"], s=20, lw=0.0
                     )
-                    if plot_standard_deviation:
-                        standard_deviation_axes[i, j].scatter(
+                    if plot_confidence_interval_width:
+                        confidence_interval_width_axes[i, j].scatter(
                             next_point[j], next_point[i], c=["xkcd:pink"], s=20, lw=0.0
                         )
-                        standard_deviation_axes[i, j].scatter(
+                        confidence_interval_width_axes[i, j].scatter(
                             min_ucb[j], min_ucb[i], c=["xkcd:orange"], s=20, lw=0.0
                         )
-                        standard_deviation_axes[i, j].scatter(
+                        confidence_interval_width_axes[i, j].scatter(
                             min_x[j], min_x[i], c=["r"], s=20, lw=0.0
                         )
                 z_min_partial_dependence[i, j] = np.min(zi_partial_dependence)
@@ -681,17 +702,21 @@ def plot_objective(
                     verticalalignment="center",
                     transform=partial_dependence_axes[i, j].transAxes,
                 )
-                if plot_standard_deviation:
-                    z_min_standard_deviation[i, j] = np.min(zi_standard_deviation)
-                    z_max_standard_deviation[i, j] = np.max(zi_standard_deviation)
-                    z_ranges_standard_deviation[i, j] = np.max(
-                        zi_standard_deviation
-                    ) - np.min(zi_standard_deviation)
-                    standard_deviation_axes[i, j].text(
+                if plot_confidence_interval_width:
+                    z_min_confidence_interval_width[i, j] = np.min(
+                        zi_confidence_interval_width
+                    )
+                    z_max_confidence_interval_width[i, j] = np.max(
+                        zi_confidence_interval_width
+                    )
+                    z_ranges_confidence_interval_width[i, j] = np.max(
+                        zi_confidence_interval_width
+                    ) - np.min(zi_confidence_interval_width)
+                    confidence_interval_width_axes[i, j].text(
                         0.5,
                         0.5,
                         np.format_float_positional(
-                            z_ranges_standard_deviation[i, j],
+                            z_ranges_confidence_interval_width[i, j],
                             precision=2,
                             unique=False,
                             fractional=False,
@@ -699,7 +724,7 @@ def plot_objective(
                         ),
                         horizontalalignment="center",
                         verticalalignment="center",
-                        transform=standard_deviation_axes[i, j].transAxes,
+                        transform=confidence_interval_width_axes[i, j].transAxes,
                     )
     # Get all dimensions.
     plot_dims = []
@@ -714,10 +739,10 @@ def plot_objective(
                     vmin=np.min(z_min_partial_dependence),
                     vmax=np.max(z_max_partial_dependence),
                 )
-                if plot_standard_deviation:
-                    contour_plot_standard_deviation[i, j].set_clim(
-                        vmin=np.min(z_min_standard_deviation),
-                        vmax=np.max(z_max_standard_deviation),
+                if plot_confidence_interval_width:
+                    contour_plot_confidence_interval_width[i, j].set_clim(
+                        vmin=np.min(z_min_confidence_interval_width),
+                        vmax=np.max(z_max_confidence_interval_width),
                     )
     partial_dependence_figure.colorbar(
         plt.cm.ScalarMappable(
@@ -730,16 +755,16 @@ def plot_objective(
         ax=partial_dependence_axes[np.triu_indices(space.n_dims, k=1)],
         shrink=0.7,
     )
-    if plot_standard_deviation:
-        standard_deviation_figure.colorbar(
+    if plot_confidence_interval_width:
+        confidence_interval_width_figure.colorbar(
             plt.cm.ScalarMappable(
                 norm=matplotlib.colors.Normalize(
-                    vmin=np.min(z_min_standard_deviation),
-                    vmax=np.max(z_max_standard_deviation),
+                    vmin=np.min(z_min_confidence_interval_width),
+                    vmax=np.max(z_max_confidence_interval_width),
                 ),
                 cmap="viridis_r",
             ),
-            ax=standard_deviation_axes[np.triu_indices(space.n_dims, k=1)],
+            ax=confidence_interval_width_axes[np.triu_indices(space.n_dims, k=1)],
             shrink=0.7,
         )
     #plt.cm.ScalarMappable.set_clim(self, vmin=np.min(z_min_partial_dependence), vmax=np.max(z_max_partial_dependence))
@@ -760,7 +785,7 @@ def plot_objective(
     #         plot_dims=plot_dims,
     #         dim_labels=dimensions,
     #     )
-    if plot_standard_deviation:
+    if plot_confidence_interval_width:
         return _format_scatter_plot_axes(
             partial_dependence_axes,
             space,
@@ -768,9 +793,9 @@ def plot_objective(
             plot_dims=plot_dims,
             dim_labels=dimensions,
         ), _format_scatter_plot_axes(
-            standard_deviation_axes,
+            confidence_interval_width_axes,
             space,
-            ylabel="Standard deviation",
+            ylabel="Confidence interval width",
             plot_dims=plot_dims,
             dim_labels=dimensions,
         )
