@@ -776,6 +776,7 @@ def plot_results(
     plt.close()
 
     plt.rcdefaults()
+    plt.rcParams["axes.formatter.useoffset"] = False
     logger.debug("Starting to compute the next partial dependence plot.")
 
     timestr = time.strftime("%Y%m%d-%H%M%S")
@@ -1004,6 +1005,7 @@ def plot_results(
     # )
     # plt.close(standard_deviation_figure)
     plt.rcdefaults()
+    plt.rcParams["axes.formatter.useoffset"] = False
 
     timestr = time.strftime("%Y%m%d-%H%M%S")
     number_of_random_active_subspace_samples = 10000 - len(result_object.x_iters)
