@@ -747,6 +747,8 @@ def plot_results(
         If None, the current iteration is assumed to be the amount of points collected.
     """
     logger = logging.getLogger(LOGGER)
+    plt.rcdefaults()
+    plt.rcParams["axes.formatter.useoffset"] = False
     timestr = time.strftime("%Y%m%d-%H%M%S")
     plotpath = pathlib.Path(plot_path)
     for subdir in ["landscapes", "elo", "optima", "hyperparameters"]:
