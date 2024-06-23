@@ -566,6 +566,9 @@ def local(  # noqa: C901
         ),
         gp_priors=gp_priors,
     )
+        
+    with AtomicWriter(model_path, mode="wb", overwrite=True).open() as f:
+            dill.dump(opt, f)
     
     root_logger.debug(
             f"Hyperparameters Markov chain Monte Carlo mean acceptance fraction: {np.mean(opt.gp._sampler.acceptance_fraction)}"
