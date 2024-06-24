@@ -763,6 +763,7 @@ def plot_results(
         np.exp(optimizer.gp.chain_),
         show_titles=True,
         plot_datapoints=True,
+        title_fmt=".3e",
         axes_scale="log",
         quantiles=[0.16, 0.5, 0.84],
     )
