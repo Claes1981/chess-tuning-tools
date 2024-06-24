@@ -19,11 +19,11 @@ packages = [
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
-bask = { version = ">=0.9.3", python = ">=3.8,<3.10" }
+bask = { git = "https://github.com/Claes1981/bayes-skopt.git" }
 Click = ">=7.1.2"
 numpy = ">=1.19.1"
 scipy = ">=1.5.2"
-scikit-optimize = "^0.9"
+scikit-optimize = { git = "https://github.com/Claes1981/scikit-optimize.git" }
 atomicwrites = ">=1.4.0"
 scikit-learn = "^1"
 dill = ">=0.3.4"
