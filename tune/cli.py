@@ -566,17 +566,17 @@ def local(  # noqa: C901
         ),
         gp_priors=gp_priors,
     )
-        
+
     with AtomicWriter(model_path, mode="wb", overwrite=True).open() as f:
-            dill.dump(opt, f)
-    
+        dill.dump(opt, f)
+
     root_logger.debug(
-            f"Hyperparameters Markov chain Monte Carlo mean acceptance fraction: {np.mean(opt.gp._sampler.acceptance_fraction)}"
+        f"Hyperparameters Markov chain Monte Carlo mean acceptance fraction: {np.mean(opt.gp._sampler.acceptance_fraction)}"
     )
     root_logger.debug(
         f"Integrated autocorrelation time estimates: {opt.gp._sampler.get_autocorr_time(quiet=True)}"
     )
-    
+
     extra_points = load_points_to_evaluate(
         space=opt.space,
         csv_file=evaluate_points,
@@ -912,7 +912,7 @@ def local(  # noqa: C901
             #np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
         with AtomicWriter(model_path, mode="wb", overwrite=True).open() as f:
             dill.dump(opt, f)
-        
+
         root_logger.debug(
             f"Hyperparameters Markov chain Monte Carlo mean acceptance fraction: {np.mean(opt.gp._sampler.acceptance_fraction)}"
         )
