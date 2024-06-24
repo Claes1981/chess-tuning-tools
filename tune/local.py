@@ -769,7 +769,7 @@ def plot_results(
     plt.savefig(
         full_plotpath,
         dpi=dpi,
-        facecolor="xkcd:dark grey",
+        # facecolor="xkcd:dark grey",
         **save_params,
     )
     logger.info(
