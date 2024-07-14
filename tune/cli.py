@@ -570,12 +570,14 @@ def local(  # noqa: C901
     with AtomicWriter(model_path, mode="wb", overwrite=True).open() as f:
         dill.dump(opt, f)
 
-    root_logger.debug(
-        f"Hyperparameters Markov chain Monte Carlo mean acceptance fraction: {np.mean(opt.gp._sampler.acceptance_fraction)}"
-    )
-    root_logger.debug(
-        f"Integrated autocorrelation time estimates: {opt.gp._sampler.get_autocorr_time(quiet=True)}"
-    )
+
+    if opt.gp.chain_ is not None:
+        root_logger.debug(
+            f"Hyperparameters Markov chain Monte Carlo mean acceptance fraction: {np.mean(opt.gp._sampler.acceptance_fraction)}"
+        )
+        root_logger.debug(
+            f"Integrated autocorrelation time estimates: {opt.gp._sampler.get_autocorr_time(quiet=True)}"
+        )
 
     extra_points = load_points_to_evaluate(
         space=opt.space,
@@ -913,12 +915,13 @@ def local(  # noqa: C901
         with AtomicWriter(model_path, mode="wb", overwrite=True).open() as f:
             dill.dump(opt, f)
 
-        root_logger.debug(
-            f"Hyperparameters Markov chain Monte Carlo mean acceptance fraction: {np.mean(opt.gp._sampler.acceptance_fraction)}"
-        )
-        root_logger.debug(
-            f"Integrated autocorrelation time estimates: {opt.gp._sampler.get_autocorr_time(quiet=True)}"
-        )
+        if opt.gp.chain_ is not None:
+            root_logger.debug(
+                f"Hyperparameters Markov chain Monte Carlo mean acceptance fraction: {np.mean(opt.gp._sampler.acceptance_fraction)}"
+            )
+            root_logger.debug(
+                f"Integrated autocorrelation time estimates: {opt.gp._sampler.get_autocorr_time(quiet=True)}"
+            )
 
 
 if __name__ == "__main__":
