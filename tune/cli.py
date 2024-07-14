@@ -474,7 +474,7 @@ def local(  # noqa: C901
     """
 
     json_dict = json.load(tuning_config)
-    settings, commands, fixed_params, param_ranges = load_tuning_config(json_dict)
+    settings, commands, directories, fixed_params, param_ranges = load_tuning_config(json_dict)
     root_logger = setup_logger(
         verbose=verbose, logfile=settings.get("logfile", logfile)
     )
@@ -740,13 +740,13 @@ def local(  # noqa: C901
                 )
 
             root_logger.debug(f"Round: {round}")
-            settings, commands, fixed_params, param_ranges = load_tuning_config(
+            settings, commands, directories, fixed_params, param_ranges = load_tuning_config(
                 json_dict
             )
 
             # Prepare engines.json file for cutechess-cli:
             engine_json = prepare_engines_json(
-                commands=commands, fixed_params=fixed_params
+                commands=commands, directories=directories, fixed_params=fixed_params
             )
             root_logger.debug(f"engines.json is prepared:\n{engine_json}")
             write_engines_json(engine_json, point_dict)

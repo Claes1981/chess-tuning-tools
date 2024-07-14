@@ -181,6 +181,7 @@ def load_tuning_config(json_dict):
         The values correspond to skopt.space dimension definitions.
     """
     commands = []
+    directories = []
     fixed_params = []
     if "engines" not in json_dict:
         raise ValueError("Tuning config does not contain engines.")
@@ -190,6 +191,10 @@ def load_tuning_config(json_dict):
     if "command" not in e:
         raise ValueError("Tuning config contains an engine without command.")
     commands.append(e["command"])
+    if "directory" not in e:
+        directories.append("")
+    else:
+        directories.append(e["directory"])
     if "fixed_parameters" not in e:
         fixed_params.append(dict())
     else:
@@ -202,17 +207,22 @@ def load_tuning_config(json_dict):
         fixed_params.append(dict())
     else:
         fixed_params.append(e["fixed_parameters"])
+    if "directory" not in e:
+        directories.append("")
+    else:
+        directories.append(e["directory"])
     if "parameter_ranges" not in json_dict:
         raise ValueError("There are no parameter ranges defined in the config file.")
     param_ranges = parse_ranges(json_dict["parameter_ranges"])
-    return json_dict, commands, fixed_params, param_ranges
+    return json_dict, commands, directories, fixed_params, param_ranges
 
 
-def prepare_engines_json(commands, fixed_params):
+def prepare_engines_json(commands, directories, fixed_params):
     result_list = [
         {
             "command": c,
             "name": f"engine{i+1}",
+            "workingDirectory": directories[i],
             "initStrings": ["uci"],
             "protocol": "uci",
         }
