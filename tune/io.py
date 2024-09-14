@@ -323,7 +323,7 @@ def write_polyglot_ini(polyglot_params):
         'UCI': 'true',
         'Book': 'true',
         'BookFile': polyglot_params.get('book_file', ''),
-        'BookDepth': str(book_depth)
+        'BookDepth': str(book_depth),
         'BookTreshold': '0',
     }
 
