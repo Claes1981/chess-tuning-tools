@@ -746,6 +746,7 @@ def local(  # noqa: C901
 
             if polyglot_params != dict():
                 write_polyglot_ini(polyglot_params=polyglot_params)
+                directories[1] = 'polyglot-config'
 
             # Prepare engines.json file for cutechess-cli:
             engine_json = prepare_engines_json(
