@@ -474,7 +474,7 @@ def local(  # noqa: C901
     """
 
     json_dict = json.load(tuning_config)
-    settings, commands, directories, fixed_params, param_ranges = load_tuning_config(json_dict)
+    settings, commands, directories, polyglot_params, fixed_params, param_ranges = load_tuning_config(json_dict)
     root_logger = setup_logger(
         verbose=verbose, logfile=settings.get("logfile", logfile)
     )
@@ -740,9 +740,12 @@ def local(  # noqa: C901
                 )
 
             root_logger.debug(f"Round: {round}")
-            settings, commands, directories, fixed_params, param_ranges = load_tuning_config(
+            settings, commands, directories, polyglot_params, fixed_params, param_ranges = load_tuning_config(
                 json_dict
             )
+
+            if polyglot_params != dict():
+                write_polyglot_ini(polyglot_params=polyglot_params)
 
             # Prepare engines.json file for cutechess-cli:
             engine_json = prepare_engines_json(
