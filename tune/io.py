@@ -183,6 +183,7 @@ def load_tuning_config(json_dict):
     commands = []
     directories = []
     fixed_params = []
+    polyglot_params = []
     if "engines" not in json_dict:
         raise ValueError("Tuning config does not contain engines.")
     engines = json_dict["engines"]
