@@ -566,6 +566,8 @@ def initialize_optimizer(
         random_state=random_state,
     )
 
+    opt.gp._kernel.k2.nu = 1.5
+
     if not resume:
         return opt
 
