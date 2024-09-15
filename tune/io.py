@@ -317,25 +317,25 @@ def write_polyglot_ini(polyglot_params):
     # Extract options from the second item in the list, since the first engine doesn't use the book.
     polyglot_options = polyglot_params[1]  # Get the second dictionary
 
-    max_book_depth = polyglot_options.get('max_book_depth', 256)
+    max_book_depth = polyglot_options.get("max_book_depth", 256)
     # Ensure max_book_depth is at least 1
     max_book_depth = max(1, int(max_book_depth))
     book_depth = random.randint(1, max_book_depth)
 
     # PolyGlot section
-    config['PolyGlot'] = {
-        'EngineCommand': polyglot_options.get('engine_command', ''),
-        'UCI': 'true',
-        'Book': 'true',
-        'BookFile': polyglot_options.get('book_file', ''),
-        'BookDepth': str(book_depth),
-        'BookTreshold': '0',
+    config["PolyGlot"] = {
+        "EngineCommand": polyglot_options.get("engine_command", ""),
+        "UCI": "true",
+        "Book": "true",
+        "BookFile": polyglot_options.get("book_file", ""),
+        "BookDepth": str(book_depth),
+        "BookTreshold": "0",
     }
 
     # Engine section
-    config['Engine'] = {}
+    config["Engine"] = {}
 
     # Write config to file
-    Path('polyglot-config').mkdir(parents=True, exist_ok=True)
-    with open(Path('polyglot-config') / "polyglot.ini", 'w') as configfile:
+    Path("polyglot-config").mkdir(parents=True, exist_ok=True)
+    with open(Path("polyglot-config") / "polyglot.ini", "w") as configfile:
         config.write(configfile)

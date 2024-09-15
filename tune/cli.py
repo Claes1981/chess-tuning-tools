@@ -22,7 +22,12 @@ from bask import acquisition
 
 import tune
 from tune.db_workers import TuningClient, TuningServer
-from tune.io import load_tuning_config, prepare_engines_json, write_engines_json, write_polyglot_ini
+from tune.io import (
+    load_tuning_config,
+    prepare_engines_json,
+    write_engines_json,
+    write_polyglot_ini,
+)
 from tune.local import (
     counts_to_penta,
     check_if_pause,
@@ -474,7 +479,9 @@ def local(  # noqa: C901
     """
 
     json_dict = json.load(tuning_config)
-    settings, commands, directories, polyglot_params, fixed_params, param_ranges = load_tuning_config(json_dict)
+    settings, commands, directories, polyglot_params, fixed_params, param_ranges = (
+        load_tuning_config(json_dict)
+    )
     root_logger = setup_logger(
         verbose=verbose, logfile=settings.get("logfile", logfile)
     )
@@ -740,13 +747,18 @@ def local(  # noqa: C901
                 )
 
             root_logger.debug(f"Round: {round}")
-            settings, commands, directories, polyglot_params, fixed_params, param_ranges = load_tuning_config(
-                json_dict
-            )
+            (
+                settings,
+                commands,
+                directories,
+                polyglot_params,
+                fixed_params,
+                param_ranges,
+            ) = load_tuning_config(json_dict)
 
             if polyglot_params != dict():
                 write_polyglot_ini(polyglot_params=polyglot_params)
-                directories[1] = 'polyglot-config'
+                directories[1] = "polyglot-config"
 
             # Prepare engines.json file for cutechess-cli:
             engine_json = prepare_engines_json(
