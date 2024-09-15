@@ -756,7 +756,7 @@ def local(  # noqa: C901
                 param_ranges,
             ) = load_tuning_config(json_dict)
 
-            if polyglot_params != dict():
+            if any(dictionary for dictionary in polyglot_params):
                 write_polyglot_ini(polyglot_params=polyglot_params)
                 directories[1] = "polyglot-config"
 
