@@ -319,7 +319,7 @@ def write_polyglot_ini(polyglot_params):
 
     max_book_depth = polyglot_options.get('max_book_depth', 256)
     # Ensure max_book_depth is at least 1
-    max_book_depth = max(1, max_book_depth)
+    max_book_depth = max(1, int(max_book_depth))
     book_depth = random.randint(1, max_book_depth)
 
     # PolyGlot section
