@@ -1045,7 +1045,7 @@ def plot_results(
         np.shape(active_subspace_samples_x_raw)
     )
 
-    if optimizer.gp.kernel.k1.k2.nu >= 1.5:
+    if optimizer.gp.kernel_.k1.k2.nu >= 1.5:
         for row_number, x_row in enumerate(active_subspace_samples_x_raw):
             y_row, grad_row = optimizer.gp.predict(
                 np.reshape(x_row, (1, -1)), return_mean_grad=True
