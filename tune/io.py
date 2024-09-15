@@ -312,18 +312,22 @@ def write_engines_json(engine_json, point_dict):
 
 def write_polyglot_ini(polyglot_params):
     config = configparser.ConfigParser()
+    config.optionxform = str  # This line makes the ConfigParser case-sensitive
 
-    max_book_depth = polyglot_params.get('max_book_depth', 256)
+    # Extract options from the second item in the list, since the first engine doesn't use the book.
+    polyglot_options = polyglot_params[1]  # Get the second dictionary
+
+    max_book_depth = polyglot_options.get('max_book_depth', 256)
     # Ensure max_book_depth is at least 1
     max_book_depth = max(1, max_book_depth)
     book_depth = random.randint(1, max_book_depth)
 
     # PolyGlot section
     config['PolyGlot'] = {
-        'EngineCommand': polyglot_params.get('engine_command', ''),
+        'EngineCommand': polyglot_options.get('engine_command', ''),
         'UCI': 'true',
         'Book': 'true',
-        'BookFile': polyglot_params.get('book_file', ''),
+        'BookFile': polyglot_options.get('book_file', ''),
         'BookDepth': str(book_depth),
         'BookTreshold': '0',
     }
