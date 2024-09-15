@@ -5,6 +5,7 @@ from ast import literal_eval
 from collections.abc import MutableMapping
 from pathlib import Path
 import random
+import configparser
 
 import skopt.space as skspace
 from skopt.space.space import check_dimension
@@ -183,6 +184,7 @@ def load_tuning_config(json_dict):
     commands = []
     directories = []
     fixed_params = []
+    polyglot_params = []
     if "engines" not in json_dict:
         raise ValueError("Tuning config does not contain engines.")
     engines = json_dict["engines"]
@@ -195,6 +197,10 @@ def load_tuning_config(json_dict):
         directories.append("")
     else:
         directories.append(e["directory"])
+    if "polyglot_parameters" not in e:
+        polyglot_params.append(dict())
+    else:
+        polyglot_params.append(e["polyglot_parameters"])
     if "fixed_parameters" not in e:
         fixed_params.append(dict())
     else:
@@ -203,18 +209,22 @@ def load_tuning_config(json_dict):
     if "command" not in e:
         raise ValueError("Tuning config contains an engine without command.")
     commands.append(e["command"])
-    if "fixed_parameters" not in e:
-        fixed_params.append(dict())
-    else:
-        fixed_params.append(e["fixed_parameters"])
     if "directory" not in e:
         directories.append("")
     else:
         directories.append(e["directory"])
+    if "polyglot_parameters" not in e:
+        polyglot_params.append(dict())
+    else:
+        polyglot_params.append(e["polyglot_parameters"])
+    if "fixed_parameters" not in e:
+        fixed_params.append(dict())
+    else:
+        fixed_params.append(e["fixed_parameters"])
     if "parameter_ranges" not in json_dict:
         raise ValueError("There are no parameter ranges defined in the config file.")
     param_ranges = parse_ranges(json_dict["parameter_ranges"])
-    return json_dict, commands, directories, fixed_params, param_ranges
+    return json_dict, commands, directories, polyglot_params, fixed_params, param_ranges
 
 
 def prepare_engines_json(commands, directories, fixed_params):
@@ -298,3 +308,34 @@ def write_engines_json(engine_json, point_dict):
     initstr.update(combine_nested_parameters(point_dict))
     with open(Path() / "engines.json", "w") as file:
         json.dump(engine_json, file, sort_keys=True, indent=4)
+
+
+def write_polyglot_ini(polyglot_params):
+    config = configparser.ConfigParser()
+    config.optionxform = str  # This line makes the ConfigParser case-sensitive
+
+    # Extract options from the second item in the list, since the first engine doesn't use the book.
+    polyglot_options = polyglot_params[1]  # Get the second dictionary
+
+    max_book_depth = polyglot_options.get("max_book_depth", 256)
+    # Ensure max_book_depth is at least 1
+    max_book_depth = max(1, int(max_book_depth))
+    book_depth = random.randint(1, max_book_depth)
+
+    # PolyGlot section
+    config["PolyGlot"] = {
+        "EngineCommand": polyglot_options.get("engine_command", ""),
+        "UCI": "true",
+        "Book": "true",
+        "BookFile": polyglot_options.get("book_file", ""),
+        "BookDepth": str(book_depth),
+        "BookTreshold": "0",
+    }
+
+    # Engine section
+    config["Engine"] = {}
+
+    # Write config to file
+    Path("polyglot-config").mkdir(parents=True, exist_ok=True)
+    with open(Path("polyglot-config") / "polyglot.ini", "w") as configfile:
+        config.write(configfile)
