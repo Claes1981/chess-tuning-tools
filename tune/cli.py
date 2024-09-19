@@ -307,6 +307,13 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     show_default=True,
 )
 @click.option(
+    "--gp-nu",
+    default="1.5",
+    type=click.Choice(["0.5", "1.5", "2.5"]),
+    help="Nu parameter of the GP Matérn kernel. ",
+    show_default=True,
+)
+@click.option(
     "--normalize-y/--no-normalize-y",
     default=True,
     help="If True, the parameter normalize_y is set to True in the optimizer",
@@ -454,6 +461,7 @@ def local(  # noqa: C901
     gp_noise_prior_scale=0.0006,
     gp_lengthscale_prior_lb=0.1,
     gp_lengthscale_prior_ub=0.5,
+    gp_nu="1.5",
     normalize_y=True,
     noise_scaling_coefficient=1,
     logfile="log.txt",
@@ -495,7 +503,7 @@ def local(  # noqa: C901
     #)
     root_logger.debug(f"Got the following tuning settings:\n{json_dict}")
     root_logger.debug(
-        f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, Acquisition function lcb alpha: {acq_function_lcb_alpha}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, GP number of walkers per thread: {gp_walkers_per_thread}, GP signal prior scale: {gp_signal_prior_scale}, GP noise prior scale: {gp_noise_prior_scale}, GP lengthscale prior lower bound: {gp_lengthscale_prior_lb}, GP lengthscale prior upper bound: {gp_lengthscale_prior_ub}, Warp inputs: {warp_inputs}, Normalize y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
+        f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, Acquisition function lcb alpha: {acq_function_lcb_alpha}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, GP number of walkers per thread: {gp_walkers_per_thread}, GP signal prior scale: {gp_signal_prior_scale}, GP noise prior scale: {gp_noise_prior_scale}, GP lengthscale prior lower bound: {gp_lengthscale_prior_lb}, GP lengthscale prior upper bound: {gp_lengthscale_prior_ub}, GP Matérn kernel nu: {gp_nu}, Warp inputs: {warp_inputs}, Normalize y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
     )
     #root_logger.debug(
         #f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Kernel lengthscale prior lower bound: {kernel_lengthscale_prior_lower_bound}, Kernel lengthscale prior upper bound: {kernel_lengthscale_prior_upper_bound}, Kernel lengthscale prior lower steepness: {kernel_lengthscale_prior_lower_steepness}, Kernel lengthscale prior upper steepness: {kernel_lengthscale_prior_upper_steepness}, Warp inputs: {warp_inputs}, Normalize y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
@@ -572,11 +580,11 @@ def local(  # noqa: C901
             "gp_walkers_per_thread", gp_walkers_per_thread
         ),
         gp_priors=gp_priors,
+        gp_nu=float(settings.get("gp_nu", gp_nu)),
     )
 
     with AtomicWriter(model_path, mode="wb", overwrite=True).open() as f:
         dill.dump(opt, f)
-
 
     if opt.gp.chain_ is not None:
         root_logger.debug(
@@ -886,6 +894,7 @@ def local(  # noqa: C901
                     "gp_walkers_per_thread", gp_walkers_per_thread
                 ),
                 gp_priors=gp_priors,
+                gp_nu=float(settings.get("gp_nu", gp_nu)),
             )
         else:
             root_logger.info("Updating model.")

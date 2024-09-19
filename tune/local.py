@@ -463,6 +463,7 @@ def initialize_optimizer(
     gp_initial_samples: int = 300,
     gp_walkers_per_thread: int = 100,
     gp_priors: Optional[List[Callable[[float], float]]] = None,
+    gp_nu: float = 1.5,
 ) -> Optimizer:
     """Create an Optimizer object and if needed resume and/or reinitialize.
 
@@ -565,8 +566,7 @@ def initialize_optimizer(
         acq_func_kwargs=acq_func_kwargs,
         random_state=random_state,
     )
-
-    opt.gp._kernel.k2.nu = 1.5
+    opt.gp._kernel.k2.nu = gp_nu
 
     if not resume:
         return opt
