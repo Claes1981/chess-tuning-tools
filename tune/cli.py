@@ -503,7 +503,25 @@ def local(  # noqa: C901
     #)
     root_logger.debug(f"Got the following tuning settings:\n{json_dict}")
     root_logger.debug(
-        f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, Acquisition function lcb alpha: {acq_function_lcb_alpha}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, GP number of walkers per thread: {gp_walkers_per_thread}, GP signal prior scale: {gp_signal_prior_scale}, GP noise prior scale: {gp_noise_prior_scale}, GP lengthscale prior lower bound: {gp_lengthscale_prior_lb}, GP lengthscale prior upper bound: {gp_lengthscale_prior_ub}, GP Matérn kernel nu: {gp_nu}, Warp inputs: {warp_inputs}, Normalize y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
+        f"Acquisition function: {acq_function}\n"
+        f"Acquisition function samples: {acq_function_samples}\n"
+        f"Acquisition function lcb alpha: {acq_function_lcb_alpha}\n"
+        f"GP burnin: {gp_burnin}\n"
+        f"GP samples: {gp_samples}\n"
+        f"GP initial burnin: {gp_initial_burnin}\n"
+        f"GP initial samples: {gp_initial_samples}\n"
+        f"GP number of walkers per thread: {gp_walkers_per_thread}\n"
+        f"GP signal prior scale: {gp_signal_prior_scale}\n"
+        f"GP noise prior scale: {gp_noise_prior_scale}\n"
+        f"GP lengthscale prior lower bound: {gp_lengthscale_prior_lb}\n"
+        f"GP lengthscale prior upper bound: {gp_lengthscale_prior_ub}\n"
+        f"GP Matérn kernel nu: {gp_nu}\n"
+        f"Warp inputs: {warp_inputs}\n"
+        f"Normalize y: {normalize_y}\n"
+        f"Noise scaling coefficient: {noise_scaling_coefficient}\n"
+        f"Initial points: {n_initial_points}\n"
+        f"Next points: {n_points}\n"
+        f"Random seed: {random_seed}"
     )
     #root_logger.debug(
         #f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Kernel lengthscale prior lower bound: {kernel_lengthscale_prior_lower_bound}, Kernel lengthscale prior upper bound: {kernel_lengthscale_prior_upper_bound}, Kernel lengthscale prior lower steepness: {kernel_lengthscale_prior_lower_steepness}, Kernel lengthscale prior upper steepness: {kernel_lengthscale_prior_upper_steepness}, Warp inputs: {warp_inputs}, Normalize y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
