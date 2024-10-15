@@ -14,6 +14,8 @@ from skopt.space import Space
 
 from tune.utils import confidence_to_mult, expected_ucb, latest_iterations
 
+from line_profiler import profile
+
 __all__ = [
     "partial_dependence",
     "plot_objective",
@@ -25,7 +27,7 @@ __all__ = [
     "plot_activesubspace_sufficient_summary",
 ]
 
-
+@profile
 def _evenly_sample(dim, n_points):
     """Return `n_points` evenly spaced points from a Dimension.
     Parameters
@@ -59,7 +61,7 @@ def _evenly_sample(dim, n_points):
         xi_transformed = dim.transform(xi)
     return xi, xi_transformed
 
-
+@profile
 def partial_dependence(
     space,
     model,
@@ -347,6 +349,7 @@ def plot_objective_1d(
     return fig, ax
 
 
+@profile
 def plot_objective(
     result,
     regression_object,
