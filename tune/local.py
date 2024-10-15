@@ -454,6 +454,7 @@ def initialize_optimizer(
     #kernel_lengthscale_prior_lower_steepness: float = 2.0,
     #kernel_lengthscale_prior_upper_steepness: float = 1.0,
     n_points: int = 500,
+    non_uncert_acq_function_evaluation_points: int = 500,
     n_initial_points: int = 16,
     acq_function: str = "mes",
     acq_function_samples: int = 1,
@@ -540,6 +541,13 @@ def initialize_optimizer(
         alpha=acq_function_lcb_alpha,
         n_thompson=500,
     )
+
+    if (
+        current_acq_func == "pvrs"
+        or current_acq_func == "ts"
+        or current_acq_func == "vr"
+    ):
+        n_points = non_uncert_acq_function_evaluation_points
 
     #roundflat = make_roundflat(
                 #kernel_lengthscale_prior_lower_bound,

@@ -175,6 +175,24 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     show_default=True,
 )
 @click.option(
+    "--n-points",
+    default=500,
+    help="The number of random points to consider as possible next point "
+    "in case of UncertaintyAcquisition acquisition function. "
+    "Less points reduce the computation time of the tuner, but reduce "
+    "the coverage of the space.",
+    show_default=True,
+)
+@click.option(
+    "--non-uncert-acq-function-evaluation-points",
+    default=500,
+    help="The number of random points to consider as possible next point "
+    "in case of FullGPAcquisition or SampleAcquisition acquisition function. "
+    "Less points reduce the computation time of the tuner, but reduce "
+    "the coverage of the space.",
+    show_default=True,
+)
+@click.option(
     "--acq-function-samples",
     default=1,
     help="How many GP samples to average the acquisition function over. "
@@ -343,14 +361,6 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     show_default=True,
 )
 @click.option(
-    "--n-points",
-    default=500,
-    help="The number of random points to consider as possible next point. "
-    "Less points reduce the computation time of the tuner, but reduce "
-    "the coverage of the space.",
-    show_default=True,
-)
-@click.option(
     "-p",
     "--evaluate-points",
     default=None,
@@ -443,6 +453,8 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
 def local(  # noqa: C901
     tuning_config,
     acq_function="mes",
+    n_points=500,
+    non_uncert_acq_function_evaluation_points=500,
     acq_function_samples=1,
     acq_function_lcb_alpha=1.96,
     confidence=0.9,
@@ -466,7 +478,6 @@ def local(  # noqa: C901
     noise_scaling_coefficient=1,
     logfile="log.txt",
     n_initial_points=16,
-    n_points=500,
     plot_every=1,
     plot_path="plots",
     plot_on_resume=False,
@@ -583,6 +594,10 @@ def local(  # noqa: C901
         # kernel_lengthscale_prior_lower_steepness=settings.get("kernel_lengthscale_prior_lower_steepness", kernel_lengthscale_prior_lower_steepness),
         # kernel_lengthscale_prior_upper_steepness=settings.get("kernel_lengthscale_prior_upper_steepness", kernel_lengthscale_prior_upper_steepness),
         n_points=settings.get("n_points", n_points),
+        non_uncert_acq_function_evaluation_points=settings.get(
+            "non_uncert_acq_function_evaluation_points",
+            non_uncert_acq_function_evaluation_points,
+        ),
         n_initial_points=settings.get("n_initial_points", n_initial_points),
         acq_function=settings.get("acq_function", acq_function),
         acq_function_samples=settings.get("acq_function_samples", acq_function_samples),
@@ -930,6 +945,18 @@ def local(  # noqa: C901
                 root_logger.debug(
                     f"Current random acquisition function: {opt.acq_func}"
                 )
+            if (
+                isinstance(opt.acq_func, acquisition.PVRS)
+                or isinstance(opt.acq_func, acquisition.ThompsonSampling)
+                or isinstance(opt.acq_func, acquisition.VarianceReduction)
+                or acq_function == "pvrs"
+                or acq_function == "ts"
+                or acq_function == "vr"
+            ):
+                opt.n_points = non_uncert_acq_function_evaluation_points
+            else:
+                opt.n_points = n_points
+
             update_model(
                 optimizer=opt,
                 point=point,
