@@ -1593,6 +1593,7 @@ def parse_experiment_result(
     draw_rate : float
         Estimated draw rate of the match.
     """
+    # print(f"outstr = {outstr}")
     wdl_strings = re.findall(r"Score of.*:\s*([0-9]+\s-\s[0-9]+\s-\s[0-9]+)", outstr)
     array = np.array(
         [np.array([int(y) for y in re.findall(r"[0-9]+", x)]) for x in wdl_strings]

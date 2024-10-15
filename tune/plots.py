@@ -431,6 +431,7 @@ def plot_objective(
     )
     samples = np.asarray(result.x_iters)
     rvs_transformed = space.transform(space.rvs(n_samples=n_samples))
+    # print(f"n_samples={n_samples}")
     z_min_partial_dependence = np.full((space.n_dims, space.n_dims), np.inf)
     z_max_partial_dependence = np.full((space.n_dims, space.n_dims), np.NINF)
     z_ranges_partial_dependence = np.zeros((space.n_dims, space.n_dims))
@@ -713,6 +714,7 @@ def plot_objective(
                     z_ranges_confidence_interval_width[i, j] = np.max(
                         zi_confidence_interval_width
                     ) - np.min(zi_confidence_interval_width)
+                    # print(f"z_ranges_confidence_interval_width[{i}, {j}]={z_ranges_confidence_interval_width[i, j]}")
                     confidence_interval_width_axes[i, j].text(
                         0.5,
                         0.5,
@@ -768,6 +770,10 @@ def plot_objective(
             ax=confidence_interval_width_axes[np.triu_indices(space.n_dims, k=1)],
             shrink=0.7,
         )
+        # print(f"z_max_confidence_interval_width={z_max_confidence_interval_width}")
+        # print(f"np.max(z_max_confidence_interval_width)={np.max(z_max_confidence_interval_width)}")
+        # print(f"np.min(z_min_confidence_interval_width)={np.min(z_min_confidence_interval_width)}")
+        # confidence_interval_width_axes.ticklabel_format(useOffset=False)
     #plt.cm.ScalarMappable.set_clim(self, vmin=np.min(z_min_partial_dependence), vmax=np.max(z_max_partial_dependence))
     #partial_dependence_figure.colorbar(contour_plot_partial_dependence[1, 0], ax=partial_dependence_axes[np.triu_indices(space.n_dims, k=1)])
     # if plot_standard_deviation:
@@ -786,6 +792,7 @@ def plot_objective(
     #         plot_dims=plot_dims,
     #         dim_labels=dimensions,
     #     )
+    # print(f"plot_dims={plot_dims}")
     if plot_confidence_interval_width:
         return _format_scatter_plot_axes(
             partial_dependence_axes,
