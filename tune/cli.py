@@ -604,6 +604,12 @@ def local(  # noqa: C901
     with AtomicWriter(model_path, mode="wb", overwrite=True).open() as f:
         dill.dump(opt, f)
 
+    root_logger.debug(f"Number of data points: {len(X)}")
+    root_logger.debug(
+            f"Number of different data points: {len(np.unique(np.array(X), axis=0))}"
+        )
+    root_logger.debug(f"Number of model data points: {len(opt.Xi)}")
+
     if opt.gp.chain_ is not None:
         root_logger.debug(
             f"Hyperparameters Markov chain Monte Carlo mean acceptance fraction: {np.mean(opt.gp._sampler.acceptance_fraction)}"
