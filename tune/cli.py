@@ -606,8 +606,8 @@ def local(  # noqa: C901
 
     root_logger.debug(f"Number of data points: {len(X)}")
     root_logger.debug(
-            f"Number of different data points: {len(np.unique(np.array(X), axis=0))}"
-        )
+        f"Number of different data points: {len(np.unique(np.array(X), axis=0))}"
+    )
     root_logger.debug(f"Number of model data points: {len(opt.Xi)}")
 
     if opt.gp.chain_ is not None:

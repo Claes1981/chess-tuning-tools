@@ -13,6 +13,7 @@ signal_prior = None
 lengthscale_prior = None
 noise_prior = None
 
+
 def roundflat(x, a_low=2.0, a_high=8.0, d_low=0.005, d_high=1.2):
     """Return the log probability of the round flat prior.
 
@@ -77,17 +78,21 @@ def make_invgamma_prior(
         )
     return invgamma(a=a_out, scale=scale_out)
 
+
 def signal_prior_logpdf(x):
     global signal_prior
     return signal_prior.logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0)
+
 
 def lengthscale_prior_logpdf(x):
     global lengthscale_prior
     return lengthscale_prior.logpdf(np.exp(x)) + x
 
+
 def noise_prior_logpdf(x):
     global noise_prior
     return noise_prior.logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0)
+
 
 def create_priors(
     n_parameters: int,
@@ -124,7 +129,7 @@ def create_priors(
          - noise prior
     """
     global signal_prior, lengthscale_prior, noise_prior
-    
+
     if signal_scale <= 0.0:
         raise ValueError(
             f"The signal scale needs to be strictly positive. Got {signal_scale}."
@@ -148,5 +153,5 @@ def create_priors(
         # lambda x: noise_prior.logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0)
     # )
     priors.append(noise_prior_logpdf)
-    
+
     return priors

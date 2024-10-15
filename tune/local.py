@@ -52,6 +52,7 @@ from tune.summary import confidence_intervals
 from tune.utils import TimeControl, confidence_to_mult, expected_ucb
 
 from line_profiler import profile
+
 __all__ = [
     "counts_to_penta",
     "initialize_optimizer",
@@ -712,6 +713,7 @@ def print_results(
             "tuner again usually works."
         )
         raise e
+
 
 @profile
 def plot_results(

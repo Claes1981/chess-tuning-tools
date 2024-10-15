@@ -27,6 +27,7 @@ __all__ = [
     "plot_activesubspace_sufficient_summary",
 ]
 
+
 @profile
 def _evenly_sample(dim, n_points):
     """Return `n_points` evenly spaced points from a Dimension.
@@ -60,6 +61,7 @@ def _evenly_sample(dim, n_points):
             xi = np.linspace(bounds[0], bounds[1], n_points)
         xi_transformed = dim.transform(xi)
     return xi, xi_transformed
+
 
 @profile
 def partial_dependence(
