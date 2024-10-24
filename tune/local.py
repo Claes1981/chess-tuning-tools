@@ -1197,6 +1197,8 @@ def run_match(
     engine2_ponder: bool = False,
     engine1_restart: str = "on",
     engine2_restart: str = "on",
+    engine1_timeout_scale_factor: Optional[Union[str, float]] = None,
+    engine2_timeout_scale_factor: Optional[Union[str, float]] = None,
     timemargin: Optional[Union[str, int]] = None,
     opening_file: Optional[str] = None,
     tuning_config_name: str = None,
@@ -1336,6 +1338,7 @@ def run_match(
             engine_depth=engine1_depth,
             engine_ponder=engine1_ponder,
             engine_restart=engine1_restart,
+            engine_timeout_scale_factor=engine1_timeout_scale_factor,
             timemargin=timemargin,
         )
     )
@@ -1348,6 +1351,7 @@ def run_match(
             engine_depth=engine2_depth,
             engine_ponder=engine2_ponder,
             engine_restart=engine2_restart,
+            engine_timeout_scale_factor=engine2_timeout_scale_factor,
             timemargin=timemargin,
         )
     )
@@ -1740,11 +1744,14 @@ def _construct_engine_conf(
     engine_depth: Optional[Union[int, str]] = None,
     engine_ponder: bool = False,
     engine_restart: str = "on",
+    engine_timeout_scale_factor: Optional[Union[float, str]] = None,
     timemargin: Optional[Union[int, str]] = None,
 ) -> List[str]:
     result = ["-engine", f"conf=engine{id}", f"restart={engine_restart}"]
     if timemargin is not None:
         result.append(f"timemargin={timemargin}")
+    if engine_timeout_scale_factor is not None:
+        result.append(f"tscale={str(engine_timeout_scale_factor)}")
     if engine_ponder:
         result.append("ponder")
     if engine_npm is not None:
