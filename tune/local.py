@@ -1407,6 +1407,7 @@ def run_match(
 
     string_array.extend(("-rounds", "1"))
     string_array.extend(("-games", "2"))
+    # string_array.extend(("-wait", "5000"))
     string_array.append("-repeat")
     string_array.append("-recover")
     string_array.append("-debug")
