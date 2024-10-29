@@ -507,32 +507,56 @@ def local(  # noqa: C901
     # First log the version of chess-tuning-tools:
     # root_logger.info(f"chess-tuning-tools version: {tune.__version__}")
     root_logger.debug(
-        f"Chess Tuning Tools version: {importlib.metadata.version('chess-tuning-tools')}, Bayes-skopt version: {importlib.metadata.version('bask')}, Scikit-optimize version: {importlib.metadata.version('scikit-optimize')}, Scikit-learn version: {importlib.metadata.version('scikit-learn')}, SciPy version: {importlib.metadata.version('scipy')}"
+        "Chess Tuning Tools version: %s, Bayes-skopt version: %s, Scikit-optimize version: %s, Scikit-learn version: %s, SciPy version: %s",
+        importlib.metadata.version("chess-tuning-tools"),
+        importlib.metadata.version("bask"),
+        importlib.metadata.version("scikit-optimize"),
+        importlib.metadata.version("scikit-learn"),
+        importlib.metadata.version("scipy"),
     )
     #root_logger.debug(
         #f"Chess Tuning Tools version: {pkg_resources.get_distribution('chess-tuning-tools').parsed_version}"
     #)
-    root_logger.debug(f"Got the following tuning settings:\n{json_dict}")
+    root_logger.debug("Got the following tuning settings:\n%s", json_dict)
     root_logger.debug(
-        f"Acquisition function: {acq_function}\n"
-        f"Acquisition function samples: {acq_function_samples}\n"
-        f"Acquisition function lcb alpha: {acq_function_lcb_alpha}\n"
-        f"GP burnin: {gp_burnin}\n"
-        f"GP samples: {gp_samples}\n"
-        f"GP initial burnin: {gp_initial_burnin}\n"
-        f"GP initial samples: {gp_initial_samples}\n"
-        f"GP number of walkers per thread: {gp_walkers_per_thread}\n"
-        f"GP signal prior scale: {gp_signal_prior_scale}\n"
-        f"GP noise prior scale: {gp_noise_prior_scale}\n"
-        f"GP lengthscale prior lower bound: {gp_lengthscale_prior_lb}\n"
-        f"GP lengthscale prior upper bound: {gp_lengthscale_prior_ub}\n"
-        f"GP Matérn kernel nu: {gp_nu}\n"
-        f"Warp inputs: {warp_inputs}\n"
-        f"Normalize y: {normalize_y}\n"
-        f"Noise scaling coefficient: {noise_scaling_coefficient}\n"
-        f"Initial points: {n_initial_points}\n"
-        f"Next points: {n_points}\n"
-        f"Random seed: {random_seed}"
+        "Acquisition function: %s\n"
+        "Acquisition function samples: %s\n"
+        "Acquisition function lcb alpha: %s\n"
+        "GP burnin: %s\n"
+        "GP samples: %s\n"
+        "GP initial burnin: %s\n"
+        "GP initial samples: %s\n"
+        "GP number of walkers per thread: %s\n"
+        "GP signal prior scale: %s\n"
+        "GP noise prior scale: %s\n"
+        "GP lengthscale prior lower bound: %s\n"
+        "GP lengthscale prior upper bound: %s\n"
+        "GP Matérn kernel nu: %s\n"
+        "Warp inputs: %s\n"
+        "Normalize y: %s\n"
+        "Noise scaling coefficient: %s\n"
+        "Initial points: %s\n"
+        "Next points: %s\n"
+        "Random seed: %s",
+        acq_function,
+        acq_function_samples,
+        acq_function_lcb_alpha,
+        gp_burnin,
+        gp_samples,
+        gp_initial_burnin,
+        gp_initial_samples,
+        gp_walkers_per_thread,
+        gp_signal_prior_scale,
+        gp_noise_prior_scale,
+        gp_lengthscale_prior_lb,
+        gp_lengthscale_prior_ub,
+        gp_nu,
+        warp_inputs,
+        normalize_y,
+        noise_scaling_coefficient,
+        n_initial_points,
+        n_points,
+        random_seed,
     )
     #root_logger.debug(
         #f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Kernel lengthscale prior lower bound: {kernel_lengthscale_prior_lower_bound}, Kernel lengthscale prior upper bound: {kernel_lengthscale_prior_upper_bound}, Kernel lengthscale prior lower steepness: {kernel_lengthscale_prior_lower_steepness}, Kernel lengthscale prior upper steepness: {kernel_lengthscale_prior_upper_steepness}, Warp inputs: {warp_inputs}, Normalize y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
@@ -619,18 +643,20 @@ def local(  # noqa: C901
     with AtomicWriter(model_path, mode="wb", overwrite=True).open() as f:
         dill.dump(opt, f)
 
-    root_logger.debug(f"Number of data points: {len(X)}")
+    root_logger.debug("Number of data points: %s", len(X))
     root_logger.debug(
-        f"Number of different data points: {len(np.unique(np.array(X), axis=0))}"
+        "Number of different data points: %s", len(np.unique(np.array(X), axis=0))
     )
-    root_logger.debug(f"Number of model data points: {len(opt.Xi)}")
+    root_logger.debug("Number of model data points: %s", len(opt.Xi))
 
     if opt.gp.chain_ is not None:
         root_logger.debug(
-            f"Hyperparameters Markov chain Monte Carlo mean acceptance fraction: {np.mean(opt.gp._sampler.acceptance_fraction)}"
+            "Hyperparameters Markov chain Monte Carlo mean acceptance fraction: %s",
+            np.mean(opt.gp._sampler.acceptance_fraction),
         )
         root_logger.debug(
-            f"Integrated autocorrelation time estimates: {opt.gp._sampler.get_autocorr_time(quiet=True)}"
+            "Integrated autocorrelation time estimates: %s",
+            opt.gp._sampler.get_autocorr_time(quiet=True),
         )
 
     extra_points = load_points_to_evaluate(
@@ -639,16 +665,16 @@ def local(  # noqa: C901
         rounds=settings.get("rounds", 10),
     )
     root_logger.debug(
-        f"Loaded {len(extra_points)} extra points to evaluate: {extra_points}"
+        "Loaded %s extra points to evaluate: %s", len(extra_points), extra_points
     )
 
     is_first_iteration_after_program_start = True
     # Main optimization loop:
     while True:
         if round == 0:
-            root_logger.info("Starting iteration {}".format(iteration))
+            root_logger.info("Starting iteration %s", iteration)
         else:
-            root_logger.info("Resuming iteration {}".format(iteration))
+            root_logger.info("Resuming iteration %s", iteration)
 
         # If a model has been fit, print/plot results so far:
         if len(y) > 0 and opt.gp.chain_ is not None:
@@ -700,8 +726,9 @@ def local(  # noqa: C901
                         point[i] = int(point[i])
                 # Log that we are evaluating the extra point:
                 root_logger.info(
-                    f"Evaluating extra point {dict(zip(param_ranges.keys(), point))} for "
-                    f"{n_rounds} rounds."
+                    "Evaluating extra point %s for " "%s rounds.",
+                    dict(zip(param_ranges.keys(), point)),
+                    n_rounds,
                 )
                 used_extra_point = True
             else:
@@ -711,7 +738,7 @@ def local(  # noqa: C901
             match_settings = settings.copy()
             match_settings["rounds"] = n_rounds
             point_dict = dict(zip(param_ranges.keys(), point))
-            root_logger.info("Testing {}".format(point_dict))
+            root_logger.info("Testing %s", point_dict)
             if len(y) > 0 and opt.gp.chain_ is not None:
                 testing_current_value = opt.gp.predict(opt.space.transform([point]))[0]
                 with opt.gp.noise_set_to_zero():
@@ -719,8 +746,9 @@ def local(  # noqa: C901
                         opt.space.transform([point]), return_std=True
                     )
                 root_logger.debug(
-                    f"Predicted Elo: {np.around(-testing_current_value * 100, 4)} +- "
-                    f"{np.around(testing_current_std * 100, 4).item()}"
+                    "Predicted Elo: %s +- " "%s",
+                    np.around(-testing_current_value * 100, 4),
+                    np.around(testing_current_std * 100, 4).item(),
                 )
                 confidence_mult = erfinv(confidence) * np.sqrt(2)
                 lower_bound = np.around(
@@ -734,9 +762,10 @@ def local(  # noqa: C901
                     4,
                 ).item()
                 root_logger.debug(
-                    f"{confidence * 100}% confidence interval of the Elo value: "
-                    f"({lower_bound}, "
-                    f"{upper_bound})"
+                    "%s%% confidence interval of the Elo value: " "(%s, " "%s)",
+                    confidence * 100,
+                    lower_bound,
+                    upper_bound,
                 )
             root_logger.info("Start experiment")
         else:
@@ -744,7 +773,7 @@ def local(  # noqa: C901
             match_settings = settings.copy()
             match_settings["rounds"] = n_rounds
             point_dict = dict(zip(param_ranges.keys(), point))
-            root_logger.info("Testing {}".format(point_dict))
+            root_logger.info("Testing %s", point_dict)
             if len(y) > 0 and opt.gp.chain_ is not None:
                 testing_current_value = opt.gp.predict(opt.space.transform([point]))[0]
                 with opt.gp.noise_set_to_zero():
@@ -752,8 +781,9 @@ def local(  # noqa: C901
                         opt.space.transform([point]), return_std=True
                     )
                 root_logger.debug(
-                    f"Predicted Elo: {np.around(-testing_current_value * 100, 4)} +- "
-                    f"{np.around(testing_current_std * 100, 4).item()}"
+                    "Predicted Elo: %s +- " "%s",
+                    np.around(-testing_current_value * 100, 4),
+                    np.around(testing_current_std * 100, 4).item(),
                 )
                 confidence_mult = erfinv(confidence) * np.sqrt(2)
                 lower_bound = np.around(
@@ -767,9 +797,10 @@ def local(  # noqa: C901
                     4,
                 ).item()
                 root_logger.debug(
-                    f"{confidence * 100}% confidence interval of the Elo value: "
-                    f"({lower_bound}, "
-                    f"{upper_bound})"
+                    "%s%% confidence interval of the Elo value: " "(%s, " "%s)",
+                    confidence * 100,
+                    lower_bound,
+                    upper_bound,
                 )
             root_logger.info("Continue experiment")
 
@@ -784,16 +815,16 @@ def local(  # noqa: C901
 
             if round > 1:
                 root_logger.debug(
-                    f"WW, WD, WL/DD, LD, LL experiment counts: {counts_array}"
+                    "WW, WD, WL/DD, LD, LL experiment counts: %s", counts_array
                 )
                 score, error_variance = counts_to_penta(counts=counts_array)
                 root_logger.info(
-                    "Experiment Elo so far: {} +- {}".format(
-                        -score * 100, np.sqrt(error_variance) * 100
-                    )
+                    "Experiment Elo so far: %s +- %s",
+                    -score * 100,
+                    np.sqrt(error_variance) * 100,
                 )
 
-            root_logger.debug(f"Round: {round}")
+            root_logger.debug("Round: %s", round)
             (
                 settings,
                 commands,
@@ -811,7 +842,7 @@ def local(  # noqa: C901
             engine_json = prepare_engines_json(
                 commands=commands, directories=directories, fixed_params=fixed_params
             )
-            root_logger.debug(f"engines.json is prepared:\n{engine_json}")
+            root_logger.debug("engines.json is prepared:\n%s", engine_json)
             write_engines_json(engine_json, point_dict)
             out_exp = []
             out_all = []
@@ -846,13 +877,13 @@ def local(  # noqa: C901
 
         later = datetime.now()
         difference = (later - now).total_seconds()
-        root_logger.info(f"Experiment finished ({difference}s elapsed).")
+        root_logger.info("Experiment finished (%ss elapsed).", difference)
 
         # Parse cutechess-cli output and report results (Elo and standard deviation):
-        root_logger.debug(f"WW, WD, WL/DD, LD, LL experiment counts: {counts_array}")
+        root_logger.debug("WW, WD, WL/DD, LD, LL experiment counts: %s", counts_array)
         score, error_variance = counts_to_penta(counts=counts_array)
         root_logger.info(
-            "Got Elo: {} +- {}".format(-score * 100, np.sqrt(error_variance) * 100)
+            "Got Elo: %s +- %s", -score * 100, np.sqrt(error_variance) * 100
         )
         # root_logger.info("Estimated draw rate: {:.2%}".format(draw_rate))
 
@@ -883,11 +914,11 @@ def local(  # noqa: C901
                 f, np.array(round), np.array(counts_array), np.array(point)
             )
 
-        root_logger.debug(f"Number of data points: {len(X)}")
+        root_logger.debug("Number of data points: %s", len(X))
         root_logger.debug(
-            f"Number of different data points: {len(np.unique(np.array(X), axis=0))}"
+            "Number of different data points: %s", len(np.unique(np.array(X), axis=0))
         )
-        root_logger.debug(f"Number of model data points: {len(opt.Xi)}")
+        root_logger.debug("Number of model data points: %s", len(opt.Xi))
 
         # Update model with the new data:
         if reset:
@@ -899,7 +930,7 @@ def local(  # noqa: C901
                     ["ts", "lcb", "pvrs", "mes", "ei", "mean"]
                 )
                 root_logger.debug(
-                    f"Current random acquisition function: {current_acq_func}"
+                    "Current random acquisition function: %s", current_acq_func
                 )
             else:
                 current_acq_func = acq_function
@@ -943,7 +974,7 @@ def local(  # noqa: C901
                     random.choice(["ts", "lcb", "pvrs", "mes", "ei", "mean"])
                 ]
                 root_logger.debug(
-                    f"Current random acquisition function: {opt.acq_func}"
+                    "Current random acquisition function: %s", opt.acq_func
                 )
             if (
                 isinstance(opt.acq_func, acquisition.PVRS)
@@ -994,10 +1025,12 @@ def local(  # noqa: C901
 
         if opt.gp.chain_ is not None:
             root_logger.debug(
-                f"Hyperparameters Markov chain Monte Carlo mean acceptance fraction: {np.mean(opt.gp._sampler.acceptance_fraction)}"
+                "Hyperparameters Markov chain Monte Carlo mean acceptance fraction: %s",
+                np.mean(opt.gp._sampler.acceptance_fraction),
             )
             root_logger.debug(
-                f"Integrated autocorrelation time estimates: {opt.gp._sampler.get_autocorr_time(quiet=True)}"
+                "Integrated autocorrelation time estimates: %s",
+                opt.gp._sampler.get_autocorr_time(quiet=True),
             )
 
 

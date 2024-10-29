@@ -408,10 +408,12 @@ def initialize_data(
                     path.stem + f"_backup_{int(time.time())}" + path.suffix
                 )
                 logger.warning(
-                    f"The parameter ranges are smaller than the existing data. "
-                    f"Some points will have to be discarded. "
-                    f"The original {len(X)} data points will be saved to "
-                    f"{backup_path}"
+                    "The parameter ranges are smaller than the existing data. "
+                    "Some points will have to be discarded. "
+                    "The original %s data points will be saved to "
+                    "%s",
+                    len(X),
+                    backup_path,
                 )
                 np.savez_compressed(
                     backup_path, np.array(X), np.array(y), np.array(noise)
@@ -587,7 +589,7 @@ def initialize_optimizer(
         if path.exists():
             with open(model_path, mode="rb") as model_file:
                 old_opt = dill.load(model_file)
-                logger.info(f"Resuming from existing optimizer in {model_path}.")
+                logger.info("Resuming from existing optimizer in %s.", model_path)
             if opt.space == old_opt.space:
                 old_opt.acq_func = opt.acq_func
                 old_opt.acq_func_kwargs = opt.acq_func_kwargs
@@ -605,10 +607,10 @@ def initialize_optimizer(
 
     if reinitialize and len(X) > 0:
         logger.info(
-            f"Importing {len(X)} existing datapoints. " f"This could take a while..."
+            "Importing %s existing datapoints. " "This could take a while...", len(X)
         )
         if acq_function == "rand":
-            logger.debug(f"Current random acquisition function: {current_acq_func}")
+            logger.debug("Current random acquisition function: %s", current_acq_func)
         opt.tell(
             X,
             y,
@@ -622,7 +624,7 @@ def initialize_optimizer(
         )
         logger.info("Importing finished.")
     #root_logger.debug(f"noise_vector: {[i*noise_scaling_coefficient for i in noise]}")
-    logger.debug(f"GP kernel_: {opt.gp.kernel_}")
+    logger.debug("GP kernel_: %s", opt.gp.kernel_)
     #logger.debug(f"GP priors: {opt.gp_priors}")
     #logger.debug(f"GP X_train_: {opt.gp.X_train_}")
     #logger.debug(f"GP alpha: {opt.gp.alpha}")
@@ -682,11 +684,12 @@ def print_results(
             _, best_std = optimizer.gp.predict(
                 optimizer.space.transform([best_point]), return_std=True
             )
-        logger.info(f"Current optimum:\n{best_point_dict}")
+        logger.info("Current optimum:\n%s", best_point_dict)
         estimated_elo = -best_value * 100
         logger.info(
-            f"Estimated Elo: {np.around(estimated_elo, 4)} +- "
-            f"{np.around(best_std * 100, 4).item()}"
+            "Estimated Elo: %s +- " "%s",
+            np.around(estimated_elo, 4),
+            np.around(best_std * 100, 4).item(),
         )
         confidence_mult = confidence_to_mult(confidence)
         lower_bound = np.around(
@@ -696,9 +699,10 @@ def print_results(
             -best_value * 100 + confidence_mult * best_std * 100, 4
         ).item()
         logger.info(
-            f"{confidence * 100}% confidence interval of the Elo value: "
-            f"({lower_bound}, "
-            f"{upper_bound})"
+            "%s%% confidence interval of the Elo value: " "%s(, " "%s)",
+            confidence * 100,
+            lower_bound,
+            upper_bound,
         )
         confidence_out = confidence_intervals(
             optimizer=optimizer,
@@ -710,8 +714,9 @@ def print_results(
             only_mean=True,
         )
         logger.info(
-            f"{confidence * 100}% confidence intervals of the parameters:"
-            f"\n{confidence_out}"
+            "%s%% confidence intervals of the parameters:" "\n%s",
+            confidence * 100,
+            confidence_out,
         )
         return best_point, estimated_elo, float(best_std * 100)
     except ValueError as e:
@@ -787,7 +792,8 @@ def plot_results(
         **save_params,
     )
     logger.info(
-        f"Saving a hyperparameters marginalized distributions corner plot to {full_plotpath}."
+        "Saving a hyperparameters marginalized distributions corner plot to %s.",
+        full_plotpath,
     )
     plt.close()
 
@@ -863,7 +869,7 @@ def plot_results(
         **save_params,
     )
     logger.info(
-        f"Saving a partial dependence plot to {full_plotpath_partial_dependence}."
+        "Saving a partial dependence plot to %s.", full_plotpath_partial_dependence
     )
     plt.close(partial_dependence_figure)
     confidence_interval_width_figure.savefig(
@@ -873,7 +879,8 @@ def plot_results(
         **save_params,
     )
     logger.info(
-        f"Saving a confidence interval width plot to {full_plotpath_confidence_interval_width}."
+        "Saving a confidence interval width plot to %s.",
+        full_plotpath_confidence_interval_width,
     )
     plt.close(confidence_interval_width_figure)
 
@@ -894,7 +901,8 @@ def plot_results(
         timestr = time.strftime("%Y%m%d-%H%M%S")
 
         logger.debug(
-            f"polynomial_features.n_output_features_= {polynomial_features.n_output_features_}"
+            "polynomial_features.n_output_features_= %s",
+            polynomial_features.n_output_features_,
         )
 
         LinearRegression_polynomial = LinearRegression()
@@ -905,7 +913,12 @@ def plot_results(
         )
 
         logger.debug(
-            f"LinearRegression_polynomial.score= {LinearRegression_polynomial.score(samples_polynomial_features_transformed, np.asarray(optimizer.yi), 1 / np.asarray(optimizer.noisei))}"
+            "LinearRegression_polynomial.score= %s",
+            LinearRegression_polynomial.score(
+                samples_polynomial_features_transformed,
+                np.asarray(optimizer.yi),
+                1 / np.asarray(optimizer.noisei),
+            ),
         )
 
         LinearRegression_polynomial_predicted_scores = (
@@ -961,7 +974,8 @@ def plot_results(
             **save_params,
         )
         logger.info(
-            f"Saving a polynomial regression partial dependence plot to {full_plotpath}."
+            "Saving a polynomial regression partial dependence plot to %s.",
+            full_plotpath,
         )
         plt.close(fig)
 
@@ -1117,7 +1131,7 @@ def plot_results(
         #figsize=(6, 4),
     )
     logger.debug(
-        f"Active subspace eigenvalues: {np.squeeze(active_subspaces_object.evals)}"
+        "Active subspace eigenvalues: %s", np.squeeze(active_subspaces_object.evals)
     )
 
     active_subspace_eigenvectors_axes = active_subspace_subfigures[1].subplots(
@@ -1140,7 +1154,7 @@ def plot_results(
     )
     activity_scores_table.sortby = "Activity score"
     activity_scores_table.reversesort = True
-    logger.debug(f"Active subspace activity scores:\n{activity_scores_table}")
+    logger.debug("Active subspace activity scores:\n%s", activity_scores_table)
     #logger.debug(f"Active subspace activity scores: {np.squeeze(active_subspaces_object.activity_scores)}")
 
     active_subspace_sufficient_summary_axes = active_subspace_subfigures[2].subplots(
@@ -1169,7 +1183,7 @@ def plot_results(
         facecolor="xkcd:dark grey",
         **save_params,
     )
-    logger.info(f"Saving an active subspace plot to {active_subspace_full_plotpath}.")
+    logger.info("Saving an active subspace plot to %s.", active_subspace_full_plotpath)
     plt.close(active_subspace_figure)
     plt.rcdefaults()
 
@@ -1518,15 +1532,16 @@ def check_log_for_errors(
         pattern = r"[0-9]+ [<>].+: error (.+)"
         match = re.search(pattern=pattern, string=line)
         if match is not None:
-            logger.warning(f"cutechess-cli error: {match.group(1)}")
+            logger.warning("cutechess-cli error: %s", match.group(1))
 
         # Check for unknown UCI option
         pattern = r"Unknown (?:option|command): (.+)"
         match = re.search(pattern=pattern, string=line)
         if match is not None:
             logger.error(
-                f"UCI option {match.group(1)} was unknown to the engine. "
-                f"Check if the spelling is correct."
+                "UCI option %s was unknown to the engine. "
+                f"Check if the spelling is correct.",
+                match.group(1),
             )
             continue
 
@@ -1538,7 +1553,7 @@ def check_log_for_errors(
         match = re.search(pattern=pattern, string=line)
         if match is not None:
             engine = match.group(1) if match.group(3) == "White" else match.group(2)
-            logger.warning(f"Engine {engine} lost on time as {match.group(3)}.")
+            logger.warning("Engine %s lost on time as %s.", engine, match.group(3))
             continue
 
         # Check for connection stall:
@@ -1550,8 +1565,9 @@ def check_log_for_errors(
         if match is not None:
             engine = match.group(1) if match.group(3) == "White" else match.group(2)
             logger.error(
-                f"{engine}'s connection stalled as {match.group(3)}. "
-                f"Game result is unreliable."
+                "%s's connection stalled as %s. " "Game result is unreliable.",
+                engine,
+                match.group(3),
             )
 
 
@@ -1717,9 +1733,9 @@ def update_model(
             )
             later = datetime.now()
             difference = (later - now).total_seconds()
-            logger.info(f"GP sampling finished ({difference}s)")
+            logger.info("GP sampling finished (%ss)", difference)
             #logger.debug(f"noise_vector: {[i*noise_scaling_coefficient for i in noise]}")
-            logger.debug(f"GP kernel_: {optimizer.gp.kernel_}")
+            logger.debug("GP kernel_: %s", optimizer.gp.kernel_)
             #logger.debug(f"GP priors: {opt.gp_priors}")
             #logger.debug(f"GP X_train_: {opt.gp.X_train_}")
             #logger.debug(f"GP alpha: {opt.gp.alpha}")
