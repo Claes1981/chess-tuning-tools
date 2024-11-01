@@ -277,7 +277,7 @@ def load_points_to_evaluate(
         rounds_column = np.full(len(df), rounds)
 
     # All points are within the bounds, add them to the list of points to evaluate:
-    return [(x, r) for x, r in zip(df.values.tolist(), rounds_column)]
+    return list(zip(df.values.tolist(), rounds_column))
 
 
 def reduce_ranges(
