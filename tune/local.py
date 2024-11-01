@@ -309,7 +309,7 @@ def reduce_ranges(
     for row, yval, nval in zip(X, y, noise):
         include_row = True
         for dim, value in zip(space.dimensions, row):
-            if isinstance(dim, Integer) or isinstance(dim, Real):
+            if isinstance(dim, (Integer, Real)):
                 lb, ub = dim.bounds
                 if value < lb or value > ub:
                     include_row = False

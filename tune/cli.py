@@ -977,9 +977,14 @@ def local(  # noqa: C901
                     "Current random acquisition function: %s", opt.acq_func
                 )
             if (
-                isinstance(opt.acq_func, acquisition.PVRS)
-                or isinstance(opt.acq_func, acquisition.ThompsonSampling)
-                or isinstance(opt.acq_func, acquisition.VarianceReduction)
+                isinstance(
+                    opt.acq_func,
+                    (
+                        acquisition.PVRS,
+                        acquisition.ThompsonSampling,
+                        acquisition.VarianceReduction,
+                    ),
+                )
                 or acq_function == "pvrs"
                 or acq_function == "ts"
                 or acq_function == "vr"
