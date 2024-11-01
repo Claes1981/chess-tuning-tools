@@ -67,7 +67,7 @@ def make_invgamma_prior(
         raise ValueError("The bounds cannot be equal to or smaller than 0.")
     if lower_bound >= upper_bound:
         raise ValueError(
-            "Lower bound needs to be strictly smaller than the upper " "bound."
+            "Lower bound needs to be strictly smaller than the upper bound."
         )
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")

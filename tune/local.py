@@ -607,7 +607,7 @@ def initialize_optimizer(
 
     if reinitialize and len(X) > 0:
         logger.info(
-            "Importing %s existing datapoints. " "This could take a while...", len(X)
+            "Importing %s existing datapoints. This could take a while...", len(X)
         )
         if acq_function == "rand":
             logger.debug("Current random acquisition function: %s", current_acq_func)
@@ -687,7 +687,7 @@ def print_results(
         logger.info("Current optimum:\n%s", best_point_dict)
         estimated_elo = -best_value * 100
         logger.info(
-            "Estimated Elo: %s +- " "%s",
+            "Estimated Elo: %s +- %s",
             np.around(estimated_elo, 4),
             np.around(best_std * 100, 4).item(),
         )
@@ -699,7 +699,7 @@ def print_results(
             -best_value * 100 + confidence_mult * best_std * 100, 4
         ).item()
         logger.info(
-            "%s%% confidence interval of the Elo value: " "%s(, " "%s)",
+            "%s%% confidence interval of the Elo value: %s(, %s)",
             confidence * 100,
             lower_bound,
             upper_bound,
@@ -714,7 +714,7 @@ def print_results(
             only_mean=True,
         )
         logger.info(
-            "%s%% confidence intervals of the parameters:" "\n%s",
+            "%s%% confidence intervals of the parameters:\n%s",
             confidence * 100,
             confidence_out,
         )
@@ -1565,7 +1565,7 @@ def check_log_for_errors(
         if match is not None:
             engine = match.group(1) if match.group(3) == "White" else match.group(2)
             logger.error(
-                "%s's connection stalled as %s. " "Game result is unreliable.",
+                "%s's connection stalled as %s. Game result is unreliable.",
                 engine,
                 match.group(3),
             )

@@ -726,7 +726,7 @@ def local(  # noqa: C901
                         point[i] = int(point[i])
                 # Log that we are evaluating the extra point:
                 root_logger.info(
-                    "Evaluating extra point %s for " "%s rounds.",
+                    "Evaluating extra point %s for %s rounds.",
                     dict(zip(param_ranges.keys(), point)),
                     n_rounds,
                 )
@@ -746,7 +746,7 @@ def local(  # noqa: C901
                         opt.space.transform([point]), return_std=True
                     )
                 root_logger.debug(
-                    "Predicted Elo: %s +- " "%s",
+                    "Predicted Elo: %s +- %s",
                     np.around(-testing_current_value * 100, 4),
                     np.around(testing_current_std * 100, 4).item(),
                 )
@@ -762,7 +762,7 @@ def local(  # noqa: C901
                     4,
                 ).item()
                 root_logger.debug(
-                    "%s%% confidence interval of the Elo value: " "(%s, " "%s)",
+                    "%s%% confidence interval of the Elo value: (%s, %s)",
                     confidence * 100,
                     lower_bound,
                     upper_bound,
@@ -781,7 +781,7 @@ def local(  # noqa: C901
                         opt.space.transform([point]), return_std=True
                     )
                 root_logger.debug(
-                    "Predicted Elo: %s +- " "%s",
+                    "Predicted Elo: %s +- %s",
                     np.around(-testing_current_value * 100, 4),
                     np.around(testing_current_std * 100, 4).item(),
                 )
@@ -797,7 +797,7 @@ def local(  # noqa: C901
                     4,
                 ).item()
                 root_logger.debug(
-                    "%s%% confidence interval of the Elo value: " "(%s, " "%s)",
+                    "%s%% confidence interval of the Elo value: (%s, %s)",
                     confidence * 100,
                     lower_bound,
                     upper_bound,
