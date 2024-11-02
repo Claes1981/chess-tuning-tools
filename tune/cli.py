@@ -624,9 +624,7 @@ def local(  # noqa: C901
         ),
         "n_initial_points": settings.get("n_initial_points", n_initial_points),
         "function_samples": settings.get("acq_function_samples", acq_function_samples),
-        "lcb_alpha": settings.get(
-            "acq_function_lcb_alpha", acq_function_lcb_alpha
-        ),
+        "lcb_alpha": settings.get("acq_function_lcb_alpha", acq_function_lcb_alpha),
     }
     resume_config = {
         "resume": resume,
@@ -713,13 +711,15 @@ def local(  # noqa: C901
                 plot_results(
                     optimizer=opt,
                     result_object=result_object,
-                    iterations=np.array(performance)[:, 0],
-                    elos=np.array(performance)[:, 1:],
-                    optima=np.array(optima),
-                    plot_path=settings.get("plot_path", plot_path),
-                    parameter_names=list(param_ranges.keys()),
-                    confidence=settings.get("confidence", confidence),
-                    current_iteration=iteration,
+                    plot_config={
+                        "path": settings.get("plot_path", plot_path),
+                        "iterations": np.array(performance)[:, 0],
+                        "elos": np.array(performance)[:, 1:],
+                        "optima": np.array(optima),
+                        "parameter_names": list(param_ranges.keys()),
+                        "confidence": settings.get("confidence", confidence),
+                        "current_iteration": iteration,
+                    },
                 )
 
         check_if_pause()
@@ -959,7 +959,11 @@ def local(  # noqa: C901
                 # kernel_lengthscale_prior_lower_steepness=settings.get("kernel_lengthscale_prior_lower_steepness", kernel_lengthscale_prior_lower_steepness),
                 # kernel_lengthscale_prior_upper_steepness=settings.get("kernel_lengthscale_prior_upper_steepness", kernel_lengthscale_prior_upper_steepness),
                 acq_function_config=acq_function_config,
-                resume_config={"resume": True, "fast_resume": False, "model_path": None},
+                resume_config={
+                    "resume": True,
+                    "fast_resume": False,
+                    "model_path": None,
+                },
             )
         else:
             root_logger.info("Updating model.")

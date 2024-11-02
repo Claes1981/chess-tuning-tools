@@ -779,13 +779,16 @@ def print_results(
 def plot_results(
     optimizer: Optimizer,
     result_object: OptimizeResult,
-    iterations: np.ndarray,
-    elos: np.ndarray,
-    optima: np.ndarray,
-    plot_path: str,
-    parameter_names: Sequence[str],
-    confidence: float = 0.9,
-    current_iteration: Optional[int] = None,
+    *,
+    plot_config: dict = None,
+    # data_config: dict = None,
+    # iterations: np.ndarray,
+    # elos: np.ndarray,
+    # optima: np.ndarray,
+    # plot_path: str,
+    # parameter_names: Sequence[str],
+    # confidence: float = 0.9,
+    # current_iteration: Optional[int] = None,
 ) -> None:
     """Plot the current results of the optimizer.
 
@@ -815,7 +818,26 @@ def plot_results(
     plt.rcdefaults()
     plt.rcParams["axes.formatter.useoffset"] = False
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    plotpath = pathlib.Path(plot_path)
+
+    # Default configurations
+    default_plot_config = {
+        "path": "plots",
+        "iterations": None,
+        "elos": None,
+        "optima": None,
+        "parameter_names": None,
+        "current_iteration": len(optimizer.Xi),
+        "confidence": 0.9,
+        "dpi": 50,
+    }
+
+    # Update default configurations with user-provided values
+    if plot_config is not None:
+        default_plot_config.update(plot_config)
+    plot_config = default_plot_config
+
+    plotpath = pathlib.Path(plot_config["path"])
+    current_iteration = plot_config["current_iteration"]
     for subdir in ["landscapes", "elo", "optima", "hyperparameters"]:
         (plotpath / subdir).mkdir(parents=True, exist_ok=True)
     full_plotpath = (
@@ -851,8 +873,10 @@ def plot_results(
     timestr = time.strftime("%Y%m%d-%H%M%S")
     dark_gray = "#36393f"
 
+    parameter_names = plot_config["parameter_names"]
     if current_iteration is None:
         current_iteration = len(optimizer.Xi)
+    confidence = plot_config["confidence"]
 
     # First save the landscape:
     save_params = dict()
@@ -898,7 +922,7 @@ def plot_results(
             confidence_interval_width_axes=confidence_interval_width_axes,
             confidence=confidence,
         )
-    plotpath = pathlib.Path(plot_path)
+    # plotpath = pathlib.Path(plot_path)
     for subdir in ["landscapes", "elo", "optima"]:
         (plotpath / subdir).mkdir(parents=True, exist_ok=True)
     full_plotpath_partial_dependence = (
@@ -1006,7 +1030,7 @@ def plot_results(
             confidence_interval_width_axes=None,
             confidence=confidence,
         )
-        plotpath = pathlib.Path(plot_path)
+        # plotpath = pathlib.Path(plot_path)
         for subdir in ["landscapes", "elo", "optima"]:
             (plotpath / subdir).mkdir(parents=True, exist_ok=True)
         full_plotpath = (
@@ -1027,9 +1051,10 @@ def plot_results(
         plt.close(fig)
 
     # Plot the history of optima:
+    iterations = plot_config["iterations"]
     fig, ax = plot_optima(
         iterations=iterations,
-        optima=optima,
+        optima=plot_config["optima"],
         space=optimizer.space,
         parameter_names=parameter_names,
     )
@@ -1039,7 +1064,8 @@ def plot_results(
 
     # Plot the predicted Elo performance of the optima:
     fig, ax = plot_performance(
-        performance=np.hstack([iterations[:, None], elos]), confidence=confidence
+        performance=np.hstack([iterations[:, None], plot_config["elos"]]),
+        confidence=confidence,
     )
     full_plotpath = plotpath / f"elo/elo-{timestr}-{current_iteration}.png"
     fig.savefig(full_plotpath, dpi=150, facecolor="xkcd:dark grey")
