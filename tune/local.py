@@ -447,28 +447,32 @@ def initialize_optimizer(
     y: Sequence[float],
     noise: Sequence[float],
     parameter_ranges: Sequence[Union[Sequence, Dimension]],
+    *,
     noise_scaling_coefficient: float = 1.0,
     random_seed: int = 0,
-    warp_inputs: bool = True,
-    normalize_y: bool = True,
+    gp_config: dict = None,
+    gp_nu: float = 1.5,
+    # warp_inputs: bool = True,
+    # normalize_y: bool = True,
     #kernel_lengthscale_prior_lower_bound: float = 0.1,
     #kernel_lengthscale_prior_upper_bound: float = 0.5,
     #kernel_lengthscale_prior_lower_steepness: float = 2.0,
     #kernel_lengthscale_prior_upper_steepness: float = 1.0,
-    n_points: int = 500,
-    non_uncert_acq_function_evaluation_points: int = 500,
-    n_initial_points: int = 16,
-    acq_function: str = "mes",
-    acq_function_samples: int = 1,
-    acq_function_lcb_alpha: float = 1.96,
-    resume: bool = True,
-    fast_resume: bool = True,
-    model_path: Optional[str] = None,
-    gp_initial_burnin: int = 100,
-    gp_initial_samples: int = 300,
-    gp_walkers_per_thread: int = 100,
+    # n_points: int = 500,
+    # non_uncert_acq_function_evaluation_points: int = 500,
+    # n_initial_points: int = 16,
+    # acq_function: str = "mes",
+    acq_function_config: dict = None,
+    # acq_function_samples: int = 1,
+    # acq_function_lcb_alpha: float = 1.96,
+    resume_config: dict = None,
+    # resume: bool = True,
+    # fast_resume: bool = True,
+    # model_path: Optional[str] = None,
+    # gp_initial_burnin: int = 100,
+    # gp_initial_samples: int = 300,
+    # gp_walkers_per_thread: int = 100,
     gp_priors: Optional[List[Callable[[float], float]]] = None,
-    gp_nu: float = 1.5,
 ) -> Optimizer:
     """Create an Optimizer object and if needed resume and/or reinitialize.
 
@@ -526,15 +530,55 @@ def initialize_optimizer(
     random_state = setup_random_state(random_seed)
     #space = normalize_dimensions(parameter_ranges)
 
+    default_gp_config = {
+        "normalize_y": True,
+        "warp_inputs": True,
+        "nu": 1.5,
+        "initial_burnin": 100,
+        "initial_samples": 300,
+        "walkers_per_thread": 100,
+    }
+
+    default_acq_function_config = {
+        "function": "mes",
+        "n_points": 500,
+        "non_uncert_acq_function_evaluation_points": 500,
+        "n_initial_points": 16,
+        "function_samples": 1,
+        "lcb_alpha": 1.96,
+    }
+
+    default_resume_config = {
+        "resume": True,
+        "fast_resume": True,
+        "model_path": None,
+    }
+
+    # Update default configurations with user-provided values
+    if gp_config is not None:
+        default_gp_config.update(gp_config)
+    gp_config = default_gp_config
+
+    if acq_function_config is not None:
+        default_acq_function_config.update(acq_function_config)
+    acq_function_config = default_acq_function_config
+
+    if resume_config is not None:
+        default_resume_config.update(resume_config)
+    resume_config = default_resume_config
+
     gp_kwargs = dict(
-        normalize_y=normalize_y,
-        warp_inputs=warp_inputs,
+        normalize_y=gp_config["normalize_y"],
+        warp_inputs=gp_config["warp_inputs"],
     )
+
+    acq_function = acq_function_config["function"]
     if acq_function == "rand":
         current_acq_func = random.choice(["ts", "lcb", "pvrs", "mes", "ei", "mean"])
     else:
         current_acq_func = acq_function
 
+    acq_function_lcb_alpha = acq_function_config["lcb_alpha"]
     if acq_function_lcb_alpha == float("inf"):
         acq_function_lcb_alpha = str(
             acq_function_lcb_alpha
@@ -549,7 +593,9 @@ def initialize_optimizer(
         or current_acq_func == "ts"
         or current_acq_func == "vr"
     ):
-        n_points = non_uncert_acq_function_evaluation_points
+        n_points = acq_function_config["non_uncert_acq_function_evaluation_points"]
+    else:
+        n_points = acq_function_config["n_points"]
 
     #roundflat = make_roundflat(
                 #kernel_lengthscale_prior_lower_bound,
@@ -569,7 +615,7 @@ def initialize_optimizer(
     opt = Optimizer(
         dimensions=parameter_ranges,
         n_points=n_points,
-        n_initial_points=n_initial_points,
+        n_initial_points=acq_function_config["n_initial_points"],
         # gp_kernel=kernel,  # TODO: Let user pass in different kernels
         gp_kwargs=gp_kwargs,
         #gp_priors=priors,
@@ -578,13 +624,14 @@ def initialize_optimizer(
         acq_func_kwargs=acq_func_kwargs,
         random_state=random_state,
     )
-    opt.gp._kernel.k2.nu = gp_nu
+    opt.gp._kernel.k2.nu = gp_config["nu"]
 
-    if not resume:
+    if not resume_config["resume"]:
         return opt
 
     reinitialize = True
-    if model_path is not None and fast_resume:
+    model_path = resume_config["model_path"]
+    if model_path is not None and resume_config["fast_resume"]:
         path = pathlib.Path(model_path)
         if path.exists():
             with open(model_path, mode="rb") as model_file:
@@ -616,10 +663,10 @@ def initialize_optimizer(
             y,
             #noise_vector=noise,
             noise_vector=[i * noise_scaling_coefficient for i in noise],
-            gp_burnin=gp_initial_burnin,
-            gp_samples=gp_initial_samples,
-            n_samples=acq_function_samples,
-            n_walkers_per_thread=gp_walkers_per_thread,
+            gp_burnin=gp_config["initial_burnin"],
+            gp_samples=gp_config["initial_samples"],
+            n_samples=acq_function_config["function_samples"],
+            n_walkers_per_thread=gp_config["walkers_per_thread"],
             progress=True,
         )
         logger.info("Importing finished.")

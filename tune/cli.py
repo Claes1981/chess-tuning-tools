@@ -604,6 +604,36 @@ def local(  # noqa: C901
         ),
         noise_scale=settings.get("gp_noise_prior_scale", gp_noise_prior_scale),
     )
+
+    gp_config = {
+        "normalize_y": settings.get("normalize_y", normalize_y),
+        "warp_inputs": settings.get("warp_inputs", warp_inputs),
+        "nu": float(settings.get("gp_nu", gp_nu)),
+        "initial_burnin": settings.get("gp_initial_burnin", gp_initial_burnin),
+        "initial_samples": settings.get("gp_initial_samples", gp_initial_samples),
+        "walkers_per_thread": settings.get(
+            "gp_walkers_per_thread", gp_walkers_per_thread
+        ),
+    }
+    acq_function_config = {
+        "function": settings.get("acq_function", acq_function),
+        "n_points": settings.get("n_points", n_points),
+        "non_uncert_acq_function_evaluation_points": settings.get(
+            "non_uncert_acq_function_evaluation_points",
+            non_uncert_acq_function_evaluation_points,
+        ),
+        "n_initial_points": settings.get("n_initial_points", n_initial_points),
+        "function_samples": settings.get("acq_function_samples", acq_function_samples),
+        "lcb_alpha": settings.get(
+            "acq_function_lcb_alpha", acq_function_lcb_alpha
+        ),
+    }
+    resume_config = {
+        "resume": resume,
+        "fast_resume": fast_resume,
+        "model_path": model_path,
+    }
+
     opt = initialize_optimizer(
         X=X,
         y=y,
@@ -611,33 +641,14 @@ def local(  # noqa: C901
         parameter_ranges=list(param_ranges.values()),
         noise_scaling_coefficient=noise_scaling_coefficient,
         random_seed=settings.get("random_seed", random_seed),
-        warp_inputs=settings.get("warp_inputs", warp_inputs),
-        normalize_y=settings.get("normalize_y", normalize_y),
+        gp_config=gp_config,
+        gp_priors=gp_priors,
         # kernel_lengthscale_prior_lower_bound=settings.get("kernel_lengthscale_prior_lower_bound", kernel_lengthscale_prior_lower_bound),
         # kernel_lengthscale_prior_upper_bound=settings.get("kernel_lengthscale_prior_upper_bound", kernel_lengthscale_prior_upper_bound),
         # kernel_lengthscale_prior_lower_steepness=settings.get("kernel_lengthscale_prior_lower_steepness", kernel_lengthscale_prior_lower_steepness),
         # kernel_lengthscale_prior_upper_steepness=settings.get("kernel_lengthscale_prior_upper_steepness", kernel_lengthscale_prior_upper_steepness),
-        n_points=settings.get("n_points", n_points),
-        non_uncert_acq_function_evaluation_points=settings.get(
-            "non_uncert_acq_function_evaluation_points",
-            non_uncert_acq_function_evaluation_points,
-        ),
-        n_initial_points=settings.get("n_initial_points", n_initial_points),
-        acq_function=settings.get("acq_function", acq_function),
-        acq_function_samples=settings.get("acq_function_samples", acq_function_samples),
-        acq_function_lcb_alpha=settings.get(
-            "acq_function_lcb_alpha", acq_function_lcb_alpha
-        ),
-        resume=resume,
-        fast_resume=fast_resume,
-        model_path=model_path,
-        gp_initial_burnin=settings.get("gp_initial_burnin", gp_initial_burnin),
-        gp_initial_samples=settings.get("gp_initial_samples", gp_initial_samples),
-        gp_walkers_per_thread=settings.get(
-            "gp_walkers_per_thread", gp_walkers_per_thread
-        ),
-        gp_priors=gp_priors,
-        gp_nu=float(settings.get("gp_nu", gp_nu)),
+        acq_function_config=acq_function_config,
+        resume_config=resume_config,
     )
 
     with AtomicWriter(model_path, mode="wb", overwrite=True).open() as f:
@@ -941,31 +952,14 @@ def local(  # noqa: C901
                 parameter_ranges=list(param_ranges.values()),
                 noise_scaling_coefficient=noise_scaling_coefficient,
                 random_seed=settings.get("random_seed", random_seed),
-                warp_inputs=settings.get("warp_inputs", warp_inputs),
-                normalize_y=settings.get("normalize_y", normalize_y),
+                gp_config=gp_config,
+                gp_priors=gp_priors,
                 # kernel_lengthscale_prior_lower_bound=settings.get("kernel_lengthscale_prior_lower_bound", kernel_lengthscale_prior_lower_bound),
                 # kernel_lengthscale_prior_upper_bound=settings.get("kernel_lengthscale_prior_upper_bound", kernel_lengthscale_prior_upper_bound),
                 # kernel_lengthscale_prior_lower_steepness=settings.get("kernel_lengthscale_prior_lower_steepness", kernel_lengthscale_prior_lower_steepness),
                 # kernel_lengthscale_prior_upper_steepness=settings.get("kernel_lengthscale_prior_upper_steepness", kernel_lengthscale_prior_upper_steepness),
-                n_points=settings.get("n_points", n_points),
-                n_initial_points=settings.get("n_initial_points", n_initial_points),
-                acq_function=current_acq_func,
-                acq_function_samples=settings.get(
-                    "acq_function_samples", acq_function_samples
-                ),
-                acq_function_lcb_alpha=settings.get(
-                    "acq_function_lcb_alpha", acq_function_lcb_alpha
-                ),
-                resume=True,
-                fast_resume=False,
-                model_path=None,
-                gp_initial_burnin=settings.get("gp_burnin", gp_burnin),
-                gp_initial_samples=settings.get("gp_samples", gp_samples),
-                gp_walkers_per_thread=settings.get(
-                    "gp_walkers_per_thread", gp_walkers_per_thread
-                ),
-                gp_priors=gp_priors,
-                gp_nu=float(settings.get("gp_nu", gp_nu)),
+                acq_function_config=acq_function_config,
+                resume_config={"resume": True, "fast_resume": False, "model_path": None},
             )
         else:
             root_logger.info("Updating model.")
