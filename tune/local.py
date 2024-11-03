@@ -1161,7 +1161,7 @@ def plot_results(
     else:
         for x_row in active_subspace_samples_x_raw:
             y_row = optimizer.gp.predict(np.reshape(x_row, (1, -1)))
-            if active_subspace_samples_y_values == []:
+            if not active_subspace_samples_y_values:
                 active_subspace_samples_y_values = y_row
             else:
                 active_subspace_samples_y_values = np.vstack(
@@ -1398,18 +1398,9 @@ def run_match(
     string_array.append(cutechesscli_command)
     string_array.extend(("-concurrency", str(concurrency)))
 
-    if (
-        engine1_npm is None
-        and engine1_tc is None
-        and engine1_st is None
-        and engine1_depth is None
-    ) or (
-        engine2_npm is None
-        and engine2_tc is None
-        and engine2_st is None
-        and engine2_depth is None
-    ):
+    if all(param is None for param in (engine1_npm, engine1_tc, engine1_st, engine1_depth)) or all(param is None for param in (engine2_npm, engine2_tc, engine2_st, engine2_depth)):
         raise ValueError("A valid time control or nodes configuration is required.")
+
     string_array.extend(
         _construct_engine_conf(
             id=1,
