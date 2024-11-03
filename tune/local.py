@@ -746,7 +746,7 @@ def print_results(
             -best_value * 100 + confidence_mult * best_std * 100, 4
         ).item()
         logger.info(
-            "%s%% confidence interval of the Elo value: %s(, %s)",
+            "%s%% confidence interval of the Elo value: (%s, %s)",
             confidence * 100,
             lower_bound,
             upper_bound,
