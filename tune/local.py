@@ -585,11 +585,7 @@ def initialize_optimizer(
         )  # Bayes-skopt expect alpha as a string, "inf", in case of infinite alpha.
     acq_func_kwargs = {"alpha": acq_function_lcb_alpha, "n_thompson": 500}
 
-    if (
-        current_acq_func == "pvrs"
-        or current_acq_func == "ts"
-        or current_acq_func == "vr"
-    ):
+    if current_acq_func in ("pvrs", "ts", "vr"):
         n_points = acq_function_config["non_uncert_acq_function_evaluation_points"]
     else:
         n_points = acq_function_config["n_points"]
