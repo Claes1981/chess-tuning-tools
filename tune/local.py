@@ -1398,7 +1398,11 @@ def run_match(
     string_array.append(cutechesscli_command)
     string_array.extend(("-concurrency", str(concurrency)))
 
-    if all(param is None for param in (engine1_npm, engine1_tc, engine1_st, engine1_depth)) or all(param is None for param in (engine2_npm, engine2_tc, engine2_st, engine2_depth)):
+    if all(
+        param is None for param in (engine1_npm, engine1_tc, engine1_st, engine1_depth)
+    ) or all(
+        param is None for param in (engine2_npm, engine2_tc, engine2_st, engine2_depth)
+    ):
         raise ValueError("A valid time control or nodes configuration is required.")
 
     string_array.extend(
