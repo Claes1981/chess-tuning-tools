@@ -1234,10 +1234,10 @@ def plot_results(
         1, 1
     )
     active_subspace_sufficient_summary_axes = plot_activesubspace_sufficient_summary(
-        active_subspaces_object,
-        active_subspace_samples_normalized_x,
-        active_subspace_samples_y_values,
-        result_object,
+        active_subspaces_object=active_subspaces_object,
+        inputs=active_subspace_samples_normalized_x,
+        outputs=active_subspace_samples_y_values,
+        result_object=result_object,
         next_point=optimizer._next_x,
         active_subspace_figure=active_subspace_figure,
         active_subspace_sufficient_summary_axes=active_subspace_sufficient_summary_axes,
@@ -1270,6 +1270,7 @@ def inputs_uniform(n_samples, lb, ub):
 
 
 def run_match(
+    *,
     cutechesscli_command: Optional[str] = "cutechess-cli",
     rounds: int = 1,
     engine1_tc: Optional[Union[str, TimeControl]] = None,
@@ -1750,6 +1751,7 @@ def update_model(
     point: list,
     score: float,
     variance: float,
+    *,
     noise_scaling_coefficient: float = 1.0,
     acq_function_samples: int = 1,
     acq_function_lcb_alpha: float = 1.96,
@@ -1828,6 +1830,7 @@ def update_model(
 
 def _construct_engine_conf(
     id: int,
+    *,
     engine_npm: Optional[Union[int, str]] = None,
     engine_tc: Optional[Union[str, TimeControl]] = None,
     engine_st: Optional[Union[int, str]] = None,

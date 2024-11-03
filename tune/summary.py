@@ -39,6 +39,7 @@ def _round_all_intervals(intervals, threshold=0.01, max_precision=32):
 
 
 def confidence_intervals(
+    *,
     optimizer,
     param_names=None,
     hdi_prob=0.95,

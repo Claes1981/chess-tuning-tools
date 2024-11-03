@@ -66,6 +66,7 @@ def _evenly_sample(dim, n_points):
 @profile
 def partial_dependence(
     space,
+    *,
     model,
     regression_object,
     polynomial_features_object,
@@ -234,6 +235,7 @@ def partial_dependence(
 
 def plot_objective_1d(
     result: OptimizeResult,
+    *,
     parameter_name: Optional[str] = None,
     n_points: int = 500,
     n_random_restarts: int = 100,
@@ -354,6 +356,7 @@ def plot_objective_1d(
 @profile
 def plot_objective(
     result,
+    *,
     regression_object,
     polynomial_features_object,
     levels=20,
@@ -508,10 +511,10 @@ def plot_objective(
                     xi, yi_partial_dependence, yi_standard_deviation = (
                         partial_dependence(
                             space,
-                            result.models[-1],
-                            regression_object,
-                            polynomial_features_object,
-                            i,
+                            model=result.models[-1],
+                            regression_object=regression_object,
+                            polynomial_features_object=polynomial_features_object,
+                            i=i,
                             j=None,
                             plot_confidence_interval_width=plot_confidence_interval_width,
                             plot_polynomial_regression=plot_polynomial_regression,
@@ -522,10 +525,10 @@ def plot_objective(
                 else:
                     xi, yi_partial_dependence = partial_dependence(
                         space,
-                        result.models[-1],
-                        regression_object,
-                        polynomial_features_object,
-                        i,
+                        model=result.models[-1],
+                        regression_object=regression_object,
+                        polynomial_features_object=polynomial_features_object,
+                        i=i,
                         j=None,
                         plot_confidence_interval_width=plot_confidence_interval_width,
                         plot_polynomial_regression=plot_polynomial_regression,
@@ -610,29 +613,29 @@ def plot_objective(
                     xi, yi, zi_partial_dependence, zi_standard_deviation = (
                         partial_dependence(
                             space,
-                            result.models[-1],
-                            regression_object,
-                            polynomial_features_object,
-                            i,
-                            j,
-                            plot_confidence_interval_width,
-                            plot_polynomial_regression,
-                            rvs_transformed,
-                            n_points,
+                            model=result.models[-1],
+                            regression_object=regression_object,
+                            polynomial_features_object=polynomial_features_object,
+                            i=i,
+                            j=j,
+                            plot_confidence_interval_width=plot_confidence_interval_width,
+                            plot_polynomial_regression=plot_polynomial_regression,
+                            sample_points=rvs_transformed,
+                            n_points=n_points,
                         )
                     )
                 else:
                     xi, yi, zi_partial_dependence = partial_dependence(
                         space,
-                        result.models[-1],
-                        regression_object,
-                        polynomial_features_object,
-                        i,
-                        j,
-                        plot_confidence_interval_width,
-                        plot_polynomial_regression,
-                        rvs_transformed,
-                        n_points,
+                        model=result.models[-1],
+                        regression_object=regression_object,
+                        polynomial_features_object=polynomial_features_object,
+                        i=i,
+                        j=j,
+                        plot_confidence_interval_width=plot_confidence_interval_width,
+                        plot_polynomial_regression=plot_polynomial_regression,
+                        sample_points=rvs_transformed,
+                        n_points=n_points,
                     )
                 zi_elo = -np.array(zi_partial_dependence) * 100
                 contour_plot_partial_dependence[i, j] = partial_dependence_axes[
@@ -820,6 +823,7 @@ def plot_objective(
 
 
 def plot_optima(
+    *,
     iterations: np.ndarray,
     optima: np.ndarray,
     space: Optional[Space] = None,
@@ -1004,6 +1008,7 @@ def plot_optima(
 
 def plot_performance(
     performance: np.ndarray,
+    *,
     confidence: float = 0.9,
     plot_width: float = 8,
     aspect_ratio: float = 0.7,
@@ -1115,6 +1120,7 @@ def plot_performance(
 
 def plot_activesubspace_eigenvalues(
     active_subspaces_object,
+    *,
     active_subspace_figure=None,
     active_subspace_eigenvalues_axes=None,
     n_evals=None,
@@ -1225,6 +1231,7 @@ def plot_activesubspace_eigenvalues(
 def plot_activesubspace_eigenvectors(
     #self,
     active_subspaces_object,
+    *,
     active_subspace_figure=None,
     active_subspace_eigenvectors_axes=None,
     n_evects=None,
@@ -1302,6 +1309,7 @@ def plot_activesubspace_eigenvectors(
 
 
 def plot_activesubspace_sufficient_summary(
+    *,
     active_subspaces_object,
     inputs,
     outputs,
