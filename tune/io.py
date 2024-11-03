@@ -122,7 +122,7 @@ def parse_ranges(s):
         # First check, if the string is a list/tuple or a function call:
         param_str = re.findall(r"(\w+)\(", s)
         if len(param_str) > 0:  # Function
-            args, kwargs = [], dict()
+            args, kwargs = [], {}
             # TODO: this split does not always work
             #  (example Categorical(["a", "b", "c"]))
             prior_param_strings = re.findall(r"\((.*?)\)", s)[0].split(",")
@@ -198,11 +198,11 @@ def load_tuning_config(json_dict):
     else:
         directories.append(e["directory"])
     if "polyglot_parameters" not in e:
-        polyglot_params.append(dict())
+        polyglot_params.append({})
     else:
         polyglot_params.append(e["polyglot_parameters"])
     if "fixed_parameters" not in e:
-        fixed_params.append(dict())
+        fixed_params.append({})
     else:
         fixed_params.append(e["fixed_parameters"])
     e = engines[random.randint(1, number_of_engines - 1)]  # Select engine2 at random.
@@ -214,11 +214,11 @@ def load_tuning_config(json_dict):
     else:
         directories.append(e["directory"])
     if "polyglot_parameters" not in e:
-        polyglot_params.append(dict())
+        polyglot_params.append({})
     else:
         polyglot_params.append(e["polyglot_parameters"])
     if "fixed_parameters" not in e:
-        fixed_params.append(dict())
+        fixed_params.append({})
     else:
         fixed_params.append(e["fixed_parameters"])
     if "parameter_ranges" not in json_dict:
@@ -272,8 +272,8 @@ def combine_nested_parameters(d: dict) -> dict:
     {'UCIParameter1': 'composite(sub-parameter1=0.0,sub-parameter2=1.0)'}
     """
     re_pattern = r"(\S+|\S.*\S)=(.+)\((.+)\)"
-    result = dict()
-    nested_params = dict()
+    result = {}
+    nested_params = {}
     for k, v in d.items():
         match = re.search(pattern=re_pattern, string=k)
         if match is None:
@@ -281,7 +281,7 @@ def combine_nested_parameters(d: dict) -> dict:
         else:
             name, value, sub_param = match.groups()
             if name not in nested_params:
-                nested_params[name] = (value, dict())
+                nested_params[name] = (value, {})
             else:
                 existing_value = nested_params[name][0]
                 if existing_value != value:

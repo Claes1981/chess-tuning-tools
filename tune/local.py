@@ -567,10 +567,10 @@ def initialize_optimizer(
         default_resume_config.update(resume_config)
     resume_config = default_resume_config
 
-    gp_kwargs = dict(
-        normalize_y=gp_config["normalize_y"],
-        warp_inputs=gp_config["warp_inputs"],
-    )
+    gp_kwargs = {
+        "normalize_y": gp_config["normalize_y"],
+        "warp_inputs": gp_config["warp_inputs"],
+    }
 
     acq_function = acq_function_config["function"]
     if acq_function == "rand":
@@ -583,10 +583,7 @@ def initialize_optimizer(
         acq_function_lcb_alpha = str(
             acq_function_lcb_alpha
         )  # Bayes-skopt expect alpha as a string, "inf", in case of infinite alpha.
-    acq_func_kwargs = dict(
-        alpha=acq_function_lcb_alpha,
-        n_thompson=500,
-    )
+    acq_func_kwargs = {"alpha": acq_function_lcb_alpha, "n_thompson": 500}
 
     if (
         current_acq_func == "pvrs"
@@ -845,7 +842,7 @@ def plot_results(
         / f"hyperparameters/marginalized-distribution-{timestr}-{current_iteration}.png"
     )
     dpi = 150 if optimizer.space.n_dims == 1 else 50
-    save_params = dict()
+    save_params = {}
     corner.corner(
         np.exp(optimizer.gp.chain_),
         show_titles=True,
@@ -879,7 +876,7 @@ def plot_results(
     confidence = plot_config["confidence"]
 
     # First save the landscape:
-    save_params = dict()
+    save_params = {}
     if optimizer.space.n_dims == 1:
         fig, ax = plot_objective_1d(
             result=result_object,

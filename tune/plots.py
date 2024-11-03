@@ -282,7 +282,7 @@ def plot_objective_1d(
 
     if fig is None:
         plt.style.use("dark_background")
-        gs_kw = dict(width_ratios=(1,), height_ratios=[5, 1], hspace=0.05)
+        gs_kw = {"width_ratios": (1,), "height_ratios": [5, 1], "hspace": 0.05}
         fig, ax = plt.subplots(figsize=figsize, nrows=2, gridspec_kw=gs_kw, sharex=True)
         for a in ax:
             a.set_facecolor("xkcd:dark grey")
@@ -988,12 +988,7 @@ def plot_optima(
             x=transformed_point[0] + 0.01,
             y=transformed_point[1] - 0.02,
             s=s,
-            bbox=dict(
-                facecolor="xkcd:dark grey",
-                edgecolor="None",
-                alpha=0.5,
-                boxstyle="square,pad=0.1",
-            ),
+            bbox={"facecolor": "xkcd:dark grey", "edgecolor": "None", "alpha": 0.5},
             transform=a.transAxes,
             horizontalalignment="left",
             verticalalignment="top",
