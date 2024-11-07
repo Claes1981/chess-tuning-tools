@@ -4,7 +4,7 @@ import re
 import subprocess
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, time as datetime_time, timedelta
 from logging import Logger
 from typing import (
     Any,
@@ -1511,51 +1511,40 @@ def check_if_pause() -> None:
         intervals = file.read().strip().split("\n")
 
     for interval in intervals:
-        start_time, end_time = interval.split("-")
-        start_hour, start_minute = map(int, start_time.split(":"))
-        end_hour, end_minute = map(int, end_time.split(":"))
+        start_time_str, end_time_str = interval.split("-")
+        start_time = datetime.strptime(start_time_str, "%H:%M").time()
+        end_time = datetime.strptime(end_time_str, "%H:%M").time()
         # Check if it is time to pause the program and
         # check if the interval spans over midnight
-        if end_hour < start_hour or (
-            end_hour == start_hour and end_minute < start_minute
-        ):
+        if end_time <= start_time:
+            # Interval spans over midnight
             # Split the interval into two separate intervals, one for each day
-            pause_between_times(start_hour, start_minute, 23, 59)
-            pause_between_times(0, 0, end_hour, end_minute)
+            pause_between_times(start_time, time(23, 59, 59))
+            pause_between_times(time(0, 0), end_time)
         else:
-            pause_between_times(start_hour, start_minute, end_hour, end_minute)
+            pause_between_times(start_time, end_time)
 
 
-def pause_between_times(start_hour, start_minute, end_hour, end_minute):
-    current_time = time.localtime()
-    current_hour, current_minute = current_time.tm_hour, current_time.tm_min
+def pause_between_times(start_time: datetime_time, end_time: datetime_time):
+    current_time = datetime.now().time()
 
-    if (
-        current_hour >= start_hour
-        and (current_hour != start_hour or current_minute >= start_minute)
-    ) and (
-        current_hour < end_hour
-        or (current_hour == end_hour and current_minute < end_minute)
-    ):
-        target_time = time.struct_time(
-            (
-                current_time.tm_year,
-                current_time.tm_mon,
-                current_time.tm_mday,
-                end_hour,
-                end_minute,
-                0,
-                current_time.tm_wday,
-                current_time.tm_yday,
-                current_time.tm_isdst,
-            )
-        )
-        target_timestamp = time.mktime(target_time)
-        current_timestamp = time.mktime(current_time)
-        sleep_time = target_timestamp - current_timestamp
+    def time_in_range(
+        start: datetime_time, end: datetime_time, current: datetime_time
+    ) -> bool:
+        if start <= end:
+            return start <= current < end
+        else:  # Over midnight
+            return start <= current or current < end
+
+    if time_in_range(start_time, end_time, current_time):
+        now = datetime.now()
+        target_time = datetime.combine(now.date(), end_time)
+        if target_time <= now:
+            target_time += timedelta(days=1)
+        sleep_time = (target_time - now).total_seconds()
         if sleep_time > 0:
-            print(f"Pause until {target_time}.")
-        time.sleep(sleep_time)
+            print(f"Pause until {target_time.time()}.")
+            time.sleep(sleep_time)
 
 
 def is_debug_log(
