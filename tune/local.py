@@ -1532,8 +1532,8 @@ def pause_between_times(start_time: datetime_time, end_time: datetime_time):
     ) -> bool:
         if start <= end:
             return start <= current < end
-        else:  # Over midnight
-            return start <= current or current < end
+        # Over midnight
+        return start <= current or current < end
 
     if time_in_range(start_time, end_time, current_time):
         now = datetime.now()
@@ -1826,16 +1826,15 @@ def _construct_engine_conf(
     if engine_npm is not None:
         result.extend(("tc=inf", f"nodes={engine_npm}"))
         return result
-    elif engine_st is not None:
+    if engine_st is not None:
         result.append(f"st={str(engine_st)}")
         return result
-    elif engine_depth is not None:
+    if engine_depth is not None:
         result.extend(("tc=inf", f"depth={str(engine_depth)}"))
         return result
-    elif engine_tc is not None:
+    if engine_tc is not None:
         if isinstance(engine_tc, str):
             engine_tc = TimeControl.from_string(engine_tc)
         result.append(f"tc={str(engine_tc)}")
         return result
-    else:
-        raise ValueError(f"No engine time control specified for engine {id}.")
+    raise ValueError(f"No engine time control specified for engine {id}.")

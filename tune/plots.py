@@ -185,52 +185,49 @@ def partial_dependence(
 
         if plot_confidence_interval_width:
             return xi, yi_partial_dependence, yi_standard_deviation
-        else:
-            return xi, yi_partial_dependence
+        return xi, yi_partial_dependence
 
-    else:
-        xi, xi_transformed = _evenly_sample(space.dimensions[j], n_points)
-        yi, yi_transformed = _evenly_sample(space.dimensions[i], n_points)
+    xi, xi_transformed = _evenly_sample(space.dimensions[j], n_points)
+    yi, yi_transformed = _evenly_sample(space.dimensions[i], n_points)
 
-        zi_partial_dependence = []
+    zi_partial_dependence = []
+    if plot_confidence_interval_width:
+        zi_standard_deviation = []
+    for x_ in xi_transformed:
+        row_partial_dependence = []
         if plot_confidence_interval_width:
-            zi_standard_deviation = []
-        for x_ in xi_transformed:
-            row_partial_dependence = []
+            row_standard_deviation = []
+        for y_ in yi_transformed:
+            rvs_ = np.array(sample_points)  # copy
+            rvs_[:, dim_locs[j] : dim_locs[j + 1]] = x_
+            rvs_[:, dim_locs[i] : dim_locs[i + 1]] = y_
             if plot_confidence_interval_width:
-                row_standard_deviation = []
-            for y_ in yi_transformed:
-                rvs_ = np.array(sample_points)  # copy
-                rvs_[:, dim_locs[j] : dim_locs[j + 1]] = x_
-                rvs_[:, dim_locs[i] : dim_locs[i + 1]] = y_
-                if plot_confidence_interval_width:
-                    with model.noise_set_to_zero():
-                        z, std = model.predict(rvs_, return_std=True)
-                    row_partial_dependence.append(np.mean(z))
-                    row_standard_deviation.append(np.mean(std))
-                elif plot_polynomial_regression:
-                    row_partial_dependence.append(
-                        np.mean(
-                            regression_object.predict(
-                                polynomial_features_object.transform(rvs_)
-                            )
+                with model.noise_set_to_zero():
+                    z, std = model.predict(rvs_, return_std=True)
+                row_partial_dependence.append(np.mean(z))
+                row_standard_deviation.append(np.mean(std))
+            elif plot_polynomial_regression:
+                row_partial_dependence.append(
+                    np.mean(
+                        regression_object.predict(
+                            polynomial_features_object.transform(rvs_)
                         )
                     )
-                else:
-                    row_partial_dependence.append(np.mean(model.predict(rvs_)))
-            zi_partial_dependence.append(row_partial_dependence)
-            if plot_confidence_interval_width:
-                zi_standard_deviation.append(row_standard_deviation)
-
+                )
+            else:
+                row_partial_dependence.append(np.mean(model.predict(rvs_)))
+        zi_partial_dependence.append(row_partial_dependence)
         if plot_confidence_interval_width:
-            return (
-                xi,
-                yi,
-                np.array(zi_partial_dependence).T,
-                np.array(zi_standard_deviation).T,
-            )
-        else:
-            return xi, yi, np.array(zi_partial_dependence).T
+            zi_standard_deviation.append(row_standard_deviation)
+
+    if plot_confidence_interval_width:
+        return (
+            xi,
+            yi,
+            np.array(zi_partial_dependence).T,
+            np.array(zi_standard_deviation).T,
+        )
+    return xi, yi, np.array(zi_partial_dependence).T
 
 
 def plot_objective_1d(
@@ -812,14 +809,13 @@ def plot_objective(
             plot_dims=plot_dims,
             dim_labels=dimensions,
         )
-    else:
-        return _format_scatter_plot_axes(
-            partial_dependence_axes,
-            space,
-            ylabel="Partial dependence",
-            plot_dims=plot_dims,
-            dim_labels=dimensions,
-        )
+    return _format_scatter_plot_axes(
+        partial_dependence_axes,
+        space,
+        ylabel="Partial dependence",
+        plot_dims=plot_dims,
+        dim_labels=dimensions,
+    )
 
 
 def plot_optima(
