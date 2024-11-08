@@ -1495,8 +1495,7 @@ def run_match(
         string_array, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
     ) as popen:
         if popen.stdout is not None:
-            for line in iter(popen.stdout.readline, ""):
-                yield line
+            yield from iter(popen.stdout.readline, "")
         else:
             raise ValueError("No stdout found.")
 
