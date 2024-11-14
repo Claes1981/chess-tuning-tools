@@ -1590,7 +1590,7 @@ def check_log_for_errors(
         if match is not None:
             logger.error(
                 "UCI option %s was unknown to the engine. "
-                f"Check if the spelling is correct.",
+                "Check if the spelling is correct.",
                 match.group(1),
             )
             continue

@@ -142,7 +142,7 @@ def parse_ranges(s):
             if hasattr(skspace, param_str[0]):
                 dim = getattr(skspace, param_str[0])(*args, **kwargs)
             else:
-                raise ValueError("Dimension {} does not exist.".format(param_str))
+                raise ValueError(f"Dimension {param_str} does not exist.")
             dimensions.append(dim)
         else:  # Tuple or list
             # We assume that the contents of the collection should be used as is and
@@ -153,8 +153,7 @@ def parse_ranges(s):
                 dimensions.append(check_dimension(parsed))
             else:
                 raise ValueError(
-                    "Dimension {} is not valid. Make sure you pass a Dimension, tuple "
-                    "or list.".format(param_str)
+                    f"Dimension {param_str} is not valid. Make sure you pass a Dimension, tuple or list."
                 )
 
     return dict(zip(j.keys(), dimensions))

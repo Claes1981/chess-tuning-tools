@@ -451,7 +451,7 @@ def plot_objective(
         locator = None
     else:
         raise ValueError(
-            "Valid values for zscale are 'linear' and 'log'," " not '%s'." % zscale
+            f"Valid values for zscale are 'linear' and 'log', not {zscale}."
         )
     if partial_dependence_figure is None:
         partial_dependence_figure, partial_dependence_axes = plt.subplots(

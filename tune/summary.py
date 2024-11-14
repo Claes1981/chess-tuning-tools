@@ -52,9 +52,7 @@ def confidence_intervals(
     threshold=0.01,
 ):
     if param_names is None:
-        param_names = [
-            "Parameter {}".format(i) for i in range(len(optimizer.space.dimensions))
-        ]
+        param_names = [f"Parameter {i}" for i in range(len(optimizer.space.dimensions))]
     intervals = optimizer.optimum_intervals(
         hdi_prob=hdi_prob,
         multimodal=multimodal,
@@ -73,7 +71,7 @@ def confidence_intervals(
     output = format_string.format(
         "Parameter", max_param_length, "Lower bound", max_lb, "Upper bound", max_ub
     )
-    output += "{:-^{}}\n".format("", max_param_length + max_lb + max_ub + 4)
+    output += f"{'':-^{max_param_length + max_lb + max_ub + 4}}\n"
     for sub, name in zip(rounded, param_names):
         for i, interval in enumerate(sub):
             if i == 0:
