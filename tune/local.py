@@ -1515,11 +1515,11 @@ def check_if_pause() -> None:
         end_time = datetime.strptime(end_time_str, "%H:%M").time()
         # Check if it is time to pause the program and
         # check if the interval spans over midnight
-        if end_time <= start_time:
+        if end_time < start_time:
             # Interval spans over midnight
             # Split the interval into two separate intervals, one for each day
-            pause_between_times(start_time, time(23, 59, 59))
-            pause_between_times(time(0, 0), end_time)
+            pause_between_times(start_time, datetime_time(23, 59, 59))
+            pause_between_times(datetime_time(0, 0), end_time)
         else:
             pause_between_times(start_time, end_time)
 
