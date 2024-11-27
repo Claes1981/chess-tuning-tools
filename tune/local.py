@@ -1765,20 +1765,23 @@ def update_model(
         try:
             now = datetime.now()
             # We fetch kwargs manually here to avoid collisions:
-            n_samples = acq_function_samples
-            gp_burnin = gp_burnin
-            gp_samples = gp_samples
+            # n_samples = acq_function_samples
+            # gp_burnin = gp_burnin
+            # gp_samples = gp_samples
             if optimizer.gp.chain_ is None:
-                gp_burnin = gp_initial_burnin
-                gp_samples = gp_initial_samples
+                current_gp_burnin = gp_initial_burnin
+                current_gp_samples = gp_initial_samples
+            else:
+                current_gp_burnin = gp_burnin
+                current_gp_samples = gp_samples
             optimizer.tell(
                 x=point,
                 y=score,
                 #noise_vector=variance,
                 noise_vector=noise_scaling_coefficient * variance,
-                n_samples=n_samples,
-                gp_samples=gp_samples,
-                gp_burnin=gp_burnin,
+                n_samples=acq_function_samples,
+                gp_samples=current_gp_samples,
+                gp_burnin=current_gp_burnin,
                 n_walkers_per_thread=gp_walkers_per_thread,
                 progress=True,
             )
