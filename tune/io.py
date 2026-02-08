@@ -24,7 +24,9 @@ __all__ = [
 # TODO: Backup file to restore it, should there be an error
 def uci_tuple(uci_string):
     try:
-        name, value = re.findall(r"name\s+(\S.*?)\s+value\s+(.*?)\s*$", uci_string)[0]
+        name, value = re.findall(
+            r"name\s+(\S.*?)\s+value\s+(.*?)\s*$", uci_string
+        )[0]
     except IndexError:
         print(f"Error parsing UCI tuples:\n{uci_string}")
         sys.exit(1)
@@ -156,7 +158,7 @@ def parse_ranges(s):
                     f"Dimension {param_str} is not valid. Make sure you pass a Dimension, tuple or list."
                 )
 
-    return dict(zip(j.keys(), dimensions))
+    return dict(zip(j.keys(), dimensions, strict=True))
 
 
 def load_tuning_config(json_dict):
@@ -187,6 +189,7 @@ def load_tuning_config(json_dict):
     if "engines" not in json_dict:
         raise ValueError("Tuning config does not contain engines.")
     engines = json_dict["engines"]
+<<<<<<< HEAD
     number_of_engines = len(engines)
     e = engines[0]
     if "command" not in e:
@@ -221,7 +224,9 @@ def load_tuning_config(json_dict):
     else:
         fixed_params.append(e["fixed_parameters"])
     if "parameter_ranges" not in json_dict:
-        raise ValueError("There are no parameter ranges defined in the config file.")
+        raise ValueError(
+            "There are no parameter ranges defined in the config file."
+        )
     param_ranges = parse_ranges(json_dict["parameter_ranges"])
     return json_dict, commands, directories, polyglot_params, fixed_params, param_ranges
 
@@ -230,14 +235,14 @@ def prepare_engines_json(commands, directories, fixed_params):
     result_list = [
         {
             "command": c,
-            "name": f"engine{i+1}",
+            "name": f"engine{i + 1}",
             "workingDirectory": directories[i],
             "initStrings": ["uci"],
             "protocol": "uci",
         }
         for i, c in enumerate(commands)
     ]
-    for r, fp in zip(result_list, fixed_params):
+    for r, fp in zip(result_list, fixed_params, strict=True):
         uci = InitStrings(r["initStrings"])
         uci.update(fp)
     return result_list

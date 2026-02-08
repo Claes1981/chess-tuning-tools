@@ -277,7 +277,9 @@ def load_points_to_evaluate(
         rounds_column = np.full(len(df), rounds)
 
     # All points are within the bounds, add them to the list of points to evaluate:
-    return list(zip(df.values.tolist(), rounds_column))
+    return [
+        (x, r) for x, r in zip(df.values.tolist(), rounds_column, strict=True)
+    ]
 
 
 def reduce_ranges(
@@ -306,10 +308,10 @@ def reduce_ranges(
     y_new = []
     noise_new = []
     reduction_needed = False
-    for row, yval, nval in zip(X, y, noise):
+    for row, yval, nval in zip(X, y, noise, strict=True):
         include_row = True
-        for dim, value in zip(space.dimensions, row):
-            if isinstance(dim, (Integer, Real)):
+        for dim, value in zip(space.dimensions, row, strict=True):
+            if isinstance(dim, Integer) or isinstance(dim, Real):
                 lb, ub = dim.bounds
                 if value < lb or value > ub:
                     include_row = False
@@ -400,8 +402,8 @@ def initialize_data(
                     f"Number of parameters ({len(X[0])}) are not matching "
                     f"the number of dimensions ({space.n_dims})."
                 )
-            reduction_needed, X_reduced, y_reduced, noise_reduced = reduce_ranges(
-                X, y, noise, space
+            reduction_needed, X_reduced, y_reduced, noise_reduced = (
+                reduce_ranges(X, y, noise, space)
             )
             if reduction_needed:
                 backup_path = path.parent / (
@@ -629,7 +631,9 @@ def initialize_optimizer(
         if path.exists():
             with open(model_path, mode="rb") as model_file:
                 old_opt = dill.load(model_file)
-                logger.info("Resuming from existing optimizer in %s.", model_path)
+                logger.info(
+                    f"Resuming from existing optimizer in {model_path}."
+                )
             if opt.space == old_opt.space:
                 old_opt.acq_func = opt.acq_func
                 old_opt.acq_func_kwargs = opt.acq_func_kwargs
@@ -647,7 +651,8 @@ def initialize_optimizer(
 
     if reinitialize and len(X) > 0:
         logger.info(
-            "Importing %s existing datapoints. This could take a while...", len(X)
+            f"Importing {len(X)} existing datapoints. "
+            f"This could take a while..."
         )
         if acq_function == "rand":
             logger.debug("Current random acquisition function: %s", current_acq_func)
@@ -719,7 +724,7 @@ def print_results(
     logger = logging.getLogger(LOGGER)
     try:
         best_point, best_value = expected_ucb(result_object, alpha=0.0)
-        best_point_dict = dict(zip(parameter_names, best_point))
+        best_point_dict = dict(zip(parameter_names, best_point, strict=True))
         with optimizer.gp.noise_set_to_zero():
             _, best_std = optimizer.gp.predict(
                 optimizer.space.transform([best_point]), return_std=True
@@ -1051,8 +1056,10 @@ def plot_results(
         space=optimizer.space,
         parameter_names=parameter_names,
     )
-    full_plotpath = plotpath / f"optima/optima-{timestr}-{current_iteration}.png"
-    fig.savefig(full_plotpath, dpi=150, facecolor="xkcd:dark grey")
+    full_plotpath = (
+        plotpath / f"optima/optima-{timestr}-{current_iteration}.png"
+    )
+    fig.savefig(full_plotpath, dpi=150, facecolor=dark_gray)
     plt.close(fig)
 
     # Plot the predicted Elo performance of the optima:
@@ -1403,7 +1410,9 @@ def run_match(
     ) or all(
         param is None for param in (engine2_npm, engine2_tc, engine2_st, engine2_depth)
     ):
-        raise ValueError("A valid time control or nodes configuration is required.")
+        raise ValueError(
+            "A valid time control or nodes configuration is required."
+        )
 
     string_array.extend(
         _construct_engine_conf(
@@ -1492,7 +1501,10 @@ def run_match(
     )
 
     with subprocess.Popen(
-        string_array, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+        string_array,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
     ) as popen:
         if popen.stdout is not None:
             yield from iter(popen.stdout.readline, "")
@@ -1602,8 +1614,10 @@ def check_log_for_errors(
         )
         match = re.search(pattern=pattern, string=line)
         if match is not None:
-            engine = match.group(1) if match.group(3) == "White" else match.group(2)
-            logger.warning("Engine %s lost on time as %s.", engine, match.group(3))
+            engine = (
+                match.group(1) if match.group(3) == "White" else match.group(2)
+            )
+            logger.warning(f"Engine {engine} lost on time as {match.group(3)}.")
             continue
 
         # Check for connection stall:
@@ -1613,7 +1627,9 @@ def check_log_for_errors(
         )
         match = re.search(pattern=pattern, string=line)
         if match is not None:
-            engine = match.group(1) if match.group(3) == "White" else match.group(2)
+            engine = (
+                match.group(1) if match.group(3) == "White" else match.group(2)
+            )
             logger.error(
                 "%s's connection stalled as %s. Game result is unreliable.",
                 engine,
@@ -1674,9 +1690,14 @@ def parse_experiment_result(
     draw_rate : float
         Estimated draw rate of the match.
     """
-    wdl_strings = re.findall(r"Score of.*:\s*([0-9]+\s-\s[0-9]+\s-\s[0-9]+)", outstr)
+    wdl_strings = re.findall(
+        r"Score of.*:\s*([0-9]+\s-\s[0-9]+\s-\s[0-9]+)", outstr
+    )
     array = np.array(
-        [np.array([int(y) for y in re.findall(r"[0-9]+", x)]) for x in wdl_strings]
+        [
+            np.array([int(y) for y in re.findall(r"[0-9]+", x)])
+            for x in wdl_strings
+        ]
     )
     # print(f"outstr= {outstr}")
     # print(f"wdl_strings= {wdl_strings}")

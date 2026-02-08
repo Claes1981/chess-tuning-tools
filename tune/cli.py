@@ -67,7 +67,9 @@ def cli():
 @click.option(
     "--verbose", "-v", is_flag=True, default=False, help="Turn on debug output."
 )
-@click.option("--logfile", default=None, help="Path to where the log is saved to.")
+@click.option(
+    "--logfile", default=None, help="Path to where the log is saved to."
+)
 @click.option(
     "--terminate-after", default=0, help="Terminate the client after x minutes."
 )
@@ -85,7 +87,9 @@ def cli():
     help="Skip calibrating the time control by running a benchmark.",
 )
 @click.option(
-    "--clientconfig", default=None, help="Path to the client configuration file."
+    "--clientconfig",
+    default=None,
+    help="Path to the client configuration file.",
 )
 @click.argument("dbconfig")
 def run_client(
@@ -124,7 +128,9 @@ def run_client(
 @click.option(
     "--verbose", "-v", is_flag=True, default=False, help="Turn on debug output."
 )
-@click.option("--logfile", default=None, help="Path to where the log is saved to.")
+@click.option(
+    "--logfile", default=None, help="Path to where the log is saved to."
+)
 @click.argument("command")
 @click.argument("experiment_file")
 @click.argument("dbconfig")
@@ -595,7 +601,9 @@ def local(  # noqa: C901
     # data/optimizer:
     gp_priors = create_priors(
         n_parameters=len(param_ranges),
-        signal_scale=settings.get("gp_signal_prior_scale", gp_signal_prior_scale),
+        signal_scale=settings.get(
+            "gp_signal_prior_scale", gp_signal_prior_scale
+        ),
         lengthscale_lower_bound=settings.get(
             "gp_lengthscale_prior_lb", gp_lengthscale_prior_lb
         ),
@@ -692,14 +700,18 @@ def local(  # noqa: C901
             result_every_n = settings.get("result_every", result_every)
             if result_every_n > 0 and iteration % result_every_n == 0:
                 try:
-                    current_optimum, estimated_elo, estimated_std = print_results(
-                        optimizer=opt,
-                        result_object=result_object,
-                        parameter_names=list(param_ranges.keys()),
-                        confidence=settings.get("confidence", confidence),
+                    current_optimum, estimated_elo, estimated_std = (
+                        print_results(
+                            optimizer=opt,
+                            result_object=result_object,
+                            parameter_names=list(param_ranges.keys()),
+                            confidence=settings.get("confidence", confidence),
+                        )
                     )
                     optima.append(current_optimum)
-                    performance.append((int(iteration), estimated_elo, estimated_std))
+                    performance.append(
+                        (int(iteration), estimated_elo, estimated_std)
+                    )
                 except ValueError:
                     pass
             plot_every_n = settings.get("plot_every", plot_every)
@@ -736,9 +748,10 @@ def local(  # noqa: C901
                     if isinstance(point[i], float) and point[i].is_integer():
                         point[i] = int(point[i])
                 # Log that we are evaluating the extra point:
+                point_display = dict(zip(param_ranges.keys(), point, strict=True))
                 root_logger.info(
                     "Evaluating extra point %s for %s rounds.",
-                    dict(zip(param_ranges.keys(), point)),
+                    point_display,
                     n_rounds,
                 )
                 used_extra_point = True
@@ -748,7 +761,7 @@ def local(  # noqa: C901
                 n_rounds = settings.get("rounds", 10)
             match_settings = settings.copy()
             match_settings["rounds"] = n_rounds
-            point_dict = dict(zip(param_ranges.keys(), point))
+            point_dict = dict(zip(param_ranges.keys(), point, strict=True))
             root_logger.info("Testing %s", point_dict)
             if len(y) > 0 and opt.gp.chain_ is not None:
                 testing_current_value = opt.gp.predict(opt.space.transform([point]))[0]
@@ -783,7 +796,7 @@ def local(  # noqa: C901
             n_rounds = settings.get("rounds", 10)
             match_settings = settings.copy()
             match_settings["rounds"] = n_rounds
-            point_dict = dict(zip(param_ranges.keys(), point))
+            point_dict = dict(zip(param_ranges.keys(), point, strict=True))
             root_logger.info("Testing %s", point_dict)
             if len(y) > 0 and opt.gp.chain_ is not None:
                 testing_current_value = opt.gp.predict(opt.space.transform([point]))[0]
