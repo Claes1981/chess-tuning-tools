@@ -279,8 +279,14 @@ def plot_objective_1d(
 
     if fig is None:
         plt.style.use("dark_background")
-        gs_kw = {"width_ratios": (1,), "height_ratios": [5, 1], "hspace": 0.05}
-        fig, ax = plt.subplots(figsize=figsize, nrows=2, gridspec_kw=gs_kw, sharex=True)
+        gs_kw = {
+            "width_ratios": (1,),
+            "height_ratios": [5, 1],
+            "hspace": 0.05,
+        }
+        fig, ax = plt.subplots(
+            figsize=figsize, nrows=2, gridspec_kw=gs_kw, sharex=True
+        )
         for a in ax:
             a.set_facecolor("xkcd:dark grey")
         fig.patch.set_facecolor("xkcd:dark grey")
@@ -294,7 +300,9 @@ def plot_objective_1d(
                 min_x = expected_ucb(
                     result, alpha=0.0, n_random_starts=n_random_restarts
                 )[0]
-                min_ucb = expected_ucb(result, n_random_starts=n_random_restarts)[0]
+                min_ucb = expected_ucb(
+                    result, n_random_starts=n_random_restarts
+                )[0]
         except ValueError:
             failures += 1
             if failures == 10:
@@ -340,7 +348,13 @@ def plot_objective_1d(
     ax[1].set_ylabel("Elo")
     fig.legend(
         (mean_plot, err_plot, opt_plot, pess_plot, match_plot),
-        ("Mean", f"{confidence:.0%} CI", "Optimum", "Conservative Optimum", "Matches"),
+        (
+            "Mean",
+            f"{confidence:.0%} CI",
+            "Optimum",
+            "Conservative Optimum",
+            "Matches",
+        ),
         loc="lower center",
         ncol=5,
         bbox_to_anchor=(0.5, -0.03),
@@ -492,7 +506,9 @@ def plot_objective(
                 min_x = expected_ucb(
                     result, alpha=0.0, n_random_starts=n_random_restarts
                 )[0]
-                min_ucb = expected_ucb(result, n_random_starts=n_random_restarts)[0]
+                min_ucb = expected_ucb(
+                    result, n_random_starts=n_random_restarts
+                )[0]
         except ValueError:
             failures += 1
             if failures == 10:
@@ -984,7 +1000,12 @@ def plot_optima(
             x=transformed_point[0] + 0.01,
             y=transformed_point[1] - 0.02,
             s=s,
-            bbox={"facecolor": "xkcd:dark grey", "edgecolor": "None", "alpha": 0.5},
+            bbox={
+                "facecolor": "#36393f",
+                "edgecolor": "None",
+                "alpha": 0.5,
+                "boxstyle": "square,pad=0.1",
+            },
             transform=a.transAxes,
             horizontalalignment="left",
             verticalalignment="top",
@@ -1101,7 +1122,9 @@ def plot_performance(
         linewidth=1,
         alpha=0.3,
     )
-    ax.legend(loc="upper center", frameon=False, bbox_to_anchor=(0.5, -0.08), ncol=3)
+    ax.legend(
+        loc="upper center", frameon=False, bbox_to_anchor=(0.5, -0.08), ncol=3
+    )
     ax.set_xlabel("Iteration")
     ax.set_ylabel("Elo")
     ax.set_xlim(min(iterations), max(iterations))

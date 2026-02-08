@@ -32,7 +32,9 @@ def _round_all_intervals(intervals, threshold=0.01, max_precision=32):
                 )
         else:
             sub_result.append(
-                _round_interval(dim, threshold=threshold, max_precision=max_precision)
+                _round_interval(
+                    dim, threshold=threshold, max_precision=max_precision
+                )
             )
         result.append(sub_result)
     return result
@@ -69,16 +71,27 @@ def confidence_intervals(
     max_ub = max(max(len(str(row[1])) for sub in rounded for row in sub), 11)
     format_string = "{:<{}}  {:>{}}  {:>{}}\n"
     output = format_string.format(
-        "Parameter", max_param_length, "Lower bound", max_lb, "Upper bound", max_ub
+        "Parameter",
+        max_param_length,
+        "Lower bound",
+        max_lb,
+        "Upper bound",
+        max_ub,
     )
-    output += f"{'':-^{max_param_length + max_lb + max_ub + 4}}\n"
-    for sub, name in zip(rounded, param_names):
+
+    output += "{:-^{}}\n".format("", max_param_length + max_lb + max_ub + 4)
+    for sub, name in zip(rounded, param_names, strict=True):
         for i, interval in enumerate(sub):
             if i == 0:
                 name_out = name
             else:
                 name_out = ""
             output += format_string.format(
-                name_out, max_param_length, interval[0], max_lb, interval[1], max_ub
+                name_out,
+                max_param_length,
+                interval[0],
+                max_lb,
+                interval[1],
+                max_ub,
             )
     return output

@@ -55,8 +55,26 @@ def expected_ucb(res, n_random_starts=100, alpha=1.96, random_state=None):
     best_x = None
     best_fun = np.inf
 
+    raw_bounds = getattr(res.space, "bounds", None)
+    minimize_bounds = None
+
+    if raw_bounds is not None:
+        minimize_bounds = []
+        for bound in raw_bounds:
+            lower, upper = bound
+            lower_cast = None if lower is None else float(np.float64(lower))
+            upper_cast = None if upper is None else float(np.float64(upper))
+            minimize_bounds.append((lower_cast, upper_cast))
+        minimize_bounds = tuple(minimize_bounds)
+
     for x0 in xs:
-        r = minimize(func, x0=x0, bounds=[(0.0, 1.0)] * len(res.space.bounds))
+        # scipy>=1.11 keeps the dtype of the input array, so make sure we use float64.
+        x0 = np.asarray(x0, dtype=np.float64).ravel()
+        r = minimize(
+            func,
+            x0=x0,
+            bounds=minimize_bounds,
+        )
 
         if r.fun < best_fun:
             best_x = r.x
@@ -116,7 +134,7 @@ class TimeControlBag(object):
             for p in self.p:
                 out.append(_probabilistic_round(p * self.bag_size))
             tmp_bag = []
-            for o, tc in zip(out, self.tcs):
+            for o, tc in zip(out, self.tcs, strict=True):
                 tmp_bag.extend(itertools.product(_latin_1d(o), [tc]))
             sorted_bag = sorted(tmp_bag)
             self.bag = [x[1] for x in sorted_bag]
@@ -180,9 +198,12 @@ def latest_iterations(
     unique_iterations = np.unique(iterations)
     if len(unique_iterations) == len(iterations):
         return (iterations, *arrays)
-    # Compute the indices of the latest unique iterations:
-    indices = np.searchsorted(iterations, unique_iterations, side="right") - 1
-    return (
-        iterations[indices],
-        *(a[indices] for a in arrays),
-    )
+    else:
+        # Compute the indices of the latest unique iterations:
+        indices = (
+            np.searchsorted(iterations, unique_iterations, side="right") - 1
+        )
+        return (
+            iterations[indices],
+            *(a[indices] for a in arrays),
+        )
