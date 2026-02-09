@@ -189,7 +189,6 @@ def load_tuning_config(json_dict):
     if "engines" not in json_dict:
         raise ValueError("Tuning config does not contain engines.")
     engines = json_dict["engines"]
-<<<<<<< HEAD
     number_of_engines = len(engines)
     e = engines[0]
     if "command" not in e:
