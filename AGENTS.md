@@ -1,29 +1,94 @@
 # Repository Guidelines
 
-## Project Structure & Module Organization
-- `tune/`: core Python package with CLI entry points (`tune/cli.py`), sampling logic, and database workers.
-- `tests/`: pytest suite mirroring package modules; add new tests alongside the feature under test.
-- `docs/`, `examples/`, `README.rst`: user-facing documentation and usage samples. Update when behavior changes.
-- `.github/workflows/`: CI pipelines; edit these when adding sessions or adjusting supported Python versions.
+## 1. Project structure
+- `tune/` – the package that contains the CLI, database workers, and algorithmic helpers.
+- `tests/` – a mirror of `tune/` with pytest test modules.
+- `docs/`, `examples/`, `README.rst` – user‑facing documentation.
+- `.github/workflows/` – GitHub Actions CI.
+- `Makefile` – command shortcuts for common tasks.
+- `pyproject.toml` – uv build and dependency information.
+- `noxfile.py` – run tests, lint, and type‑check in reproducible environments.
+- `.pre-commit-config.yaml` – ruff hooks.
 
-## Build, Test, and Development Commands
-- `uv sync --group dev --extra dist`: install the project with development dependencies and optional dist extras.
-- `uv run --group dev pytest`: execute unit tests locally.
-- `uv run --group dev nox -s tests-3.13`: run the CI-aligned test session for Python 3.13.
-- `uv run --group dev nox -s pre-commit`: lint and format the codebase; pass `install` to set up hooks.
-- `uv build`: produce wheel and sdist artifacts; `uv publish` pushes to PyPI when credentials are configured.
+## 2. Installing / setting up the dev environment
+```bash
+# Pull the latest source and install dependencies
+uv sync --group dev --extra dist
+# Alternatively, use pip in a venv
+# python -m venv .venv && source .venv/bin/activate && pip install -e .[dev,dist]
+```
+The `--extra dist` flag pulls optional packages for distributed execution (joblib, pandas, postgresql, sqlalchemy).
 
-## Coding Style & Naming Conventions
-- Follow the existing code patterns: 4-space indentation, snake_case for variables and functions, PascalCase for classes.
-- Run `ruff format` and `ruff check` via `uv run --group dev nox -s pre-commit` or the individual tools before committing.
-- Keep log messages short; prefer structured logging (e.g., `logger.info("Testing %s", value)`).
+## 3. Running tests
+- All tests
+  ```bash
+  uv run --group dev pytest
+  ```
+- Single test file
+  ```bash
+  uv run --group dev pytest tests/test_tune.py
+  ```
+- Single test function
+  ```bash
+  uv run --group dev pytest tests/test_tune.py::test_my_feature
+  ```
+- Use `-q` for quiet output or `-s` to see print statements.
+- For CI‑aligned version:
+  ```bash
+  uv run --group dev nox -s tests
+  ```
 
-## Testing Guidelines
-- Use `pytest` with descriptive test names like `test_feature_behavior`.
-- Mirror module names inside `tests/` (e.g., `tests/test_local.py` covers `tune/local.py`).
-- Add regression tests for bug fixes; aim to keep warnings clean unless explicitly tracked.
+## 4. Linting, formatting, and type‑checking
+| Command | Purpose |
+|---------|---------|
+| `uv run --group dev nox -s pre-commit` | Run ruff format & check on all files. |
+| `uv run --group dev ruff format` | In‑place formatting only. |
+| `uv run --group dev ruff check` | Find style and lint errors only. |
+| `uv run --group dev nox -s ruff` | Same as above but via nox. |
+| `uv run --group dev mypy .` | Static type checking. |
 
-## Commit & Pull Request Guidelines
-- Write commits in the imperative mood (e.g., `Add uv build workflow`), bundling related changes together.
-- Every pull request should link to relevant issues, describe functional changes, and note how to reproduce validation steps (tests, lint).
-- Include screenshots or logs when touching CLI output or user-visible behavior.
+**Note:** All tools obey the ruff config in `pyproject.toml` (max‑line‑length 80, ignore E203,E501,F403,F405). `mypy.ini` ignores imports for third‑party libraries.
+
+## 5. Building / publishing
+```bash
+uv build  # creates dist/*.tar.gz & dist/*.whl
+uv publish  # pushes to PyPI if credentials are set via UV_PROJECT
+```
+
+## 6. Coding style guidelines
+- **Indentation**: 4 spaces, never tabs. All files must pass `ruff format`.
+- **Naming**: snake_case for functions, variables, modules; PascalCase for classes and data structures.
+- **Imports**: absolute imports inside the package; group standard library, third‑party, local in that order, each separated by a blank line.
+- **Type hints**: provide annotations for public functions and classes. Use `typing` primitives (`List`, `Dict`, `Tuple`, `Optional`), and `typing.Any` only when necessary.
+- **Docstrings**: use Google style or reST; no empty docstrings. For public API functions, include brief description, parameters, and return values.
+- **Error handling**: raise specific exceptions derived from `Exception`; avoid `sys.exit` in library code.
+- **Logging**: use `logger = logging.getLogger(__name__)`; prefer structured logging via `logger.info("msg", extra={...})`.
+- **Line length**: keep within 80 characters as enforced by ruff; use line continuation or `typing.get_type_hints` for complex type hints.
+- **Magic numbers**: replace with named constants or `Enum` where appropriate.
+- **Use of `# noqa`**: only for legitimate cases; include a short comment explaining why.
+
+## 7. Testing guidelines
+- Name tests `test_<module>_<feature>.py` in `tests/`.
+- Keep tests deterministic; avoid external network calls.
+- Use fixtures for reusable setup.
+- Mark tests with `@pytest.mark.parametrize` for parameterized coverage.
+
+## 8. Git workflow
+- Commit messages in imperative, short form.
+- Avoid committing `.venv` or other large binary directories.
+- Run `uv run --group dev nox -s pre-commit` before pushing.
+- Use `git add` followed by `git commit -m "Msg"`.
+
+## 9. Pull request policy
+- Reference related issue (e.g., `Fixes #123`).
+- Include CI status badges in the PR description.
+- Add a brief summary in the PR body and a list of changes.
+
+## 10. Miscellaneous
+- There are no cursor rules or Copilot instructions in this repo.
+- The repository is primarily for research and distributed tuning of chess engines.
+- If you need to contribute a new feature, first create a separate branch, run `uv run --group dev nox -s pre-commit`, then run all tests.
+- For documentation, run `make docs` or `make servedocs`.
+- The Makefile also includes targets: `clean`, `lint`, `test-all`, `coverage`. These wrap the same commands above.
+
+# End of guidelines
