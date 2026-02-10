@@ -29,7 +29,6 @@ from bask import Optimizer #, acquisition
 #from bask.priors import make_roundflat
 from matplotlib.transforms import Bbox
 from numpy.random import RandomState
-import random
 from athena.active import ActiveSubspaces
 from athena.utils import Normalizer
 from scipy.optimize import OptimizeResult
@@ -576,7 +575,7 @@ def initialize_optimizer(
 
     acq_function = acq_function_config["function"]
     if acq_function == "rand":
-        current_acq_func = random.choice(["ts", "lcb", "pvrs", "mes", "ei", "mean"])
+        current_acq_func = np.random.choice(["ts", "lcb", "pvrs", "mes", "ei", "mean"])
     else:
         current_acq_func = acq_function
 
