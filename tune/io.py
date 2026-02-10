@@ -70,16 +70,16 @@ class InitStrings(MutableMapping):
         self._init_strings.append(_set_option(key, value))
 
     def __delitem__(self, key):
-        elem = -1
+        index_to_remove = None
         for i, s in enumerate(self._init_strings):
             if s == "uci":
                 continue
             name, _ = uci_tuple(s)
             if key == name:
-                elem = i
+                index_to_remove = i
                 break
-        if elem != -1:
-            del self._init_strings[i]
+        if index_to_remove is not None:
+            del self._init_strings[index_to_remove]
         else:
             raise KeyError(key)
 
@@ -206,6 +206,8 @@ def load_tuning_config(json_dict):
         fixed_params.append({})
     else:
         fixed_params.append(e["fixed_parameters"])
+    if number_of_engines < 2:
+        raise ValueError("Tuning config requires at least two engines.")
     e = engines[random.randint(1, number_of_engines - 1)]  # Select engine2 at random.
     if "command" not in e:
         raise ValueError("Tuning config contains an engine without command.")
