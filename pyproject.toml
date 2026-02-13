@@ -94,7 +94,7 @@ indent-style = "space"
 [tool.uv-dynamic-versioning]
 vcs = "git"
 style = "semver"
-format = "0.9.5+{commit}
+format = "0.9.5+{commit}"
 
 [build-system]
 requires = ["hatchling>=1.15", "uv-dynamic-versioning"]
