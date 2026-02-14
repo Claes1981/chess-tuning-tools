@@ -86,7 +86,7 @@ uv publish  # pushes to PyPI if credentials are set via UV_PROJECT
 
 ## 10. Miscellaneous
 - There are no cursor rules or Copilot instructions in this repo.
-- The repository is primarily for research and distributed tuning of chess engines.
+- The repository is primarily for research and tuning of chess engines.
 - If you need to contribute a new feature, first create a separate branch, run `uv run --group dev nox -s pre-commit`, then run all tests.
 - For documentation, run `make docs` or `make servedocs`.
 - The Makefile also includes targets: `clean`, `lint`, `test-all`, `coverage`. These wrap the same commands above.
