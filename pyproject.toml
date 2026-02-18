@@ -2,7 +2,7 @@
 name = "chess-tuning-tools"
 dynamic = ["version"]
 description = "A collection of tools for local and distributed tuning of chess engines."
-authors = ["Karlson Pfannschmidt", "Claes Fransson"]
+authors = [{name="Karlson Pfannschmidt"},{name="Claes Fransson"}]
 requires-python = ">=3.10,<3.14"
 readme = "README.rst"
 license = "Apache-2.0"
@@ -20,12 +20,12 @@ classifiers = [
 
 dependencies = [
     "atomicwrites>=1.4.0",
-    "bask=https://github.com/Claes1981/bayes-skopt.git",
+    "bask @ git+https://github.com/Claes1981/bayes-skopt.git@master",
     "Click>=7.1.2",
     "dill>=0.3.4",
     "numpy>=2.0.0",
     "scikit-learn>=1,<2",
-    "scikit-optimize=https://github.com/Claes1981/scikit-optimize.git",
+    "scikit-optimize @ git+https://github.com/Claes1981/scikit-optimize.git@master",
     "scipy>=1.5.2",
     "athena-mathlab>=0.1.2",
     "prettytable>=3.0",
@@ -74,6 +74,9 @@ include = ["tune"]
 
 [tool.hatch.version]
 source = "uv-dynamic-versioning"
+
+[tool.hatch.metadata] 
+allow-direct-references = true
 
 [tool.ruff]
 exclude = ["docs"]
