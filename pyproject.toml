@@ -27,7 +27,7 @@ dependencies = [
     "scikit-learn>=1,<2",
     "scikit-optimize @ git+https://github.com/Claes1981/scikit-optimize.git@master",
     "scipy>=1.5.2",
-    "athena-mathlab>=0.1.2",
+    "athena-mathlab @ git+https://github.com/k1nshuk/ATHENA.git@bayesopt",
     "prettytable>=3.0",
 ]
 
