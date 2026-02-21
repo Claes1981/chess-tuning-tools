@@ -762,7 +762,7 @@ def print_results(
             confidence * 100,
             confidence_out,
         )
-        return best_point, estimated_elo, float(best_std * 100)
+        return best_point, estimated_elo, float(np.squeeze(best_std * 100))
     except ValueError as e:
         logger.info(
             "Computing current optimum was not successful. "
