@@ -62,8 +62,8 @@ def expected_ucb(res, n_random_starts=100, alpha=1.96, random_state=None):
         minimize_bounds = []
         for bound in raw_bounds:
             lower, upper = bound
-            lower_cast = None if lower is None else float(np.float64(lower))
-            upper_cast = None if upper is None else float(np.float64(upper))
+            lower_cast = None if lower is None else float(np.float64(0.0))
+            upper_cast = None if upper is None else float(np.float64(1.0))
             minimize_bounds.append((lower_cast, upper_cast))
         minimize_bounds = tuple(minimize_bounds)
 
