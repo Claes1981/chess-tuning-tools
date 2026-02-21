@@ -449,14 +449,14 @@ def plot_objective(
     rvs_transformed = space.transform(space.rvs(n_samples=n_samples))
     # print(f"n_samples={n_samples}")
     z_min_partial_dependence = np.full((space.n_dims, space.n_dims), np.inf)
-    z_max_partial_dependence = np.full((space.n_dims, space.n_dims), np.NINF)
+    z_max_partial_dependence = np.full((space.n_dims, space.n_dims), -np.inf)
     z_ranges_partial_dependence = np.zeros((space.n_dims, space.n_dims))
     if plot_confidence_interval_width:
         contour_plot_confidence_interval_width = np.empty(
             (space.n_dims, space.n_dims), dtype=object
         )
         z_min_confidence_interval_width = np.full((space.n_dims, space.n_dims), np.inf)
-        z_max_confidence_interval_width = np.full((space.n_dims, space.n_dims), np.NINF)
+        z_max_confidence_interval_width = np.full((space.n_dims, space.n_dims), -np.inf)
         z_ranges_confidence_interval_width = np.zeros((space.n_dims, space.n_dims))
 
     if zscale == "log":
