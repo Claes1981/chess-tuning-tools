@@ -15,10 +15,15 @@ def test_load_tuning_config():
         "parameter_ranges": {"CPuct": "Real(0.0, 1.0)"},
         "gp_samples": 100,
     }
-    json_dict, commands, fixed_params, param_ranges = load_tuning_config(
-        testdict
-    )
-    assert len(json_dict) == 1
+    (
+        json_dict,
+        commands,
+        directories,
+        polyglot_params,
+        fixed_params,
+        param_ranges,
+    ) = load_tuning_config(testdict)
+    assert len(json_dict) == 3
     assert "gp_samples" in json_dict
     assert len(commands) == 2
     assert len(fixed_params) == 2
