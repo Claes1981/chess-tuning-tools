@@ -1159,7 +1159,7 @@ def plot_results(
             #     )
             # active_subspace_samples_y_values.append(y_row)
             # active_subspace_samples_gradients.append(grad_row)
-            active_subspace_samples_y_values[row_number] = y_row
+            active_subspace_samples_y_values[row_number] = y_row.item()
             active_subspace_samples_gradients[row_number] = grad_row
 
         active_subspaces_object = ActiveSubspaces(dim=2, method="exact", n_boot=1000)
