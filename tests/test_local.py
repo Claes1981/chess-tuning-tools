@@ -27,12 +27,14 @@ def test_parse_experiment_result():
     Elo difference: -31.4 +/- 57.1, LOS: 13.9 %, DrawRatio: 31.0 %
     Finished match
     """
-    score, error, draw_rate = parse_experiment_result(
-        teststr, n_dirichlet_samples=1000, random_state=0
+    match_score, match_error_variance, match_draw_rate, match_counts_array = (
+        parse_experiment_result(
+            teststr, n_dirichlet_samples=1000, random_state=0
+        )
     )
-    assert_almost_equal(score, 0.0)
-    assert_almost_equal(error, 0.887797821633887)
-    assert_almost_equal(draw_rate, 1 / 4)
+    assert_almost_equal(match_score, 0.0)
+    assert_almost_equal(match_error_variance, 0.887797821633887)
+    assert_almost_equal(match_draw_rate, 1 / 4)
 
     # Test cutechess 1.2.0 output:
     teststr = """Started game 1 of 4 (engine1 vs engine2)
@@ -53,12 +55,14 @@ def test_parse_experiment_result():
     Elo difference: -88.7 +/- nan, LOS: 28.2 %, DrawRatio: 25.0 %
     Finished match
     """
-    score, error, draw_rate = parse_experiment_result(
-        teststr, n_dirichlet_samples=1000, random_state=0
+    match_score, match_error_variance, match_draw_rate, match_counts_array = (
+        parse_experiment_result(
+            teststr, n_dirichlet_samples=1000, random_state=0
+        )
     )
-    assert_almost_equal(score, 0.38764005203222596)
-    assert_almost_equal(error, 0.6255020676255081)
-    assert_almost_equal(draw_rate, 1.5 / 5)
+    assert_almost_equal(match_score, 0.38764005203222596)
+    assert_almost_equal(match_error_variance, 0.6255020676255081)
+    assert_almost_equal(match_draw_rate, 1.5 / 5)
 
     teststr = """Indexing opening suite...
     Started game 1 of 40 (engine1 vs engine2)
@@ -92,12 +96,14 @@ def test_parse_experiment_result():
     Finished game 10 (engine2 vs engine1): 1/2-1/2 {Draw by adjudication}
     Score of engine1 vs engine2: 10 - 0 - 0  [0.450] 10
     """
-    score, error, draw_rate = parse_experiment_result(
-        teststr, n_dirichlet_samples=1000, random_state=0
+    match_score, match_error_variance, match_draw_rate, match_counts_array = (
+        parse_experiment_result(
+            teststr, n_dirichlet_samples=1000, random_state=0
+        )
     )
-    assert_almost_equal(score, -2.7958800173440745)
-    assert_almost_equal(error, 1.9952678343378125)
-    assert_almost_equal(draw_rate, 1 / 8)
+    assert_almost_equal(match_score, -2.7958800173440745)
+    assert_almost_equal(match_error_variance, 1.9952678343378125)
+    assert_almost_equal(match_draw_rate, 1 / 8)
 
     # Test if the result is correct in case the order of finished games is not linear.
     # This can happen with concurrency > 1
@@ -119,12 +125,14 @@ def test_parse_experiment_result():
     Elo difference: -88.7 +/- nan, LOS: 28.2 %, DrawRatio: 25.0 %
     Finished match
     """
-    score, error, draw_rate = parse_experiment_result(
-        teststr, n_dirichlet_samples=1000, random_state=0
+    match_score, match_error_variance, match_draw_rate, match_counts_array = (
+        parse_experiment_result(
+            teststr, n_dirichlet_samples=1000, random_state=0
+        )
     )
-    assert_almost_equal(score, 0.38764005203222596)
-    assert_almost_equal(error, 0.6255020676255081)
-    assert_almost_equal(draw_rate, 1.5 / 5)
+    assert_almost_equal(match_score, 0.38764005203222596)
+    assert_almost_equal(match_error_variance, 0.6255020676255081)
+    assert_almost_equal(match_draw_rate, 1.5 / 5)
 
 
 def test_reduce_ranges():
@@ -143,10 +151,12 @@ def test_reduce_ranges():
 
 def test_initialize_data(tmp_path):
     # Test basic functionality without resume:
-    X, y, noise, iteration, optima, performance = initialize_data(
-        parameter_ranges=[(0.0, 1.0)],
-        data_path=None,
-        resume=False,
+    X, y, noise, iteration, optima, performance, round, counts_array, point = (
+        initialize_data(
+            parameter_ranges=[(0.0, 1.0)],
+            data_path=None,
+            resume=False,
+        )
     )
     assert len(X) == 0
     assert len(y) == 0
@@ -174,7 +184,7 @@ def test_initialize_data(tmp_path):
 
     # Check if resume=False is recognized correctly
     # (outputs should be empty despite data_path being given):
-    X, _, _, _, _, _ = initialize_data(
+    X, _, _, _, _, _, _, _, _ = initialize_data(
         parameter_ranges=[(0.0, 1.0)],
         data_path=testfile,
         resume=False,
@@ -182,10 +192,12 @@ def test_initialize_data(tmp_path):
     assert len(X) == 0
 
     # Check if we get the data back we saved with resume=True:
-    X, y, noise, iteration, optima, performance = initialize_data(
-        parameter_ranges=[(0.0, 1.0)],
-        data_path=testfile,
-        resume=True,
+    X, y, noise, iteration, optima, performance, round, counts_array, point = (
+        initialize_data(
+            parameter_ranges=[(0.0, 1.0)],
+            data_path=testfile,
+            resume=True,
+        )
     )
     assert int(iteration) == 5
     assert np.allclose(X, X_in)
@@ -195,7 +207,7 @@ def test_initialize_data(tmp_path):
     assert np.allclose(performance, performance_in)
 
     # Check if we get the correct subset, if we reduce the parameter range:
-    X, y, noise, iteration, _, _ = initialize_data(
+    X, y, noise, iteration, _, _, _, _, _ = initialize_data(
         parameter_ranges=[(0.0, 0.5)],
         data_path=testfile,
         resume=True,
@@ -216,65 +228,101 @@ def test_initialize_data(tmp_path):
 
 def test_initialize_optimizer(tmp_path):
     # First test the minimal functionality without data and resume=False
+    resume_config = {
+        "resume": False,
+    }
     opt = initialize_optimizer(
         X=[],
         y=[],
         noise=[],
         parameter_ranges=[(0.0, 1.0)],
-        resume=False,
+        resume_config=resume_config,
     )
     assert len(opt.Xi) == 0
 
-    # Provide some data to test resume functionality, but do not provide a path:
+    # Provide some data to test resume functionality, but do not provide a path
+    # should only work with a given model_path, so should fall back:
+    resume_config = {
+        "resume": True,
+        "fast_resume": True,
+        "model_path": None,
+    }
+    gp_config = {
+        "initial_burnin": 0,
+    }
+    acq_function_config = {
+        "n_initial_points": 2,
+    }
     opt = initialize_optimizer(
         X=[[0.0], [0.5], [1.0]],
         y=[1.0, -1.0, 1.0],
         noise=[0.1, 0.1, 0.1],
-        n_initial_points=2,
-        gp_initial_burnin=0,
         parameter_ranges=[(0.0, 1.0)],
-        resume=True,
-        # should only work with a given model_path, so should fall back:
-        fast_resume=True,
-        model_path=None,
+        gp_config=gp_config,
+        acq_function_config=acq_function_config,
+        resume_config=resume_config,
     )
     assert len(opt.Xi) == 3
     assert hasattr(opt.gp, "chain_")
 
     # Save the optimizer from above to test fast resume:
     model_path = tmp_path / "model.pkl"
+    resume_config = {
+        "resume": True,
+        "fast_resume": True,
+        "model_path": model_path,
+    }
     with open(model_path, mode="wb") as f:
         dill.dump(opt, f)
+    gp_config = {
+        "initial_burnin": 0,
+    }
+    acq_function_config = {
+        "n_initial_points": 2,
+    }
     opt2 = initialize_optimizer(
         X=[[0.0], [0.5], [1.0]],
         y=[1.0, -1.0, 1.0],
         noise=[0.1, 0.1, 0.1],
-        n_initial_points=2,
-        gp_initial_burnin=0,
         parameter_ranges=[(0.0, 1.0)],
-        resume=True,
-        fast_resume=True,
-        model_path=model_path,
+        gp_config=gp_config,
+        acq_function_config=acq_function_config,
+        resume_config=resume_config,
     )
     assert np.allclose(opt2.Xi, opt.Xi)
     assert np.allclose(opt2.yi, opt.yi)
     assert np.allclose(opt2.noisei, opt.noisei)
     # Since fast_resume does not do a refit, these should be equal:
-    assert np.allclose(opt2.gp.chain_, opt.gp.chain_)
+    if opt.gp.chain_ is not None and opt2.gp.chain_ is not None:
+        assert np.allclose(
+            opt2.gp.chain_,
+            opt.gp.chain_,
+        )
+    else:
+        assert opt2.gp.chain_ == opt.gp.chain_
 
     # Do a fast resume, but change the ranges. This is expected to raise a ValueError
     # exception, since at this point the data is assumed to be filtered already:
+    resume_config = {
+        "resume": True,
+        "fast_resume": True,
+        "model_path": model_path,
+    }
+    gp_config = {
+        "initial_burnin": 0,
+    }
+    acq_function_config = {
+        "n_initial_points": 2,
+    }
     with pytest.raises(ValueError):
         _ = initialize_optimizer(
             X=[[0.0], [0.5], [1.0]],
             y=[1.0, -1.0, 1.0],
             noise=[0.1, 0.1, 0.1],
-            n_initial_points=2,
-            gp_initial_burnin=0,
             parameter_ranges=[(0.0, 0.5)],
-            resume=True,
-            fast_resume=True,
-            model_path=model_path,
+            gp_config=gp_config,
+            acq_function_config=acq_function_config,
+            resume_config=resume_config,
         )
 
 
