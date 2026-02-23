@@ -25,14 +25,15 @@ import matplotlib.pyplot as plt
 import corner
 import numpy as np
 import pandas as pd
-from bask import Optimizer #, acquisition
-#from bask.priors import make_roundflat
+from bask import Optimizer  # , acquisition
+
+# from bask.priors import make_roundflat
 from matplotlib.transforms import Bbox
 from numpy.random import RandomState
 from athena.active import ActiveSubspaces
 from athena.utils import Normalizer
 from scipy.optimize import OptimizeResult
-from scipy.stats import dirichlet #, halfnorm
+from scipy.stats import dirichlet  # , halfnorm
 from skopt.space import Categorical, Dimension, Integer, Real, Space
 from skopt.utils import normalize_dimensions
 from sklearn.preprocessing import PolynomialFeatures
@@ -178,7 +179,9 @@ def counts_to_penta(
             raise ValueError("Argument prior_counts should contain 5 elements.")
     dist = dirichlet(alpha=counts + prior_counts)
     scores = [0.0, 0.25, 0.5, 0.75, 1.0]
-    score = float(np.squeeze(prob_to_elo(dist.mean().dot(scores), k=score_scale)))
+    score = float(
+        np.squeeze(prob_to_elo(dist.mean().dot(scores), k=score_scale))
+    )
     error = prob_to_elo(
         dist.rvs(n_dirichlet_samples, random_state=random_state).dot(scores),
         k=score_scale,
@@ -345,7 +348,7 @@ def initialize_data(
         If None, no resuming will be performed.
     intermediate_data_path : str or None, default=None
         Path to the file containing the data structures used for resuming an unfinished experiment.
-        If None, no resuming will be performed.
+        If None, the iteration/experiment will start over.
     resume : bool, default=True
         If True, fill the data structures with the the data from the given data_path.
         Otherwise return empty data structures.
@@ -374,8 +377,13 @@ def initialize_data(
     if data_path is not None and resume:
         space = normalize_dimensions(parameter_ranges)
         path = pathlib.Path(data_path)
-        intermediate_path = pathlib.Path(intermediate_data_path)
-        if intermediate_path.exists():
+        if intermediate_data_path is not None:
+            intermediate_path = pathlib.Path(intermediate_data_path)
+        else:
+            intermediate_path = None
+
+        # Only try to load intermediate data if we have a valid path
+        if intermediate_path is not None and intermediate_path.exists():
             with np.load(intermediate_path) as importa:
                 round = importa["arr_0"]
                 counts_array = importa["arr_1"]
@@ -422,8 +430,18 @@ def initialize_data(
                 X = X_reduced
                 y = y_reduced
                 noise = noise_reduced
-            #iteration = len(X)
-    return X, y, noise, iteration, optima, performance, round, counts_array, point
+            # iteration = len(X)
+    return (
+        X,
+        y,
+        noise,
+        iteration,
+        optima,
+        performance,
+        round,
+        counts_array,
+        point,
+    )
 
 
 def setup_random_state(seed: int) -> np.random.RandomState:
@@ -455,10 +473,10 @@ def initialize_optimizer(
     gp_nu: float = 1.5,
     # warp_inputs: bool = True,
     # normalize_y: bool = True,
-    #kernel_lengthscale_prior_lower_bound: float = 0.1,
-    #kernel_lengthscale_prior_upper_bound: float = 0.5,
-    #kernel_lengthscale_prior_lower_steepness: float = 2.0,
-    #kernel_lengthscale_prior_upper_steepness: float = 1.0,
+    # kernel_lengthscale_prior_lower_bound: float = 0.1,
+    # kernel_lengthscale_prior_upper_bound: float = 0.5,
+    # kernel_lengthscale_prior_lower_steepness: float = 2.0,
+    # kernel_lengthscale_prior_upper_steepness: float = 1.0,
     # n_points: int = 500,
     # non_uncert_acq_function_evaluation_points: int = 500,
     # n_initial_points: int = 16,
@@ -529,7 +547,7 @@ def initialize_optimizer(
     logger = logging.getLogger(LOGGER)
     # Create random generator:
     random_state = setup_random_state(random_seed)
-    #space = normalize_dimensions(parameter_ranges)
+    # space = normalize_dimensions(parameter_ranges)
 
     default_gp_config = {
         "normalize_y": True,
@@ -575,7 +593,9 @@ def initialize_optimizer(
 
     acq_function = acq_function_config["function"]
     if acq_function == "rand":
-        current_acq_func = np.random.choice(["ts", "lcb", "pvrs", "mes", "ei", "mean"])
+        current_acq_func = np.random.choice(
+            ["ts", "lcb", "pvrs", "mes", "ei", "mean"]
+        )
     else:
         current_acq_func = acq_function
 
@@ -587,7 +607,9 @@ def initialize_optimizer(
     acq_func_kwargs = {"alpha": acq_function_lcb_alpha, "n_thompson": 500}
 
     if current_acq_func in ("pvrs", "ts", "vr"):
-        n_points = acq_function_config["non_uncert_acq_function_evaluation_points"]
+        n_points = acq_function_config[
+            "non_uncert_acq_function_evaluation_points"
+        ]
     else:
         n_points = acq_function_config["n_points"]
 
@@ -612,7 +634,7 @@ def initialize_optimizer(
         n_initial_points=acq_function_config["n_initial_points"],
         # gp_kernel=kernel,  # TODO: Let user pass in different kernels
         gp_kwargs=gp_kwargs,
-        #gp_priors=priors,
+        # gp_priors=priors,
         gp_priors=gp_priors,
         acq_func=current_acq_func,
         acq_func_kwargs=acq_func_kwargs,
@@ -654,11 +676,13 @@ def initialize_optimizer(
             f"This could take a while..."
         )
         if acq_function == "rand":
-            logger.debug("Current random acquisition function: %s", current_acq_func)
+            logger.debug(
+                "Current random acquisition function: %s", current_acq_func
+            )
         opt.tell(
             X,
             y,
-            #noise_vector=noise,
+            # noise_vector=noise,
             noise_vector=[i * noise_scaling_coefficient for i in noise],
             gp_burnin=gp_config["initial_burnin"],
             gp_samples=gp_config["initial_samples"],
@@ -667,31 +691,31 @@ def initialize_optimizer(
             progress=True,
         )
         logger.info("Importing finished.")
-    #root_logger.debug(f"noise_vector: {[i*noise_scaling_coefficient for i in noise]}")
+    # root_logger.debug(f"noise_vector: {[i*noise_scaling_coefficient for i in noise]}")
     logger.debug("GP kernel_: %s", opt.gp.kernel_)
-    #logger.debug(f"GP priors: {opt.gp_priors}")
-    #logger.debug(f"GP X_train_: {opt.gp.X_train_}")
-    #logger.debug(f"GP alpha: {opt.gp.alpha}")
-    #logger.debug(f"GP alpha_: {opt.gp.alpha_}")
-    #logger.debug(f"GP y_train_: {opt.gp.y_train_}")
-    #logger.debug(f"GP y_train_std_: {opt.gp.y_train_std_}")
-    #logger.debug(f"GP y_train_mean_: {opt.gp.y_train_mean_}")
+    # logger.debug(f"GP priors: {opt.gp_priors}")
+    # logger.debug(f"GP X_train_: {opt.gp.X_train_}")
+    # logger.debug(f"GP alpha: {opt.gp.alpha}")
+    # logger.debug(f"GP alpha_: {opt.gp.alpha_}")
+    # logger.debug(f"GP y_train_: {opt.gp.y_train_}")
+    # logger.debug(f"GP y_train_std_: {opt.gp.y_train_std_}")
+    # logger.debug(f"GP y_train_mean_: {opt.gp.y_train_mean_}")
 
-    #if warp_inputs and hasattr(opt.gp, "warp_alphas_"):
-        #warp_params = dict(
-            #zip(
-                #parameter_ranges.keys(),
-                #zip(
-                    #np.around(np.exp(opt.gp.warp_alphas_), 3),
-                    #np.around(np.exp(opt.gp.warp_betas_), 3),
-                #),
-            #)
-        #)
-        #logger.debug(
-            #f"Input warping was applied using the following parameters for "
-            #f"the beta distributions:\n"
-            #f"{warp_params}"
-        #)
+    # if warp_inputs and hasattr(opt.gp, "warp_alphas_"):
+        # warp_params = dict(
+            # zip(
+                # parameter_ranges.keys(),
+                # zip(
+                    # np.around(np.exp(opt.gp.warp_alphas_), 3),
+                    # np.around(np.exp(opt.gp.warp_betas_), 3),
+                # ),
+            # )
+        # )
+        # logger.debug(
+            # f"Input warping was applied using the following parameters for "
+            #f "the beta distributions:\n"
+            # f"{warp_params}"
+        # )
 
     return opt
 
@@ -891,39 +915,49 @@ def plot_results(
             ncols=optimizer.space.n_dims,
             figsize=(3 * optimizer.space.n_dims, 3 * optimizer.space.n_dims),
         )
-        confidence_interval_width_figure, confidence_interval_width_axes = plt.subplots(
-            nrows=optimizer.space.n_dims,
-            ncols=optimizer.space.n_dims,
-            figsize=(3 * optimizer.space.n_dims, 3 * optimizer.space.n_dims),
+        confidence_interval_width_figure, confidence_interval_width_axes = (
+            plt.subplots(
+                nrows=optimizer.space.n_dims,
+                ncols=optimizer.space.n_dims,
+                figsize=(
+                    3 * optimizer.space.n_dims,
+                    3 * optimizer.space.n_dims,
+                ),
+            )
         )
 
         for i in range(optimizer.space.n_dims):
             for j in range(optimizer.space.n_dims):
                 partial_dependence_axes[i, j].set_facecolor("xkcd:dark grey")
-                confidence_interval_width_axes[i, j].set_facecolor("xkcd:dark grey")
+                confidence_interval_width_axes[i, j].set_facecolor(
+                    "xkcd:dark grey"
+                )
         partial_dependence_figure.patch.set_facecolor("xkcd:dark grey")
         confidence_interval_width_figure.patch.set_facecolor("xkcd:dark grey")
-        partial_dependence_axes, confidence_interval_width_axes = plot_objective(
-            result_object,
-            regression_object=None,
-            polynomial_features_object=None,
-            n_points=10,
-            n_samples=100,
-            dimensions=parameter_names,
-            next_point=optimizer._next_x,
-            plot_confidence_interval_width=True,
-            plot_polynomial_regression=False,
-            partial_dependence_figure=partial_dependence_figure,
-            partial_dependence_axes=partial_dependence_axes,
-            confidence_interval_width_figure=confidence_interval_width_figure,
-            confidence_interval_width_axes=confidence_interval_width_axes,
-            confidence=confidence,
+        partial_dependence_axes, confidence_interval_width_axes = (
+            plot_objective(
+                result_object,
+                regression_object=None,
+                polynomial_features_object=None,
+                n_points=10,
+                n_samples=100,
+                dimensions=parameter_names,
+                next_point=optimizer._next_x,
+                plot_confidence_interval_width=True,
+                plot_polynomial_regression=False,
+                partial_dependence_figure=partial_dependence_figure,
+                partial_dependence_axes=partial_dependence_axes,
+                confidence_interval_width_figure=confidence_interval_width_figure,
+                confidence_interval_width_axes=confidence_interval_width_axes,
+                confidence=confidence,
+            )
         )
     # plotpath = pathlib.Path(plot_path)
     for subdir in ["landscapes", "elo", "optima"]:
         (plotpath / subdir).mkdir(parents=True, exist_ok=True)
     full_plotpath_partial_dependence = (
-        plotpath / f"landscapes/partial_dependence-{timestr}-{current_iteration}.png"
+        plotpath
+        / f"landscapes/partial_dependence-{timestr}-{current_iteration}.png"
     )
     full_plotpath_confidence_interval_width = (
         plotpath
@@ -937,7 +971,8 @@ def plot_results(
         **save_params,
     )
     logger.info(
-        "Saving a partial dependence plot to %s.", full_plotpath_partial_dependence
+        "Saving a partial dependence plot to %s.",
+        full_plotpath_partial_dependence,
     )
     plt.close(partial_dependence_figure)
     confidence_interval_width_figure.savefig(
@@ -961,7 +996,6 @@ def plot_results(
         len(np.unique(np.array(optimizer.Xi), axis=0))
         >= polynomial_features.n_output_features_
     ):
-
         logger.debug(
             "Starting to compute the next polynomial regression partial dependence plot."
         )
@@ -990,10 +1024,13 @@ def plot_results(
         )
 
         LinearRegression_polynomial_predicted_scores = (
-            LinearRegression_polynomial.predict(samples_polynomial_features_transformed)
+            LinearRegression_polynomial.predict(
+                samples_polynomial_features_transformed
+            )
         )
         LinearRegression_polynomial_residuals = (
-            np.asarray(optimizer.yi) - LinearRegression_polynomial_predicted_scores
+            np.asarray(optimizer.yi)
+            - LinearRegression_polynomial_predicted_scores
         )
         LinearRegression_polynomial_weighted_residuals = (
             LinearRegression_polynomial_residuals
@@ -1113,7 +1150,9 @@ def plot_results(
     plt.rcParams["axes.formatter.useoffset"] = False
 
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    number_of_random_active_subspace_samples = 10000 - len(result_object.x_iters)
+    number_of_random_active_subspace_samples = 10000 - len(
+        result_object.x_iters
+    )
     number_of_input_dimensions = optimizer.space.n_dims
     # active_subspace_samples_y_values = []
     # active_subspace_samples_gradients = []
@@ -1133,7 +1172,9 @@ def plot_results(
 
     active_subspaces_input_normalizer = Normalizer(lb, ub)
     active_subspace_samples_normalized_x = (
-        active_subspaces_input_normalizer.fit_transform(active_subspace_samples_x_raw)
+        active_subspaces_input_normalizer.fit_transform(
+            active_subspace_samples_x_raw
+        )
     )
     active_subspace_samples_y_values = np.zeros(
         np.shape(active_subspace_samples_x_raw)[0]
@@ -1162,7 +1203,9 @@ def plot_results(
             active_subspace_samples_y_values[row_number] = y_row.item()
             active_subspace_samples_gradients[row_number] = grad_row
 
-        active_subspaces_object = ActiveSubspaces(dim=2, method="exact", n_boot=1000)
+        active_subspaces_object = ActiveSubspaces(
+            dim=2, method="exact", n_boot=1000
+        )
         active_subspaces_object.fit(gradients=active_subspace_samples_gradients)
     else:
         for x_row in active_subspace_samples_x_raw:
@@ -1174,7 +1217,9 @@ def plot_results(
                     [active_subspace_samples_y_values, y_row]
                 )
 
-        active_subspaces_object = ActiveSubspaces(dim=2, method="local", n_boot=1000)
+        active_subspaces_object = ActiveSubspaces(
+            dim=2, method="local", n_boot=1000
+        )
         active_subspaces_object.fit(
             inputs=active_subspace_samples_normalized_x,
             outputs=active_subspace_samples_y_values,
@@ -1193,17 +1238,20 @@ def plot_results(
         height_ratios=[1, active_subspaces_object.evects.shape[1], 3],
     )
 
-    #active_subspace_figure.tight_layout()
-    #active_subspace_figure.patch.set_facecolor("xkcd:dark grey")
-    active_subspace_eigenvalues_axes = active_subspace_subfigures[0].subplots(1, 1)
+    # active_subspace_figure.tight_layout()
+    # active_subspace_figure.patch.set_facecolor("xkcd:dark grey")
+    active_subspace_eigenvalues_axes = active_subspace_subfigures[0].subplots(
+        1, 1
+    )
     active_subspace_eigenvalues_axes = plot_activesubspace_eigenvalues(
         active_subspaces_object,
         active_subspace_figure=active_subspace_figure,
         active_subspace_eigenvalues_axes=active_subspace_eigenvalues_axes,
-        #figsize=(6, 4),
+        # figsize=(6, 4),
     )
     logger.debug(
-        "Active subspace eigenvalues: %s", np.squeeze(active_subspaces_object.evals)
+        "Active subspace eigenvalues: %s",
+        np.squeeze(active_subspaces_object.evals),
     )
 
     active_subspace_eigenvectors_axes = active_subspace_subfigures[1].subplots(
@@ -1213,10 +1261,10 @@ def plot_results(
         active_subspaces_object,
         active_subspace_figure=active_subspace_figure,
         active_subspace_eigenvectors_axes=active_subspace_eigenvectors_axes,
-        #n_evects=number_of_input_dimensions,
+        # n_evects=number_of_input_dimensions,
         n_evects=active_subspaces_object.evects.shape[1],
         labels=parameter_names,
-        #figsize=(6, 4),
+        # figsize=(6, 4),
     )
 
     activity_scores_table = PrettyTable()
@@ -1227,11 +1275,11 @@ def plot_results(
     activity_scores_table.sortby = "Activity score"
     activity_scores_table.reversesort = True
     logger.debug("Active subspace activity scores:\n%s", activity_scores_table)
-    #logger.debug(f"Active subspace activity scores: {np.squeeze(active_subspaces_object.activity_scores)}")
+    # logger.debug(f"Active subspace activity scores: {np.squeeze(active_subspaces_object.activity_scores)}")
 
-    active_subspace_sufficient_summary_axes = active_subspace_subfigures[2].subplots(
-        1, 1
-    )
+    active_subspace_sufficient_summary_axes = active_subspace_subfigures[
+        2
+    ].subplots(1, 1)
     active_subspace_sufficient_summary_axes = plot_activesubspace_sufficient_summary(
         active_subspaces_object=active_subspaces_object,
         inputs=active_subspace_samples_normalized_x,
@@ -1240,14 +1288,15 @@ def plot_results(
         next_point=optimizer._next_x,
         active_subspace_figure=active_subspace_figure,
         active_subspace_sufficient_summary_axes=active_subspace_sufficient_summary_axes,
-        #figsize=(6, 4),
+        # figsize=(6, 4),
     )
 
     active_subspace_figure.suptitle("Active subspace")
 
-    #plt.show()
+    # plt.show()
     active_subspace_full_plotpath = (
-        plotpath / f"landscapes/active_subspace-{timestr}-{current_iteration}.png"
+        plotpath
+        / f"landscapes/active_subspace-{timestr}-{current_iteration}.png"
     )
     active_subspace_figure.savefig(
         active_subspace_full_plotpath,
@@ -1255,7 +1304,9 @@ def plot_results(
         facecolor="xkcd:dark grey",
         **save_params,
     )
-    logger.info("Saving an active subspace plot to %s.", active_subspace_full_plotpath)
+    logger.info(
+        "Saving an active subspace plot to %s.", active_subspace_full_plotpath
+    )
     plt.close(active_subspace_figure)
     plt.rcdefaults()
 
@@ -1263,7 +1314,10 @@ def plot_results(
 def inputs_uniform(n_samples, lb, ub):
     return np.vstack(
         np.array(
-            [np.random.uniform(lb[i], ub[i], n_samples) for i in range(lb.shape[0])]
+            [
+                np.random.uniform(lb[i], ub[i], n_samples)
+                for i in range(lb.shape[0])
+            ]
         ).T
     )
 
@@ -1405,9 +1459,11 @@ def run_match(
     string_array.extend(("-concurrency", str(concurrency)))
 
     if all(
-        param is None for param in (engine1_npm, engine1_tc, engine1_st, engine1_depth)
+        param is None
+        for param in (engine1_npm, engine1_tc, engine1_st, engine1_depth)
     ) or all(
-        param is None for param in (engine2_npm, engine2_tc, engine2_st, engine2_depth)
+        param is None
+        for param in (engine2_npm, engine2_tc, engine2_st, engine2_depth)
     ):
         raise ValueError(
             "A valid time control or nodes configuration is required."
@@ -1797,7 +1853,7 @@ def update_model(
             optimizer.tell(
                 x=point,
                 y=score,
-                #noise_vector=variance,
+                # noise_vector=variance,
                 noise_vector=noise_scaling_coefficient * variance,
                 n_samples=acq_function_samples,
                 gp_samples=current_gp_samples,
@@ -1808,15 +1864,15 @@ def update_model(
             later = datetime.now()
             difference = (later - now).total_seconds()
             logger.info("GP sampling finished (%ss)", difference)
-            #logger.debug(f"noise_vector: {[i*noise_scaling_coefficient for i in noise]}")
+            # logger.debug(f"noise_vector: {[i*noise_scaling_coefficient for i in noise]}")
             logger.debug("GP kernel_: %s", optimizer.gp.kernel_)
-            #logger.debug(f"GP priors: {opt.gp_priors}")
-            #logger.debug(f"GP X_train_: {opt.gp.X_train_}")
-            #logger.debug(f"GP alpha: {opt.gp.alpha}")
-            #logger.debug(f"GP alpha_: {opt.gp.alpha_}")
-            #logger.debug(f"GP y_train_: {opt.gp.y_train_}")
-            #logger.debug(f"GP y_train_std_: {opt.gp.y_train_std_}")
-            #logger.debug(f"GP y_train_mean_: {opt.gp.y_train_mean_}")
+            # logger.debug(f"GP priors: {opt.gp_priors}")
+            # logger.debug(f"GP X_train_: {opt.gp.X_train_}")
+            # logger.debug(f"GP alpha: {opt.gp.alpha}")
+            # logger.debug(f"GP alpha_: {opt.gp.alpha_}")
+            # logger.debug(f"GP y_train_: {opt.gp.y_train_}")
+            # logger.debug(f"GP y_train_std_: {opt.gp.y_train_std_}")
+            # logger.debug(f"GP y_train_mean_: {opt.gp.y_train_mean_}")
         except ValueError:
             logger.warning(
                 "Error encountered during fitting. Trying to sample chain a bit. "
