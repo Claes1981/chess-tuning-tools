@@ -401,7 +401,7 @@ def initialize_data(
                 if "arr_4" in importa:
                     performance = importa["arr_4"].tolist()
                 if "arr_5" in importa:
-                    iteration = importa["arr_5"]
+                    iteration = importa["arr_5"].item()
                 else:
                     iteration = len(X)
             if len(X[0]) != space.n_dims:
