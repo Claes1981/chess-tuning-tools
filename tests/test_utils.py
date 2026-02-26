@@ -10,24 +10,39 @@ import tune.utils as utils_module
 from tune.utils import expected_ucb, latest_iterations
 
 
-def test_latest_iterations():
+def test_latest_iterations_filters_to_last_occurrence_of_each_value():
+    """Returns only the last occurrence of each unique value."""
     iterations = np.array([1.0, 2.0, 3.0, 3.0, 4.0])
     expected_indices = [0, 1, 3, 4]
+
     result = latest_iterations(iterations)
     assert len(result) == 1
     assert_allclose(result, (iterations[expected_indices],))
+
+
+def test_latest_iterations_filters_additional_arrays():
+    """Filters additional arrays using same indices as iteration array."""
+    iterations = np.array([1.0, 2.0, 3.0, 3.0, 4.0])
     array = np.array([0.0, 0.1, 0.2, 0.3, 0.4])
+    expected_indices = [0, 1, 3, 4]
+
     result = latest_iterations(iterations, array)
     assert len(result) == 2
     assert_allclose(result[0], iterations[expected_indices])
     assert_allclose(result[1], array[expected_indices])
 
-    # Test if inconsistent lengths cause an exception
-    array = np.array([0.0, 0.1])
+
+def test_latest_iterations_rejects_mismatched_lengths():
+    """Raises ValueError when additional arrays have different lengths."""
+    iterations = np.array([1.0, 2.0, 3.0, 3.0, 4.0])
+    array = np.array([0.0, 0.1])  # Shorter than iterations
+
     with pytest.raises(ValueError):
         latest_iterations(iterations, array)
 
-    # Test an empty input:
+
+def test_latest_iterations_handles_empty_input():
+    """Returns empty tuple for empty input array."""
     iterations = np.array([])
     result = latest_iterations(iterations)
     assert len(result) == 1

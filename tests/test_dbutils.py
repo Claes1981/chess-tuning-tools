@@ -17,7 +17,8 @@ from tune.db_workers.utils import (
 )
 
 
-def test_penta():
+def test_penta_computes_correct_probabilities():
+    """Test that penta computes correct probabilities from LDW arrays."""
     ldw1 = np.array([0.1, 0.2, 0.7])
     ldw2 = np.array([0.2, 0.2, 0.6])
 
@@ -26,7 +27,8 @@ def test_penta():
     assert_almost_equal(result, expected, decimal=3)
 
 
-def test_ldw_probabilities():
+def test_ldw_probabilities_with_default_parameters():
+    """Test LDW probability calculation with default parameters."""
     result = ldw_probabilities(elo=50, draw_elo=200, bias=200)
     expected = np.array(
         [0.06975828735890623, 0.35877859523271227, 0.5714631174083815]
@@ -34,13 +36,15 @@ def test_ldw_probabilities():
     assert_almost_equal(result, expected)
 
 
-def test_draw_rate_to_elo():
+def test_draw_rate_to_elo_converts_midpoint_draw_rate():
+    """Test conversion of 0.5 draw rate to elo difference."""
     result = draw_rate_to_elo(0.5)
     expected = np.array(190.84850188786498)
     assert_almost_equal(result, expected)
 
 
-def test_compute_probabilities_for_bias():
+def test_compute_probabilities_for_bias_single_value():
+    """Test probability computation for a single bias value."""
     result = compute_probabilities_for_bias(elo=50, draw_elo=200, bias=200)
     expected = np.array(
         [0.029894, 0.18540627, 0.41591514, 0.30154527, 0.06723932]
@@ -48,7 +52,8 @@ def test_compute_probabilities_for_bias():
     assert_almost_equal(result, expected)
 
 
-def test_compute_probabilities():
+def test_compute_probabilities_with_multiple_biases():
+    """Test probability computation with multiple bias values."""
     result = compute_probabilities(elo=50, draw_elo=200, biases=(0, 200))
     expected = np.array(
         [
@@ -62,13 +67,15 @@ def test_compute_probabilities():
     assert_almost_equal(result, expected)
 
 
-def test_elo_to_bayeselo():
+def test_elo_to_bayeselo_conversion():
+    """Test conversion from Elo to BayesElo."""
     result = elo_to_bayeselo(elo=50, draw_elo=200, biases=(0, 200))
     expected = 71.513929
     assert_almost_equal(result, expected, decimal=5)
 
 
-def test_penta_to_score():
+def test_penta_to_score_with_sample_counts():
+    """Test score calculation from penta distribution with sample counts."""
     counts = np.array([1, 2, 3, 4, 5])
     result = penta_to_score(
         draw_rate=0.5, counts=counts, prior_games=10, prior_elo=0
@@ -77,10 +84,16 @@ def test_penta_to_score():
     assert_almost_equal(result, expected)
 
 
-def test_timecontrol():
+def test_timecontrol_from_strings():
+    """Test TimeControl parsing and serialization from string format."""
     strings = ("3.0+0.03", "7.0+0.0")
     result = TimeControl.from_strings(*strings)
     expected = (Decimal("3.0"), Decimal("0.03"), Decimal(7), Decimal(0))
     assert result == expected
 
-    assert result.to_strings() == strings
+
+def test_timecontrol_to_strings():
+    """Test TimeControl conversion back to string format."""
+    strings = ("3.0+0.03", "7.0+0.0")
+    time_control = TimeControl.from_strings(*strings)
+    assert time_control.to_strings() == strings
