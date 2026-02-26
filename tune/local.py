@@ -1699,7 +1699,7 @@ def parse_experiment_result(
     score_scale: float = 4.0,
     random_state: Union[int, RandomState, None] = None,
     **kwargs: Any,
-) -> Tuple[float, float, float]:
+) -> Tuple[float, float, float, np.array(int)]:
     """Parse cutechess-cli result output to extract mean score and error.
 
     Here we use a simple pentanomial model to exploit paired openings.
