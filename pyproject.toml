@@ -27,7 +27,7 @@ dependencies = [
     "scikit-learn>=1,<2",
     "scikit-optimize @ git+https://github.com/Claes1981/scikit-optimize.git@master",
     "scipy>=1.5.2",
-    "athena-mathlab @ git+https://github.com/k1nshuk/ATHENA.git@bayesopt",
+    "athena-mathlab @ git+https://github.com/Claes1981/ATHENA.git@feature/ignore-gpy-not-available",
     "prettytable>=3.0",
     "corner>=2",
     "line-profiler>=4",
