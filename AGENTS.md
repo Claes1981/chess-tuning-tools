@@ -1,94 +1,264 @@
 # Repository Guidelines
 
-## 1. Project structure
-- `tune/` – the package that contains the CLI, database workers, and algorithmic helpers.
-- `tests/` – a mirror of `tune/` with pytest test modules.
-- `docs/`, `examples/`, `README.rst` – user‑facing documentation.
-- `.github/workflows/` – GitHub Actions CI.
-- `Makefile` – command shortcuts for common tasks.
-- `pyproject.toml` – uv build and dependency information.
-- `noxfile.py` – run tests, lint, and type‑check in reproducible environments.
-- `.pre-commit-config.yaml` – ruff hooks.
+This document provides comprehensive guidelines for AI coding assistants working with this chess-tuning-tools repository.
 
-## 2. Installing / setting up the dev environment
+## 1. Project Overview
+
+The **chess-tuning-tools** repository is designed for research and tuning of chess engines. It includes:
+- A CLI tool for running tuning experiments
+- Database workers for storing results
+- Algorithmic helpers for analysis
+- Comprehensive test suite using pytest
+
+## 2. Development Environment Setup
+
+### Prerequisites
+- Python 3.10+
+- [uv](https://github.com/astral-sh/uv) package manager (recommended)
+- Git
+
+### Installation
 ```bash
-# Pull the latest source and install dependencies
+# Clone the repository
+git clone https://github.com/anomalyco/chess-tuning-tools.git
+cd chess-tuning-tools
+
+# Install dependencies in development mode
 uv sync --group dev --extra dist
-# Alternatively, use pip in a venv
-# python -m venv .venv && source .venv/bin/activate && pip install -e .[dev,dist]
+
+# Alternative: Use pip with virtual environment
+python -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev,dist]"
 ```
-The `--extra dist` flag pulls optional packages for distributed execution (joblib, pandas, postgresql, sqlalchemy).
 
-## 3. Running tests
-- All tests
-  ```bash
-  uv run --group dev pytest
-  ```
-- Single test file
-  ```bash
-  uv run --group dev pytest tests/test_tune.py
-  ```
-- Single test function
-  ```bash
-  uv run --group dev pytest tests/test_tune.py::test_my_feature
-  ```
-- Use `-q` for quiet output or `-s` to see print statements.
-- For CI‑aligned version:
-  ```bash
-  uv run --group dev nox -s tests
-  ```
+The `--extra dist` flag pulls optional packages needed for distributed execution (joblib, pandas, postgresql, sqlalchemy).
 
-## 4. Linting, formatting, and type‑checking
+## 3. Running Tests
+
+### Test Commands
 | Command | Purpose |
 |---------|---------|
-| `uv run --group dev nox -s pre-commit` | Run ruff format & check on all files. |
-| `uv run --group dev ruff format` | In‑place formatting only. |
-| `uv run --group dev ruff check` | Find style and lint errors only. |
-| `uv run --group dev nox -s ruff` | Same as above but via nox. |
-| `uv run --group dev mypy .` | Static type checking. |
+| `uv run --group dev pytest` | Run entire test suite |
+| `uv run --group dev pytest tests/test_tune.py` | Run specific test module |
+| `uv run --group dev pytest tests/test_tune.py::test_my_feature` | Run single test function |
+| `uv run --group dev nox -s tests` | CI-aligned test run |
+| `uv run --group dev pytest -q` | Quiet output |
+| `uv run --group dev pytest -s` | Show print statements |
 
-**Note:** All tools obey the ruff config in `pyproject.toml` (max‑line‑length 80, ignore E203,E501,F403,F405). `mypy.ini` ignores imports for third‑party libraries.
+### Best Practices
+- Keep tests deterministic; avoid external network calls
+- Use fixtures for reusable setup
+- Mark parameterized tests with `@pytest.mark.parametrize`
+- Place test files in `tests/` mirroring the `tune/` structure
 
-## 5. Building / publishing
+## 4. Linting, Formatting, and Type Checking
+
+### Code Quality Tools
+| Command | Purpose |
+|---------|---------|
+| `uv run --group dev nox -s pre-commit` | Full ruff format & check |
+| `uv run --group dev ruff format` | Format code only |
+| `uv run --group dev ruff check` | Check style/lint errors |
+| `uv run --group dev mypy .` | Static type checking |
+
+**Note:** All tools obey configuration in `pyproject.toml`:
+- Max line length: 80 characters
+- Ignored rules: E203, E501, F403, F405
+- `mypy.ini` ignores imports for third-party libraries
+
+### Makefile Shortcuts
 ```bash
-uv build  # creates dist/*.tar.gz & dist/*.whl
-uv publish  # pushes to PyPI if credentials are set via UV_PROJECT
+make lint       # Runs ruff format & check
+make test-all   # Runs full test suite
+make coverage   # Generates coverage report
+make clean      # Cleans build artifacts
 ```
 
-## 6. Coding style guidelines
-- **Indentation**: 4 spaces, never tabs. All files must pass `ruff format`.
-- **Naming**: snake_case for functions, variables, modules; PascalCase for classes and data structures.
-- **Imports**: absolute imports inside the package; group standard library, third‑party, local in that order, each separated by a blank line.
-- **Type hints**: provide annotations for public functions and classes. Use `typing` primitives (`List`, `Dict`, `Tuple`, `Optional`), and `typing.Any` only when necessary.
-- **Docstrings**: use Google style or reST; no empty docstrings. For public API functions, include brief description, parameters, and return values.
-- **Error handling**: raise specific exceptions derived from `Exception`; avoid `sys.exit` in library code.
-- **Logging**: use `logger = logging.getLogger(__name__)`; prefer structured logging via `logger.info("msg", extra={...})`.
-- **Line length**: keep within 80 characters as enforced by ruff; use line continuation or `typing.get_type_hints` for complex type hints.
-- **Magic numbers**: replace with named constants or `Enum` where appropriate.
-- **Use of `# noqa`**: only for legitimate cases; include a short comment explaining why.
+## 5. Coding Style Guidelines
 
-## 7. Testing guidelines
-- Name tests `test_<module>_<feature>.py` in `tests/`.
-- Keep tests deterministic; avoid external network calls.
-- Use fixtures for reusable setup.
-- Mark tests with `@pytest.mark.parametrize` for parameterized coverage.
+### Imports
+- **Order**: Standard library → Third-party → Local
+- **Grouping**: Separate each group by blank lines
+- **Absolute imports**: Always use absolute imports within package
+- **Avoid wildcards**: Never use `from x import *`
 
-## 8. Git workflow
-- Commit messages in imperative, short form.
-- Avoid committing `.venv` or other large binary directories.
-- Run `uv run --group dev nox -s pre-commit` before pushing.
-- Use `git add` followed by `git commit -m "Msg"`.
+Example:
+```python
+import os
+import sys
+from typing import List, Dict, Optional
 
-## 9. Pull request policy
-- Reference related issue (e.g., `Fixes #123`).
-- Include CI status badges in the PR description.
-- Add a brief summary in the PR body and a list of changes.
+import numpy as np
+import pandas as pd
 
-## 10. Miscellaneous
-- There are no cursor rules or Copilot instructions in this repo.
-- The repository is primarily for research and tuning of chess engines.
-- If you need to contribute a new feature, first create a separate branch, run `uv run --group dev nox -s pre-commit`, then run all tests.
-- For documentation, run `make docs` or `make servedocs`.
-- The Makefile also includes targets: `clean`, `lint`, `test-all`, `coverage`. These wrap the same commands above.
+from tune.utils import logger
+from tune.config import settings
+```
 
-# End of guidelines
+### Naming Conventions
+- **Functions/Variables**: snake_case (e.g., `calculate_score`, `data_frame`)
+- **Classes/Data Structures**: PascalCase (e.g., `TunerConfig`, `ResultSet`)
+- **Constants**: UPPER_SNAKE_CASE (e.g., `MAX_ITERATIONS`, `DEFAULT_TIMEOUT`)
+- **Private members**: Prefix with underscore (e.g., `_internal_helper()`)
+
+### Type Hints
+- Provide annotations for public functions and classes
+- Use `typing` primitives: `List`, `Dict`, `Tuple`, `Optional`
+- Use `Any` sparingly; prefer specific types
+- For complex signatures, break across multiple lines
+
+Good example:
+```python
+def process_results(
+    data: List[Dict[str, Any]],
+    config: Optional[TunerConfig] = None,
+) -> Tuple[int, float]:
+    ...
+```
+
+### Docstrings
+- Use Google or reST style
+- Include brief description, parameters, return values
+- No empty docstrings
+
+Example:
+```python
+def evaluate_position(board_state: BoardState) -> EvaluationScore:
+    """
+    Evaluates the chess position and returns a score.
+    
+    Args:
+        board_state: Current state of the chessboard.
+    
+    Returns:
+        Score representing position evaluation.
+    """
+    ...
+```
+
+### Error Handling
+- Raise specific exceptions derived from `Exception`
+- Avoid `sys.exit` in library code
+- Use custom exception classes for domain-specific errors
+
+Example:
+```python
+class TunerError(Exception):
+    pass
+
+if invalid_config:
+    raise TunerError("Invalid configuration provided")
+```
+
+### Logging
+- Use `logger = logging.getLogger(__name__)`
+- Prefer structured logging via `extra` parameter
+- Log levels: DEBUG → INFO → WARNING → ERROR → CRITICAL
+
+Example:
+```python
+logger.info("Processing started", extra={"stage": "initialization"})
+logger.error("Failed to load data", exc_info=True)
+```
+
+## 6. Git Workflow
+
+### Commit Messages
+- Imperative mood, short form
+- Reference issues when applicable (e.g., "Fixes #123")
+- Focus on "why" rather than "what"
+
+Examples:
+- "Add support for parallel tuning experiments"
+- "Fix race condition in database worker"
+- "Update documentation for CLI usage"
+
+### Best Practices
+- Run pre-commit hooks before pushing:
+  ```bash
+  uv run --group dev nox -s pre-commit
+  ```
+- Never commit `.venv` or large binary files
+- Use feature branches with descriptive names
+- Keep commits focused and atomic
+
+## 7. Pull Request Policy
+
+### Requirements
+- Reference related issue in PR description
+- Include CI status badges
+- Provide summary of changes
+- List all modified components
+
+### Template
+```markdown
+# Summary
+
+- Added new feature X
+- Fixed bug Y
+- Updated documentation Z
+
+# Changes
+
+- Modified `tune/core/tuner.py` to add parallel execution
+- Added tests in `tests/test_tuner_parallel.py`
+- Updated README with new examples
+
+# Testing
+
+All tests passing:
+- Unit tests: ✓
+- Integration tests: ✓
+- Linting: ✓
+- Type checking: ✓
+```
+
+## 8. Project Structure
+
+```
+tree
+├── tune/                  # Main package
+│   ├── cli/               # Command-line interface
+│   ├── core/              # Core algorithms
+│   ├── db/                # Database workers
+│   ├── utils/             # Utilities
+│   └── config.py          # Configuration
+├── tests/                 # Test suite (mirrors tune/)
+├── docs/                  # Documentation
+├── examples/              # Usage examples
+├── .github/workflows/     # CI configuration
+├── Makefile               # Command shortcuts
+├── pyproject.toml         # Build & dependencies
+├── noxfile.py             # Reproducible environments
+└── .pre-commit-config.yaml # Pre-commit hooks
+```
+
+## 9. Common Tasks
+
+### Adding a New Feature
+1. Create branch from main
+2. Add implementation in appropriate module
+3. Write comprehensive tests
+4. Update documentation
+5. Run full test suite
+6. Submit pull request
+
+### Fixing a Bug
+1. Identify failing test or reproduce issue
+2. Implement fix with minimal changes
+3. Add regression test if needed
+4. Verify all existing tests pass
+5. Submit pull request
+
+### Updating Dependencies
+1. Modify `pyproject.toml`
+2. Run `uv lock`
+3. Test compatibility
+4. Document breaking changes if any
+
+## 10. Additional Resources
+
+- [Python Style Guide](https://peps.python.org/pep-0008/)
+- [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html)
+- [Ruff Documentation](https://docs.astral.sh/ruff/)
+- [mypy Documentation](https://mypy.readthedocs.io/)
