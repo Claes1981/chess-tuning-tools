@@ -1208,14 +1208,15 @@ def plot_results(
         )
         active_subspaces_object.fit(gradients=active_subspace_samples_gradients)
     else:
-        for x_row in active_subspace_samples_x_raw:
+        for row_number, x_row in enumerate(active_subspace_samples_x_raw):
             y_row = optimizer.gp.predict(np.reshape(x_row, (1, -1)))
-            if not active_subspace_samples_y_values:
-                active_subspace_samples_y_values = y_row
-            else:
-                active_subspace_samples_y_values = np.vstack(
-                    [active_subspace_samples_y_values, y_row]
-                )
+            # if not active_subspace_samples_y_values:
+            #     active_subspace_samples_y_values = y_row
+            # else:
+            #     active_subspace_samples_y_values = np.vstack(
+            #         [active_subspace_samples_y_values, y_row]
+            #     )
+            active_subspace_samples_y_values[row_number] = y_row.item()
 
         active_subspaces_object = ActiveSubspaces(
             dim=2, method="local", n_boot=1000
