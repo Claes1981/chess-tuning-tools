@@ -7,7 +7,6 @@ from datetime import datetime
 
 # from watchpoints import watch
 import importlib.metadata
-# import pkg_resources
 
 import click
 import dill
@@ -17,7 +16,6 @@ import random
 from skopt.utils import create_result
 from scipy.special import erfinv
 
-# from scipy.stats import halfnorm
 from bask import acquisition
 
 import tune
@@ -57,6 +55,7 @@ ACQUISITION_FUNC = {
 }
 
 # watch.config(pdb=True)
+
 
 @click.group()
 def cli():
@@ -270,30 +269,6 @@ def run_server(verbose, logfile, command, experiment_file, dbconfig):
     "number of MCMC walkers per thread.",
     show_default=True,
 )
-#@click.option(
-    #"--kernel-lengthscale-prior-lower-bound",
-    #default=0.1,
-    #help="Lower bound of prior distribution of Kernel lengthscale.",
-    #show_default=True,
-#)
-#@click.option(
-    #"--kernel-lengthscale-prior-upper-bound",
-    #default=0.5,
-    #help="Upper bound of prior distribution of Kernel lengthscale.",
-    #show_default=True,
-#)
-#@click.option(
-    #"--kernel-lengthscale-prior-lower-steepness",
-    #default=2.0,
-    #help="Lower steepness of prior distribution of Kernel lengthscale.",
-    #show_default=True,
-#)
-#@click.option(
-    #"--kernel-lengthscale-prior-upper-steepness",
-    #default=1.0,
-    #help="Upper steepness of prior distribution of Kernel lengthscale.",
-    #show_default=True,
-#)
 @click.option(
     "--gp-signal-prior-scale",
     default=4.0,
@@ -471,10 +446,6 @@ def local(  # noqa: C901
     gp_initial_burnin=100,
     gp_initial_samples=300,
     gp_walkers_per_thread=100,
-    # kernel_lengthscale_prior_lower_bound=0.1,
-    # kernel_lengthscale_prior_upper_bound=0.5,
-    # kernel_lengthscale_prior_lower_steepness=2.0,
-    # kernel_lengthscale_prior_upper_steepness=1.0,
     gp_signal_prior_scale=4.0,
     gp_noise_prior_scale=0.0006,
     gp_lengthscale_prior_lb=0.1,
@@ -504,14 +475,17 @@ def local(  # noqa: C901
     """
 
     json_dict = json.load(tuning_config)
-    settings, commands, directories, polyglot_params, fixed_params, param_ranges = (
-        load_tuning_config(json_dict)
-    )
+    (
+        settings,
+        commands,
+        directories,
+        polyglot_params,
+        fixed_params,
+        param_ranges,
+    ) = load_tuning_config(json_dict)
     root_logger = setup_logger(
         verbose=verbose, logfile=settings.get("logfile", logfile)
     )
-    # First log the version of chess-tuning-tools:
-    # root_logger.info(f"chess-tuning-tools version: {tune.__version__}")
     root_logger.debug(
         "Chess Tuning Tools version: %s, Bayes-skopt version: %s, Scikit-optimize version: %s, Scikit-learn version: %s, SciPy version: %s",
         importlib.metadata.version("chess-tuning-tools"),
@@ -520,9 +494,6 @@ def local(  # noqa: C901
         importlib.metadata.version("scikit-learn"),
         importlib.metadata.version("scipy"),
     )
-    #root_logger.debug(
-        #f"Chess Tuning Tools version: {pkg_resources.get_distribution('chess-tuning-tools').parsed_version}"
-    #)
     root_logger.debug("Got the following tuning settings:\n%s", json_dict)
     root_logger.debug(
         "Acquisition function: %s\n"
@@ -564,9 +535,6 @@ def local(  # noqa: C901
         n_points,
         random_seed,
     )
-    #root_logger.debug(
-        #f"Acquisition function: {acq_function}, Acquisition function samples: {acq_function_samples}, GP burnin: {gp_burnin}, GP samples: {gp_samples}, GP initial burnin: {gp_initial_burnin}, GP initial samples: {gp_initial_samples}, Kernel lengthscale prior lower bound: {kernel_lengthscale_prior_lower_bound}, Kernel lengthscale prior upper bound: {kernel_lengthscale_prior_upper_bound}, Kernel lengthscale prior lower steepness: {kernel_lengthscale_prior_lower_steepness}, Kernel lengthscale prior upper steepness: {kernel_lengthscale_prior_upper_steepness}, Warp inputs: {warp_inputs}, Normalize y: {normalize_y}, Noise scaling coefficient: {noise_scaling_coefficient}, Initial points: {n_initial_points}, Next points: {n_points}, Random seed: {random_seed}"
-    #)
 
     # Initialize/import data structures:
     if data_path is None:
@@ -618,7 +586,9 @@ def local(  # noqa: C901
         "warp_inputs": settings.get("warp_inputs", warp_inputs),
         "nu": float(settings.get("gp_nu", gp_nu)),
         "initial_burnin": settings.get("gp_initial_burnin", gp_initial_burnin),
-        "initial_samples": settings.get("gp_initial_samples", gp_initial_samples),
+        "initial_samples": settings.get(
+            "gp_initial_samples", gp_initial_samples
+        ),
         "walkers_per_thread": settings.get(
             "gp_walkers_per_thread", gp_walkers_per_thread
         ),
@@ -631,8 +601,12 @@ def local(  # noqa: C901
             non_uncert_acq_function_evaluation_points,
         ),
         "n_initial_points": settings.get("n_initial_points", n_initial_points),
-        "function_samples": settings.get("acq_function_samples", acq_function_samples),
-        "lcb_alpha": settings.get("acq_function_lcb_alpha", acq_function_lcb_alpha),
+        "function_samples": settings.get(
+            "acq_function_samples", acq_function_samples
+        ),
+        "lcb_alpha": settings.get(
+            "acq_function_lcb_alpha", acq_function_lcb_alpha
+        ),
     }
     resume_config = {
         "resume": resume,
@@ -649,10 +623,6 @@ def local(  # noqa: C901
         random_seed=settings.get("random_seed", random_seed),
         gp_config=gp_config,
         gp_priors=gp_priors,
-        # kernel_lengthscale_prior_lower_bound=settings.get("kernel_lengthscale_prior_lower_bound", kernel_lengthscale_prior_lower_bound),
-        # kernel_lengthscale_prior_upper_bound=settings.get("kernel_lengthscale_prior_upper_bound", kernel_lengthscale_prior_upper_bound),
-        # kernel_lengthscale_prior_lower_steepness=settings.get("kernel_lengthscale_prior_lower_steepness", kernel_lengthscale_prior_lower_steepness),
-        # kernel_lengthscale_prior_upper_steepness=settings.get("kernel_lengthscale_prior_upper_steepness", kernel_lengthscale_prior_upper_steepness),
         acq_function_config=acq_function_config,
         resume_config=resume_config,
     )
@@ -662,7 +632,8 @@ def local(  # noqa: C901
 
     root_logger.debug("Number of data points: %s", len(X))
     root_logger.debug(
-        "Number of different data points: %s", len(np.unique(np.array(X), axis=0))
+        "Number of different data points: %s",
+        len(np.unique(np.array(X), axis=0)),
     )
     root_logger.debug("Number of model data points: %s", len(opt.Xi))
 
@@ -682,7 +653,9 @@ def local(  # noqa: C901
         rounds=settings.get("rounds", 10),
     )
     root_logger.debug(
-        "Loaded %s extra points to evaluate: %s", len(extra_points), extra_points
+        "Loaded %s extra points to evaluate: %s",
+        len(extra_points),
+        extra_points,
     )
 
     is_first_iteration_after_program_start = True
@@ -695,7 +668,9 @@ def local(  # noqa: C901
 
         # If a model has been fit, print/plot results so far:
         if len(y) > 0 and opt.gp.chain_ is not None:
-            result_object = create_result(Xi=X, yi=y, space=opt.space, models=[opt.gp])
+            result_object = create_result(
+                Xi=X, yi=y, space=opt.space, models=[opt.gp]
+            )
             # root_logger.debug(f"result_object:\n{result_object}")
             result_every_n = settings.get("result_every", result_every)
             if result_every_n > 0 and iteration % result_every_n == 0:
@@ -748,7 +723,9 @@ def local(  # noqa: C901
                     if isinstance(point[i], float) and point[i].is_integer():
                         point[i] = int(point[i])
                 # Log that we are evaluating the extra point:
-                point_display = dict(zip(param_ranges.keys(), point, strict=True))
+                point_display = dict(
+                    zip(param_ranges.keys(), point, strict=True)
+                )
                 root_logger.info(
                     "Evaluating extra point %s for %s rounds.",
                     point_display,
@@ -764,7 +741,9 @@ def local(  # noqa: C901
             point_dict = dict(zip(param_ranges.keys(), point, strict=True))
             root_logger.info("Testing %s", point_dict)
             if len(y) > 0 and opt.gp.chain_ is not None:
-                testing_current_value = opt.gp.predict(opt.space.transform([point]))[0]
+                testing_current_value = opt.gp.predict(
+                    opt.space.transform([point])
+                )[0]
                 with opt.gp.noise_set_to_zero():
                     _, testing_current_std = opt.gp.predict(
                         opt.space.transform([point]), return_std=True
@@ -799,7 +778,9 @@ def local(  # noqa: C901
             point_dict = dict(zip(param_ranges.keys(), point, strict=True))
             root_logger.info("Testing %s", point_dict)
             if len(y) > 0 and opt.gp.chain_ is not None:
-                testing_current_value = opt.gp.predict(opt.space.transform([point]))[0]
+                testing_current_value = opt.gp.predict(
+                    opt.space.transform([point])
+                )[0]
                 with opt.gp.noise_set_to_zero():
                     _, testing_current_std = opt.gp.predict(
                         opt.space.transform([point]), return_std=True
@@ -830,9 +811,6 @@ def local(  # noqa: C901
 
         # Run experiment:
         now = datetime.now()
-        #settings["debug_mode"] = settings.get(
-            #"debug_mode", False if verbose <= 1 else True
-        #)
 
         while round < settings.get("rounds", rounds):
             round += 1
@@ -864,7 +842,9 @@ def local(  # noqa: C901
 
             # Prepare engines.json file for cutechess-cli:
             engine_json = prepare_engines_json(
-                commands=commands, directories=directories, fixed_params=fixed_params
+                commands=commands,
+                directories=directories,
+                fixed_params=fixed_params,
             )
             root_logger.debug("engines.json is prepared:\n%s", engine_json)
             write_engines_json(engine_json, point_dict)
@@ -904,7 +884,9 @@ def local(  # noqa: C901
         root_logger.info("Experiment finished (%ss elapsed).", difference)
 
         # Parse cutechess-cli output and report results (Elo and standard deviation):
-        root_logger.debug("WW, WD, WL/DD, LD, LL experiment counts: %s", counts_array)
+        root_logger.debug(
+            "WW, WD, WL/DD, LD, LL experiment counts: %s", counts_array
+        )
         score, error_variance = counts_to_penta(counts=counts_array)
         root_logger.info(
             "Got Elo: %s +- %s", -score * 100, np.sqrt(error_variance) * 100
@@ -940,7 +922,8 @@ def local(  # noqa: C901
 
         root_logger.debug("Number of data points: %s", len(X))
         root_logger.debug(
-            "Number of different data points: %s", len(np.unique(np.array(X), axis=0))
+            "Number of different data points: %s",
+            len(np.unique(np.array(X), axis=0)),
         )
         root_logger.debug("Number of model data points: %s", len(opt.Xi))
 
@@ -967,10 +950,6 @@ def local(  # noqa: C901
                 random_seed=settings.get("random_seed", random_seed),
                 gp_config=gp_config,
                 gp_priors=gp_priors,
-                # kernel_lengthscale_prior_lower_bound=settings.get("kernel_lengthscale_prior_lower_bound", kernel_lengthscale_prior_lower_bound),
-                # kernel_lengthscale_prior_upper_bound=settings.get("kernel_lengthscale_prior_upper_bound", kernel_lengthscale_prior_upper_bound),
-                # kernel_lengthscale_prior_lower_steepness=settings.get("kernel_lengthscale_prior_lower_steepness", kernel_lengthscale_prior_lower_steepness),
-                # kernel_lengthscale_prior_upper_steepness=settings.get("kernel_lengthscale_prior_upper_steepness", kernel_lengthscale_prior_upper_steepness),
                 acq_function_config=acq_function_config,
                 resume_config={
                     "resume": True,
@@ -1018,7 +997,9 @@ def local(  # noqa: C901
                 ),
                 gp_burnin=settings.get("gp_burnin", gp_burnin),
                 gp_samples=settings.get("gp_samples", gp_samples),
-                gp_initial_burnin=settings.get("gp_initial_burnin", gp_initial_burnin),
+                gp_initial_burnin=settings.get(
+                    "gp_initial_burnin", gp_initial_burnin
+                ),
                 gp_initial_samples=settings.get(
                     "gp_initial_samples", gp_initial_samples
                 ),
@@ -1031,11 +1012,8 @@ def local(  # noqa: C901
         if used_extra_point:
             opt._n_initial_points += 1
 
-        # iteration = len(X)
         is_first_iteration_after_program_start = False
 
-        #with AtomicWriter(data_path, mode="wb", overwrite=True).open() as f:
-            #np.savez_compressed(f, np.array(X), np.array(y), np.array(noise))
         with AtomicWriter(model_path, mode="wb", overwrite=True).open() as f:
             dill.dump(opt, f)
 

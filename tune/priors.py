@@ -144,14 +144,9 @@ def create_priors(
     )
     noise_prior = halfnorm(scale=noise_scale)
 
-    # priors = [lambda x: signal_prior.logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0)]
     priors = [signal_prior_logpdf]
     for _ in range(n_parameters):
-        # priors.append(lambda x: lengthscale_prior.logpdf(np.exp(x)) + x)
         priors.append(lengthscale_prior_logpdf)
-    # priors.append(
-        # lambda x: noise_prior.logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0)
-    # )
     priors.append(noise_prior_logpdf)
 
     return priors

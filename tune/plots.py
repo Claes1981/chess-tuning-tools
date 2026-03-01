@@ -2,7 +2,7 @@ import itertools
 from typing import Optional, Sequence, Tuple, Union
 
 import matplotlib.pyplot as plt
-import matplotlib.colors #as matplotlibcolors
+import matplotlib.colors
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
@@ -10,7 +10,6 @@ from matplotlib.ticker import LogLocator
 from scipy.optimize import OptimizeResult
 from skopt.plots import _format_scatter_plot_axes
 from skopt.space import Space
-#from athena.utils import Normalizer
 
 from tune.utils import confidence_to_mult, expected_ucb, latest_iterations
 
@@ -455,9 +454,15 @@ def plot_objective(
         contour_plot_confidence_interval_width = np.empty(
             (space.n_dims, space.n_dims), dtype=object
         )
-        z_min_confidence_interval_width = np.full((space.n_dims, space.n_dims), np.inf)
-        z_max_confidence_interval_width = np.full((space.n_dims, space.n_dims), -np.inf)
-        z_ranges_confidence_interval_width = np.zeros((space.n_dims, space.n_dims))
+        z_min_confidence_interval_width = np.full(
+            (space.n_dims, space.n_dims), np.inf
+        )
+        z_max_confidence_interval_width = np.full(
+            (space.n_dims, space.n_dims), -np.inf
+        )
+        z_ranges_confidence_interval_width = np.zeros(
+            (space.n_dims, space.n_dims)
+        )
 
     if zscale == "log":
         locator = LogLocator()
@@ -473,11 +478,16 @@ def plot_objective(
             space.n_dims,
             figsize=(size * space.n_dims, size * space.n_dims),
         )
-    if plot_confidence_interval_width and confidence_interval_width_figure is None:
-        confidence_interval_width_figure, confidence_interval_width_axes = plt.subplots(
-            space.n_dims,
-            space.n_dims,
-            figsize=(size * space.n_dims, size * space.n_dims),
+    if (
+        plot_confidence_interval_width
+        and confidence_interval_width_figure is None
+    ):
+        confidence_interval_width_figure, confidence_interval_width_axes = (
+            plt.subplots(
+                space.n_dims,
+                space.n_dims,
+                figsize=(size * space.n_dims, size * space.n_dims),
+            )
         )
     width, height = partial_dependence_figure.get_size_inches()
 
@@ -549,9 +559,10 @@ def plot_objective(
                         n_points=n_points,
                     )
                 yi_elo = -np.array(yi_partial_dependence) * 100
-                yi_min_partial_dependence, yi_max_partial_dependence = np.min(
-                    yi_elo
-                ), np.max(yi_elo)
+                yi_min_partial_dependence, yi_max_partial_dependence = (
+                    np.min(yi_elo),
+                    np.max(yi_elo),
+                )
                 partial_dependence_axes[i, i].plot(xi, yi_elo, color=colors[1])
                 if plot_confidence_interval_width:
                     yi_confidence_interval_width = (
@@ -563,8 +574,9 @@ def plot_objective(
                     (
                         yi_min_confidence_interval_width,
                         yi_max_confidence_interval_width,
-                    ) = np.min(yi_confidence_interval_width), np.max(
-                        yi_confidence_interval_width
+                    ) = (
+                        np.min(yi_confidence_interval_width),
+                        np.max(yi_confidence_interval_width),
                     )
                     confidence_interval_width_axes[i, i].plot(
                         xi, yi_confidence_interval_width, color=colors[1]
@@ -579,14 +591,22 @@ def plot_objective(
                     partial_dependence_axes[i, i].text(
                         min_ucb[i],
                         yi_min_partial_dependence
-                        + 0.7 * (yi_max_partial_dependence - yi_min_partial_dependence),
+                        + 0.7
+                        * (
+                            yi_max_partial_dependence
+                            - yi_min_partial_dependence
+                        ),
                         f"{np.around(min_ucb[i], 4)}",
                         color=colors[5],
                     )
                     partial_dependence_axes[i, i].text(
                         min_x[i],
                         yi_min_partial_dependence
-                        + 0.9 * (yi_max_partial_dependence - yi_min_partial_dependence),
+                        + 0.9
+                        * (
+                            yi_max_partial_dependence
+                            - yi_min_partial_dependence
+                        ),
                         f"{np.around(min_x[i], 4)}",
                         color=colors[3],
                     )
@@ -661,9 +681,13 @@ def plot_objective(
                     locator=locator,
                     cmap="viridis",
                 )
-                #partial_dependence_figure.colorbar(contour_plot_partial_dependence[i, j], ax=partial_dependence_axes[i, j])
                 partial_dependence_axes[i, j].scatter(
-                    samples[:, j], samples[:, i], c="k", s=10, lw=0.0, alpha=alpha
+                    samples[:, j],
+                    samples[:, i],
+                    c="k",
+                    s=10,
+                    lw=0.0,
+                    alpha=alpha,
                 )
                 if plot_confidence_interval_width:
                     zi_confidence_interval_width = (
@@ -672,22 +696,31 @@ def plot_objective(
                         * np.array(zi_standard_deviation)
                         * 100
                     )
-                    contour_plot_confidence_interval_width[
-                        i, j
-                    ] = confidence_interval_width_axes[i, j].contourf(
-                        xi,
-                        yi,
-                        zi_confidence_interval_width,
-                        levels,
-                        locator=locator,
-                        cmap="viridis_r",
+                    contour_plot_confidence_interval_width[i, j] = (
+                        confidence_interval_width_axes[i, j].contourf(
+                            xi,
+                            yi,
+                            zi_confidence_interval_width,
+                            levels,
+                            locator=locator,
+                            cmap="viridis_r",
+                        )
                     )
                     confidence_interval_width_axes[i, j].scatter(
-                        samples[:, j], samples[:, i], c="k", s=10, lw=0.0, alpha=alpha
+                        samples[:, j],
+                        samples[:, i],
+                        c="k",
+                        s=10,
+                        lw=0.0,
+                        alpha=alpha,
                     )
                 if failures != 10:
                     partial_dependence_axes[i, j].scatter(
-                        next_point[j], next_point[i], c=["xkcd:pink"], s=20, lw=0.0
+                        next_point[j],
+                        next_point[i],
+                        c=["xkcd:pink"],
+                        s=20,
+                        lw=0.0,
                     )
                     partial_dependence_axes[i, j].scatter(
                         min_ucb[j], min_ucb[i], c=["xkcd:orange"], s=20, lw=0.0
@@ -697,17 +730,27 @@ def plot_objective(
                     )
                     if plot_confidence_interval_width:
                         confidence_interval_width_axes[i, j].scatter(
-                            next_point[j], next_point[i], c=["xkcd:pink"], s=20, lw=0.0
+                            next_point[j],
+                            next_point[i],
+                            c=["xkcd:pink"],
+                            s=20,
+                            lw=0.0,
                         )
                         confidence_interval_width_axes[i, j].scatter(
-                            min_ucb[j], min_ucb[i], c=["xkcd:orange"], s=20, lw=0.0
+                            min_ucb[j],
+                            min_ucb[i],
+                            c=["xkcd:orange"],
+                            s=20,
+                            lw=0.0,
                         )
                         confidence_interval_width_axes[i, j].scatter(
                             min_x[j], min_x[i], c=["r"], s=20, lw=0.0
                         )
                 z_min_partial_dependence[i, j] = np.min(zi_elo)
                 z_max_partial_dependence[i, j] = np.max(zi_elo)
-                z_ranges_partial_dependence[i, j] = np.max(zi_elo) - np.min(zi_elo)
+                z_ranges_partial_dependence[i, j] = np.max(zi_elo) - np.min(
+                    zi_elo
+                )
                 partial_dependence_axes[i, j].text(
                     0.5,
                     0.5,
@@ -745,7 +788,9 @@ def plot_objective(
                         ),
                         horizontalalignment="center",
                         verticalalignment="center",
-                        transform=confidence_interval_width_axes[i, j].transAxes,
+                        transform=confidence_interval_width_axes[
+                            i, j
+                        ].transAxes,
                     )
     # Get all dimensions.
     plot_dims = []
@@ -785,31 +830,14 @@ def plot_objective(
                 ),
                 cmap="viridis_r",
             ),
-            ax=confidence_interval_width_axes[np.triu_indices(space.n_dims, k=1)],
+            ax=confidence_interval_width_axes[
+                np.triu_indices(space.n_dims, k=1)
+            ],
             shrink=0.7,
         )
         # print(f"z_max_confidence_interval_width={z_max_confidence_interval_width}")
         # print(f"np.max(z_max_confidence_interval_width)={np.max(z_max_confidence_interval_width)}")
         # print(f"np.min(z_min_confidence_interval_width)={np.min(z_min_confidence_interval_width)}")
-        # confidence_interval_width_axes.ticklabel_format(useOffset=False)
-    #plt.cm.ScalarMappable.set_clim(self, vmin=np.min(z_min_partial_dependence), vmax=np.max(z_max_partial_dependence))
-    #partial_dependence_figure.colorbar(contour_plot_partial_dependence[1, 0], ax=partial_dependence_axes[np.triu_indices(space.n_dims, k=1)])
-    # if plot_standard_deviation:
-    #     return _format_scatter_plot_axes(
-    #         ax,
-    #         space,
-    #         ylabel="Standard deviation",
-    #         plot_dims=plot_dims,
-    #         dim_labels=dimensions,
-    #     )
-    # else:
-    #     return _format_scatter_plot_axes(
-    #         ax,
-    #         space,
-    #         ylabel="Partial dependence",
-    #         plot_dims=plot_dims,
-    #         dim_labels=dimensions,
-    #     )
     # print(f"plot_dims={plot_dims}")
     if plot_confidence_interval_width:
         return _format_scatter_plot_axes(
@@ -1156,7 +1184,7 @@ def plot_activesubspace_eigenvalues(
 
     .. warning:: `active_subspaces_object.fit` has to be called in advance.
     """
-    #ax = self #or plt.gca()
+
     if active_subspaces_object.evals is None:
         raise TypeError(
             "The eigenvalues have not been computed."
@@ -1167,10 +1195,6 @@ def plot_activesubspace_eigenvalues(
     if n_evals > active_subspaces_object.evals.shape[0]:
         raise TypeError("Invalid number of eigenvalues to plot.")
 
-    #ax = ax or plt.gca()
-    #eigen_values_fig = plt.figure(figsize=figsize)
-    #eigen_values_fig.suptitle(title)
-    #ax = eigen_values_fig.add_subplot(111)
     if np.amin(active_subspaces_object.evals[:n_evals]) == 0:
         active_subspace_eigenvalues_axes.semilogy(
             range(1, n_evals + 1),
@@ -1180,7 +1204,6 @@ def plot_activesubspace_eigenvalues(
             linewidth=2,
         )
     else:
-        #active_subspace_eigenvalues_axes.semilogy(range(1, n_evals + 1),
         active_subspace_eigenvalues_axes.plot(
             range(1, n_evals + 1),
             active_subspaces_object.evals[:n_evals],
@@ -1233,17 +1256,11 @@ def plot_activesubspace_eigenvalues(
 
     active_subspace_eigenvalues_axes.grid(linestyle="dotted")
     active_subspace_eigenvalues_axes.set_facecolor("xkcd:dark grey")
-    #eigen_values_fig.tight_layout
 
-    #if filename:
-    #    eigen_values_fig.savefig(filename)
-    #else:
-    #    return eigen_values_fig
     return active_subspace_eigenvalues_axes
 
 
 def plot_activesubspace_eigenvectors(
-    #self,
     active_subspaces_object,
     *,
     active_subspace_figure=None,
@@ -1268,7 +1285,7 @@ def plot_activesubspace_eigenvectors(
 
     .. warning:: `active_subspaces_object.fit` has to be called in advance.
     """
-    #ax = self or plt.gca()
+
     if active_subspaces_object.evects is None:
         raise TypeError(
             "The eigenvectors have not been computed."
@@ -1284,10 +1301,10 @@ def plot_activesubspace_eigenvectors(
         figsize = (8, 2 * n_evects)
 
     n_pars = active_subspaces_object.evects.shape[0]
-    #fig, axes = plt.subplots(n_evects, 1, figsize=figsize)
-    #fig.suptitle(title)
-    # to ensure generality for subplots (1, 1)
-    active_subspace_eigenvectors_axes = np.array(active_subspace_eigenvectors_axes)
+
+    active_subspace_eigenvectors_axes = np.array(
+        active_subspace_eigenvectors_axes
+    )
     for i, ax in enumerate(active_subspace_eigenvectors_axes.flat):
         ax.scatter(
             range(1, n_pars + 1),
@@ -1308,17 +1325,10 @@ def plot_activesubspace_eigenvectors(
         ax.axis([0, n_pars + 1, -1 - 0.1, 1 + 0.1])
         ax.set_facecolor("xkcd:dark grey")
 
-    active_subspace_eigenvectors_axes.flat[-1].set_xlabel("Eigenvector components")
-    #fig.tight_layout()
-    # tight_layout does not consider suptitle so we adjust it manually
-    #plt.subplots_adjust(top=0.94)
-    #ax.figure=fig
-    #self.add_child_axes(fig)
-    #breakpoint()
-    #if filename:
-    #    plt.savefig(filename)
-    #else:
-    #    return fig
+    active_subspace_eigenvectors_axes.flat[-1].set_xlabel(
+        "Eigenvector components"
+    )
+
     return active_subspace_eigenvectors_axes
 
 
@@ -1352,34 +1362,30 @@ def plot_activesubspace_sufficient_summary(
 
         Plot only available for partitions up to dimension 2.
     """
-    #ax = self or plt.gca()
+
     if active_subspaces_object.evects is None:
         raise TypeError(
             "The eigenvectors have not been computed."
             "You have to perform the fit method."
         )
 
-    #plt.figure(figsize=figsize)
-    #plt.title(title)
-    #sufficient_summary_fig = plt.figure(figsize=figsize)
-    #sufficient_summary_fig.suptitle(title)
-    #ax = sufficient_summary_fig.add_subplot(111)
-
     best_point, best_value = expected_ucb(result_object, alpha=0.0)
     tuner_sample_points = np.asarray(result_object.x_iters)
-    best_point_normalized_zero_to_one = result_object.space.transform([best_point])
-    next_point_normalized_zero_to_one = result_object.space.transform([next_point])
+    best_point_normalized_zero_to_one = result_object.space.transform(
+        [best_point]
+    )
+    next_point_normalized_zero_to_one = result_object.space.transform(
+        [next_point]
+    )
     tuner_sample_points_normalized_zero_to_one = result_object.space.transform(
         tuner_sample_points
     )
-    #best_point_normalized_minus_one_to_one = Normalizer(0, 1).fit_transform(
-        #best_point_normalized_zero_to_one
-    #)
-    best_point_normalized_minus_one_to_one = best_point_normalized_zero_to_one * 2 - 1
-    next_point_normalized_minus_one_to_one = next_point_normalized_zero_to_one * 2 - 1
-    #tuner_sample_points_normalized_minus_one_to_one = Normalizer(0, 1).fit_transform(
-        #tuner_sample_points_normalized_zero_to_one
-    #)
+    best_point_normalized_minus_one_to_one = (
+        best_point_normalized_zero_to_one * 2 - 1
+    )
+    next_point_normalized_minus_one_to_one = (
+        next_point_normalized_zero_to_one * 2 - 1
+    )
     tuner_sample_points_normalized_minus_one_to_one = (
         tuner_sample_points_normalized_zero_to_one * 2 - 1
     )
@@ -1410,16 +1416,7 @@ def plot_activesubspace_sufficient_summary(
         active_subspace_tuner_sample_points = active_subspaces_object.transform(
             tuner_sample_points_normalized_minus_one_to_one
         )[0]
-        #scatter_plot= active_subspace_sufficient_summary_axes.scatter(
-            #active_subspace_x[:, 0],
-            #active_subspace_x[:, 1],
-            #c=outputs.reshape(-1),
-            #s=60,
-            #alpha=0.9,
-            #edgecolors='k',
-            #vmin=np.min(outputs),
-            #vmax=np.max(outputs)
-            #)
+
         contour_plot = active_subspace_sufficient_summary_axes.tricontourf(
             active_subspace_x[:, 0],
             active_subspace_x[:, 1],
@@ -1478,10 +1475,5 @@ def plot_activesubspace_sufficient_summary(
 
     active_subspace_sufficient_summary_axes.set_facecolor("xkcd:dark grey")
     active_subspace_sufficient_summary_axes.grid(linestyle="dotted")
-    #sufficient_summary_fig.tight_layout()
 
-    #if filename:
-    #    sufficient_summary_fig.savefig(filename)
-    #else:
-    #    return sufficient_summary_fig
     return active_subspace_sufficient_summary_axes

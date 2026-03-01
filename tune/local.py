@@ -25,15 +25,13 @@ import matplotlib.pyplot as plt
 import corner
 import numpy as np
 import pandas as pd
-from bask import Optimizer  # , acquisition
-
-# from bask.priors import make_roundflat
+from bask import Optimizer
 from matplotlib.transforms import Bbox
 from numpy.random import RandomState
 from athena.active import ActiveSubspaces
 from athena.utils import Normalizer
 from scipy.optimize import OptimizeResult
-from scipy.stats import dirichlet  # , halfnorm
+from scipy.stats import dirichlet
 from skopt.space import Categorical, Dimension, Integer, Real, Space
 from skopt.utils import normalize_dimensions
 from sklearn.preprocessing import PolynomialFeatures
@@ -73,16 +71,6 @@ __all__ = [
 
 LOGGER = "ChessTuner"
 
-#ACQUISITION_FUNC = {
-    #"ei": acquisition.ExpectedImprovement(),
-    #"lcb": acquisition.LCB(),
-    #"mean": acquisition.Expectation(),
-    #"mes": acquisition.MaxValueSearch(),
-    #"pvrs": acquisition.PVRS(),
-    #"ts": acquisition.ThompsonSampling(),
-    #"ttei": acquisition.TopTwoEI(),
-    #"vr": acquisition.VarianceReduction(),
-#}
 
 def elo_to_prob(elo: np.ndarray, k: float = 4.0) -> np.ndarray:
     """Convert an Elo score (logit space) to a probability.
@@ -430,7 +418,6 @@ def initialize_data(
                 X = X_reduced
                 y = y_reduced
                 noise = noise_reduced
-            # iteration = len(X)
     return (
         X,
         y,
@@ -471,26 +458,8 @@ def initialize_optimizer(
     random_seed: int = 0,
     gp_config: dict = None,
     gp_nu: float = 1.5,
-    # warp_inputs: bool = True,
-    # normalize_y: bool = True,
-    # kernel_lengthscale_prior_lower_bound: float = 0.1,
-    # kernel_lengthscale_prior_upper_bound: float = 0.5,
-    # kernel_lengthscale_prior_lower_steepness: float = 2.0,
-    # kernel_lengthscale_prior_upper_steepness: float = 1.0,
-    # n_points: int = 500,
-    # non_uncert_acq_function_evaluation_points: int = 500,
-    # n_initial_points: int = 16,
-    # acq_function: str = "mes",
     acq_function_config: dict = None,
-    # acq_function_samples: int = 1,
-    # acq_function_lcb_alpha: float = 1.96,
     resume_config: dict = None,
-    # resume: bool = True,
-    # fast_resume: bool = True,
-    # model_path: Optional[str] = None,
-    # gp_initial_burnin: int = 100,
-    # gp_initial_samples: int = 300,
-    # gp_walkers_per_thread: int = 100,
     gp_priors: Optional[List[Callable[[float], float]]] = None,
 ) -> Optimizer:
     """Create an Optimizer object and if needed resume and/or reinitialize.
@@ -547,7 +516,6 @@ def initialize_optimizer(
     logger = logging.getLogger(LOGGER)
     # Create random generator:
     random_state = setup_random_state(random_seed)
-    # space = normalize_dimensions(parameter_ranges)
 
     default_gp_config = {
         "normalize_y": True,
@@ -613,28 +581,12 @@ def initialize_optimizer(
     else:
         n_points = acq_function_config["n_points"]
 
-    #roundflat = make_roundflat(
-                #kernel_lengthscale_prior_lower_bound,
-                #kernel_lengthscale_prior_upper_bound,
-                #kernel_lengthscale_prior_lower_steepness,
-                #kernel_lengthscale_prior_upper_steepness,
-            #)
-    #priors = [
-        # Prior distribution for the signal variance:
-        #lambda x: halfnorm(scale=2.).logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0),
-        # Prior distribution for the length scales:
-        #*[lambda x: roundflat(np.exp(x)) + x for _ in range(space.n_dims)],
-        # Prior distribution for the noise:
-        #lambda x: halfnorm(scale=2.).logpdf(np.sqrt(np.exp(x))) + x / 2.0 - np.log(2.0)
-        #]
-
     opt = Optimizer(
         dimensions=parameter_ranges,
         n_points=n_points,
         n_initial_points=acq_function_config["n_initial_points"],
         # gp_kernel=kernel,  # TODO: Let user pass in different kernels
         gp_kwargs=gp_kwargs,
-        # gp_priors=priors,
         gp_priors=gp_priors,
         acq_func=current_acq_func,
         acq_func_kwargs=acq_func_kwargs,
@@ -682,7 +634,6 @@ def initialize_optimizer(
         opt.tell(
             X,
             y,
-            # noise_vector=noise,
             noise_vector=[i * noise_scaling_coefficient for i in noise],
             gp_burnin=gp_config["initial_burnin"],
             gp_samples=gp_config["initial_samples"],
@@ -802,14 +753,6 @@ def plot_results(
     result_object: OptimizeResult,
     *,
     plot_config: dict = None,
-    # data_config: dict = None,
-    # iterations: np.ndarray,
-    # elos: np.ndarray,
-    # optima: np.ndarray,
-    # plot_path: str,
-    # parameter_names: Sequence[str],
-    # confidence: float = 0.9,
-    # current_iteration: Optional[int] = None,
 ) -> None:
     """Plot the current results of the optimizer.
 
@@ -878,7 +821,6 @@ def plot_results(
     plt.savefig(
         full_plotpath,
         dpi=dpi,
-        # facecolor="xkcd:dark grey",
         **save_params,
     )
     logger.info(
@@ -1064,7 +1006,6 @@ def plot_results(
             confidence_interval_width_axes=None,
             confidence=confidence,
         )
-        # plotpath = pathlib.Path(plot_path)
         for subdir in ["landscapes", "elo", "optima"]:
             (plotpath / subdir).mkdir(parents=True, exist_ok=True)
         full_plotpath = (
@@ -1107,45 +1048,6 @@ def plot_results(
     fig.savefig(full_plotpath, dpi=150, facecolor="xkcd:dark grey")
     plt.close(fig)
 
-    # logger.debug("Starting to compute the next standard deviation plot.")
-    # timestr = time.strftime("%Y%m%d-%H%M%S")
-    # plt.style.use("dark_background")
-    # standard_deviation_figure, standard_deviation_axes = plt.subplots(
-    #     nrows=optimizer.space.n_dims,
-    #     ncols=optimizer.space.n_dims,
-    #     figsize=(3 * optimizer.space.n_dims, 3 * optimizer.space.n_dims),
-    # )
-    # standard_deviation_figure.patch.set_facecolor("xkcd:dark grey")
-    # for i in range(optimizer.space.n_dims):
-    #     for j in range(optimizer.space.n_dims):
-    #         standard_deviation_axes[i, j].set_facecolor("xkcd:dark grey")
-    #
-    # plot_objective(
-    #     result_object,
-    #     regression_object=None,
-    #     polynomial_features_object=None,
-    #     n_points=10,
-    #     n_samples=30,
-    #     dimensions=parameter_names,
-    #     next_point=optimizer._next_x,
-    #     plot_standard_deviation=True,
-    #     plot_polynomial_regression=False,
-    #     fig=standard_deviation_figure,
-    #     ax=standard_deviation_axes,
-    # )
-    # standard_deviation_full_plotpath = (
-    #     plotpath / f"landscapes/standard_deviation-{timestr}-{current_iteration}.png"
-    # )
-    # plt.savefig(
-    #     standard_deviation_full_plotpath,
-    #     dpi=300,
-    #     facecolor="xkcd:dark grey",
-    #     **save_params,
-    # )
-    # logger.info(
-    #     f"Saving a standard deviation plot to {standard_deviation_full_plotpath}."
-    # )
-    # plt.close(standard_deviation_figure)
     plt.rcdefaults()
     plt.rcParams["axes.formatter.useoffset"] = False
 
@@ -1154,8 +1056,6 @@ def plot_results(
         result_object.x_iters
     )
     number_of_input_dimensions = optimizer.space.n_dims
-    # active_subspace_samples_y_values = []
-    # active_subspace_samples_gradients = []
 
     # Uniformly distributed inputs
     lb = 0 * np.ones(number_of_input_dimensions)  # lower bounds
@@ -1188,18 +1088,6 @@ def plot_results(
             y_row, grad_row = optimizer.gp.predict(
                 np.reshape(x_row, (1, -1)), return_mean_grad=True
             )
-            # if active_subspace_samples_gradients == []:
-            #     active_subspace_samples_gradients = grad_row
-            #     active_subspace_samples_y_values = y_row
-            # else:
-            #     active_subspace_samples_gradients = np.vstack(
-            #         [active_subspace_samples_gradients, grad_row]
-            #     )
-            #     active_subspace_samples_y_values = np.vstack(
-            #         [active_subspace_samples_y_values, y_row]
-            #     )
-            # active_subspace_samples_y_values.append(y_row)
-            # active_subspace_samples_gradients.append(grad_row)
             active_subspace_samples_y_values[row_number] = y_row.item()
             active_subspace_samples_gradients[row_number] = grad_row
 
@@ -1210,12 +1098,6 @@ def plot_results(
     else:
         for row_number, x_row in enumerate(active_subspace_samples_x_raw):
             y_row = optimizer.gp.predict(np.reshape(x_row, (1, -1)))
-            # if not active_subspace_samples_y_values:
-            #     active_subspace_samples_y_values = y_row
-            # else:
-            #     active_subspace_samples_y_values = np.vstack(
-            #         [active_subspace_samples_y_values, y_row]
-            #     )
             active_subspace_samples_y_values[row_number] = y_row.item()
 
         active_subspaces_object = ActiveSubspaces(
@@ -1239,8 +1121,6 @@ def plot_results(
         height_ratios=[1, active_subspaces_object.evects.shape[1], 3],
     )
 
-    # active_subspace_figure.tight_layout()
-    # active_subspace_figure.patch.set_facecolor("xkcd:dark grey")
     active_subspace_eigenvalues_axes = active_subspace_subfigures[0].subplots(
         1, 1
     )
@@ -1248,7 +1128,6 @@ def plot_results(
         active_subspaces_object,
         active_subspace_figure=active_subspace_figure,
         active_subspace_eigenvalues_axes=active_subspace_eigenvalues_axes,
-        # figsize=(6, 4),
     )
     logger.debug(
         "Active subspace eigenvalues: %s",
@@ -1262,10 +1141,8 @@ def plot_results(
         active_subspaces_object,
         active_subspace_figure=active_subspace_figure,
         active_subspace_eigenvectors_axes=active_subspace_eigenvectors_axes,
-        # n_evects=number_of_input_dimensions,
         n_evects=active_subspaces_object.evects.shape[1],
         labels=parameter_names,
-        # figsize=(6, 4),
     )
 
     activity_scores_table = PrettyTable()
@@ -1289,12 +1166,10 @@ def plot_results(
         next_point=optimizer._next_x,
         active_subspace_figure=active_subspace_figure,
         active_subspace_sufficient_summary_axes=active_subspace_sufficient_summary_axes,
-        # figsize=(6, 4),
     )
 
     active_subspace_figure.suptitle("Active subspace")
 
-    # plt.show()
     active_subspace_full_plotpath = (
         plotpath
         / f"landscapes/active_subspace-{timestr}-{current_iteration}.png"
@@ -1548,7 +1423,6 @@ def run_match(
 
     string_array.extend(("-rounds", "1"))
     string_array.extend(("-games", "2"))
-    # string_array.extend(("-wait", "5000"))
     string_array.append("-repeat")
     string_array.append("-recover")
     string_array.append("-debug")
@@ -1842,9 +1716,6 @@ def update_model(
         try:
             now = datetime.now()
             # We fetch kwargs manually here to avoid collisions:
-            # n_samples = acq_function_samples
-            # gp_burnin = gp_burnin
-            # gp_samples = gp_samples
             if optimizer.gp.chain_ is None:
                 current_gp_burnin = gp_initial_burnin
                 current_gp_samples = gp_initial_samples
@@ -1854,7 +1725,6 @@ def update_model(
             optimizer.tell(
                 x=point,
                 y=score,
-                # noise_vector=variance,
                 noise_vector=noise_scaling_coefficient * variance,
                 n_samples=acq_function_samples,
                 gp_samples=current_gp_samples,

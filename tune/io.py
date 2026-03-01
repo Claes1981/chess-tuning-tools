@@ -208,7 +208,9 @@ def load_tuning_config(json_dict):
         fixed_params.append(e["fixed_parameters"])
     if number_of_engines < 2:
         raise ValueError("Tuning config requires at least two engines.")
-    e = engines[random.randint(1, number_of_engines - 1)]  # Select engine2 at random.
+    e = engines[
+        random.randint(1, number_of_engines - 1)
+    ]  # Select engine2 at random.
     if "command" not in e:
         raise ValueError("Tuning config contains an engine without command.")
     commands.append(e["command"])
@@ -229,7 +231,14 @@ def load_tuning_config(json_dict):
             "There are no parameter ranges defined in the config file."
         )
     param_ranges = parse_ranges(json_dict["parameter_ranges"])
-    return json_dict, commands, directories, polyglot_params, fixed_params, param_ranges
+    return (
+        json_dict,
+        commands,
+        directories,
+        polyglot_params,
+        fixed_params,
+        param_ranges,
+    )
 
 
 def prepare_engines_json(commands, directories, fixed_params):
