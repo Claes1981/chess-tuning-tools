@@ -1452,6 +1452,8 @@ def check_if_pause() -> None:
         intervals = file.read().strip().split("\n")
 
     for interval in intervals:
+        if not interval.strip():
+            continue
         start_time_str, end_time_str = interval.split("-")
         start_time = datetime.strptime(start_time_str, "%H:%M").time()
         end_time = datetime.strptime(end_time_str, "%H:%M").time()
