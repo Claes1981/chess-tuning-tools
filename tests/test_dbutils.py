@@ -17,83 +17,94 @@ from tune.db_workers.utils import (
 )
 
 
-def test_penta_computes_correct_probabilities():
-    """Test that penta computes correct probabilities from LDW arrays."""
-    ldw1 = np.array([0.1, 0.2, 0.7])
-    ldw2 = np.array([0.2, 0.2, 0.6])
+class TestPentaCalculations:
+    """Tests for penta-related probability calculations."""
 
-    result = penta(ldw1, ldw2)
-    expected = np.array([0.02, 0.06, 0.24, 0.26, 0.42])
-    assert_almost_equal(result, expected, decimal=3)
+    def test_penta_computes_correct_probabilities(self):
+        """Test that penta computes correct probabilities from LDW arrays."""
+        ldw1 = np.array([0.1, 0.2, 0.7])
+        ldw2 = np.array([0.2, 0.2, 0.6])
 
+        result = penta(ldw1, ldw2)
+        expected = np.array([0.02, 0.06, 0.24, 0.26, 0.42])
+        assert_almost_equal(result, expected, decimal=3)
 
-def test_ldw_probabilities_with_default_parameters():
-    """Test LDW probability calculation with default parameters."""
-    result = ldw_probabilities(elo=50, draw_elo=200, bias=200)
-    expected = np.array(
-        [0.06975828735890623, 0.35877859523271227, 0.5714631174083815]
-    )
-    assert_almost_equal(result, expected)
-
-
-def test_draw_rate_to_elo_converts_midpoint_draw_rate():
-    """Test conversion of 0.5 draw rate to elo difference."""
-    result = draw_rate_to_elo(0.5)
-    expected = np.array(190.84850188786498)
-    assert_almost_equal(result, expected)
+    def test_penta_to_score_with_sample_counts(self):
+        """Test score calculation from penta distribution with sample counts."""
+        counts = np.array([1, 2, 3, 4, 5])
+        result = penta_to_score(
+            draw_rate=0.5, counts=counts, prior_games=10, prior_elo=0
+        )
+        expected = 0.4016368226279837
+        assert_almost_equal(result, expected)
 
 
-def test_compute_probabilities_for_bias_single_value():
-    """Test probability computation for a single bias value."""
-    result = compute_probabilities_for_bias(elo=50, draw_elo=200, bias=200)
-    expected = np.array(
-        [0.029894, 0.18540627, 0.41591514, 0.30154527, 0.06723932]
-    )
-    assert_almost_equal(result, expected)
+class TestLDWProbabilities:
+    """Tests for LDW probability calculations."""
+
+    def test_ldw_probabilities_with_default_parameters(self):
+        """Test LDW probability calculation with default parameters."""
+        result = ldw_probabilities(elo=50, draw_elo=200, bias=200)
+        expected = np.array(
+            [0.06975828735890623, 0.35877859523271227, 0.5714631174083815]
+        )
+        assert_almost_equal(result, expected)
 
 
-def test_compute_probabilities_with_multiple_biases():
-    """Test probability computation with multiple bias values."""
-    result = compute_probabilities(elo=50, draw_elo=200, biases=(0, 200))
-    expected = np.array(
-        [
-            0.033318056828286285,
-            0.19078749500997028,
-            0.3957332350793835,
-            0.30255132321508954,
-            0.07760988986727044,
-        ]
-    )
-    assert_almost_equal(result, expected)
+class TestEloConversions:
+    """Tests for Elo conversion functions."""
+
+    def test_draw_rate_to_elo_converts_midpoint_draw_rate(self):
+        """Test conversion of 0.5 draw rate to elo difference."""
+        result = draw_rate_to_elo(0.5)
+        expected = np.array(190.84850188786498)
+        assert_almost_equal(result, expected)
+
+    def test_elo_to_bayeselo_conversion(self):
+        """Test conversion from Elo to BayesElo."""
+        result = elo_to_bayeselo(elo=50, draw_elo=200, biases=(0, 200))
+        expected = 71.513929
+        assert_almost_equal(result, expected, decimal=5)
 
 
-def test_elo_to_bayeselo_conversion():
-    """Test conversion from Elo to BayesElo."""
-    result = elo_to_bayeselo(elo=50, draw_elo=200, biases=(0, 200))
-    expected = 71.513929
-    assert_almost_equal(result, expected, decimal=5)
+class TestBiasProbabilities:
+    """Tests for bias-related probability computations."""
+
+    def test_compute_probabilities_for_bias_single_value(self):
+        """Test probability computation for a single bias value."""
+        result = compute_probabilities_for_bias(elo=50, draw_elo=200, bias=200)
+        expected = np.array(
+            [0.029894, 0.18540627, 0.41591514, 0.30154527, 0.06723932]
+        )
+        assert_almost_equal(result, expected)
+
+    def test_compute_probabilities_with_multiple_biases(self):
+        """Test probability computation with multiple bias values."""
+        result = compute_probabilities(elo=50, draw_elo=200, biases=(0, 200))
+        expected = np.array(
+            [
+                0.033318056828286285,
+                0.19078749500997028,
+                0.3957332350793835,
+                0.30255132321508954,
+                0.07760988986727044,
+            ]
+        )
+        assert_almost_equal(result, expected)
 
 
-def test_penta_to_score_with_sample_counts():
-    """Test score calculation from penta distribution with sample counts."""
-    counts = np.array([1, 2, 3, 4, 5])
-    result = penta_to_score(
-        draw_rate=0.5, counts=counts, prior_games=10, prior_elo=0
-    )
-    expected = 0.4016368226279837
-    assert_almost_equal(result, expected)
+class TestTimeControl:
+    """Tests for TimeControl class."""
 
+    def test_from_strings(self):
+        """Test TimeControl parsing from string format."""
+        strings = ("3.0+0.03", "7.0+0.0")
+        result = TimeControl.from_strings(*strings)
+        expected = (Decimal("3.0"), Decimal("0.03"), Decimal(7), Decimal(0))
+        assert result == expected
 
-def test_timecontrol_from_strings():
-    """Test TimeControl parsing and serialization from string format."""
-    strings = ("3.0+0.03", "7.0+0.0")
-    result = TimeControl.from_strings(*strings)
-    expected = (Decimal("3.0"), Decimal("0.03"), Decimal(7), Decimal(0))
-    assert result == expected
-
-
-def test_timecontrol_to_strings():
-    """Test TimeControl conversion back to string format."""
-    strings = ("3.0+0.03", "7.0+0.0")
-    time_control = TimeControl.from_strings(*strings)
-    assert time_control.to_strings() == strings
+    def test_to_strings(self):
+        """Test TimeControl conversion back to string format."""
+        strings = ("3.0+0.03", "7.0+0.0")
+        time_control = TimeControl.from_strings(*strings)
+        assert time_control.to_strings() == strings

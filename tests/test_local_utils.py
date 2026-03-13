@@ -1,21 +1,29 @@
-"""Comprehensive tests for additional tune/local.py functions.
+"""Comprehensive tests for utility functions in tune/local.py.
 
-Tests inputs_uniform, reduce_ranges, load_points_to_evaluate, and other utility functions.
+Tests inputs_uniform, reduce_ranges, load_points_to_evaluate, counts_to_penta,
+setup_logger, and pause_between_times.
 """
 
 import io
+import logging
 import numpy as np
+import os
 import pandas as pd
 import pytest
+import tempfile
+from datetime import time as datetime_time
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from skopt.space import Categorical, Integer, Real, Space
 
 from tune.local import (
+    counts_to_penta,
     inputs_uniform,
-    reduce_ranges,
     load_points_to_evaluate,
+    pause_between_times,
+    reduce_ranges,
+    setup_logger,
 )
 
 
@@ -340,3 +348,225 @@ class TestLoadPointsToEvaluate:
         assert len(result) == 2
         assert result[0] == ([1.0, 2.0, 3.0], 10)
         assert result[1] == ([4.0, 5.0, 6.0], 10)
+
+
+class TestCountsToPenta:
+    """Tests for the counts_to_penta function."""
+
+    def test_all_draws_gives_zero_elo(self):
+        """All draws (middle element only) should give Elo of 0."""
+        counts = np.array([0, 0, 100, 0, 0])
+        mean_elo, variance = counts_to_penta(counts)
+        assert np.isclose(mean_elo, 0.0, rtol=1e-5)
+
+    def test_more_wins_gives_negative_elo(self):
+        """Penta with more wins (WW) should give negative Elo (good for ref)."""
+        counts = np.array([50, 20, 10, 10, 10])
+        mean_elo, variance = counts_to_penta(counts)
+        assert mean_elo < 0
+
+    def test_more_losses_gives_positive_elo(self):
+        """Penta with more losses (LL) should give positive Elo (bad for ref)."""
+        counts = np.array([10, 10, 10, 20, 50])
+        mean_elo, variance = counts_to_penta(counts)
+        assert mean_elo > 0
+
+    def test_variance_decreases_with_larger_counts(self):
+        """Larger sample sizes should give smaller variance."""
+        small_counts = np.array([10, 10, 20, 10, 10])
+        large_counts = np.array([1000, 1000, 2000, 1000, 1000])
+        _, variance_small = counts_to_penta(small_counts)
+        _, variance_large = counts_to_penta(large_counts)
+        assert variance_large < variance_small
+
+    def test_custom_score_scale(self):
+        """Should accept custom score_scale parameter."""
+        counts = np.array([50, 20, 10, 10, 10])
+        mean_elo_default, _ = counts_to_penta(counts, score_scale=4.0)
+        mean_elo_custom, _ = counts_to_penta(counts, score_scale=2.0)
+        assert mean_elo_default != mean_elo_custom
+
+    def test_random_state_reproducibility(self):
+        """Same random_state should give reproducible results."""
+        counts = np.array([10, 10, 20, 10, 10])
+        mean1, var1 = counts_to_penta(counts, random_state=42)
+        mean2, var2 = counts_to_penta(counts, random_state=42)
+        assert np.isclose(mean1, mean2)
+        assert np.isclose(var1, var2)
+
+    def test_different_random_state_gives_different_variance(self):
+        """Different random_state may give slightly different variance."""
+        counts = np.array([5, 5, 10, 5, 5])
+        _, var1 = counts_to_penta(counts, random_state=42)
+        _, var2 = counts_to_penta(counts, random_state=123)
+        assert abs(var1 - var2) < max(var1, var2) * 0.5
+
+    def test_mixed_results(self):
+        """Test with realistic mixed game results."""
+        counts = np.array([30, 25, 50, 25, 30])
+        mean_elo, variance = counts_to_penta(counts)
+        assert isinstance(mean_elo, float)
+        assert isinstance(variance, float)
+        assert variance >= 0
+
+    def test_very_small_counts(self):
+        """Should handle very small counts (with larger variance)."""
+        counts = np.array([1, 1, 2, 1, 1])
+        mean_elo, variance = counts_to_penta(counts)
+        assert isinstance(mean_elo, float)
+        assert isinstance(variance, float)
+        assert variance >= 0
+
+    def test_very_large_counts(self):
+        """Should handle very large counts (with smaller variance)."""
+        counts = np.array([10000, 10000, 20000, 10000, 10000])
+        mean_elo, variance = counts_to_penta(counts)
+        assert isinstance(mean_elo, float)
+        assert isinstance(variance, float)
+        assert variance >= 0
+        assert variance < 1.0
+
+
+class TestSetupLogger:
+    """Tests for the setup_logger function."""
+
+    def test_creates_logger(self):
+        """Test that setup_logger creates a logger."""
+        logger = setup_logger()
+        assert isinstance(logger, logging.Logger)
+        assert logger.name == "ChessTuner"
+
+    def test_with_verbose_0(self):
+        """Test with verbose=0."""
+        logger = setup_logger(verbose=0)
+        assert isinstance(logger, logging.Logger)
+        assert logger.level == logging.INFO
+
+    def test_with_verbose_1(self):
+        """Test with verbose=1."""
+        logger = setup_logger(verbose=1)
+        assert isinstance(logger, logging.Logger)
+        assert logger.level == logging.DEBUG
+
+    def test_with_logfile(self, tmp_path):
+        """Test with logfile parameter."""
+        log_file = tmp_path / "test_log.txt"
+        logger = setup_logger(logfile=str(log_file))
+        assert isinstance(logger, logging.Logger)
+        file_handlers = [
+            h for h in logger.handlers if isinstance(h, logging.FileHandler)
+        ]
+        assert len(file_handlers) > 0
+
+    def test_logger_has_handlers(self):
+        """Test that logger has both file and console handlers."""
+        logger = setup_logger()
+        assert len(logger.handlers) >= 2
+        handler_types = [type(h) for h in logger.handlers]
+        assert logging.FileHandler in handler_types
+        assert logging.StreamHandler in handler_types
+
+    def test_logger_propagate_is_false(self):
+        """Logger propagate should be set to False."""
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".log") as f:
+            log_path = f.name
+
+        try:
+            logger = setup_logger(verbose=0, logfile=log_path)
+            assert logger.propagate is False
+        finally:
+            if os.path.exists(log_path):
+                os.remove(log_path)
+
+    def test_logger_writes_to_file(self):
+        """Logger should write to the specified log file."""
+        with tempfile.NamedTemporaryFile(
+            delete=False, mode="w", suffix=".log"
+        ) as f:
+            log_path = f.name
+
+        try:
+            logger = setup_logger(verbose=0, logfile=log_path)
+            logger.info("Test message")
+            assert os.path.exists(log_path)
+            with open(log_path, "r") as f:
+                content = f.read()
+            assert "Test message" in content
+        finally:
+            if os.path.exists(log_path):
+                os.remove(log_path)
+
+    def test_logger_returns_same_instance(self):
+        """Should return the same logger instance for repeated calls."""
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".log") as f:
+            log_path = f.name
+
+        try:
+            logger1 = setup_logger(verbose=0, logfile=log_path)
+            logger2 = setup_logger(verbose=1, logfile=log_path)
+            assert logger1 is logger2
+        finally:
+            if os.path.exists(log_path):
+                os.remove(log_path)
+
+
+class TestPauseBetweenTimes:
+    """Tests for the pause_between_times function."""
+
+    def test_time_not_in_range(self, monkeypatch):
+        """Test when current time is not in pause range."""
+        start_time = datetime_time(23, 0)
+        end_time = datetime_time(6, 0)
+
+        mock_datetime = MagicMock()
+        mock_datetime.now.return_value.time.return_value = datetime_time(14, 0)
+        monkeypatch.setattr("tune.local.datetime", mock_datetime)
+
+        pause_between_times(start_time, end_time)
+
+    def test_time_in_range_day_boundary(self, monkeypatch, capsys):
+        """Test when current time is in pause range (crossing day boundary)."""
+        from datetime import date, datetime as dt_class
+
+        start_time = datetime_time(23, 0)
+        end_time = datetime_time(6, 0)
+
+        mock_now = dt_class(2024, 1, 15, 2, 0)
+
+        mock_datetime = MagicMock()
+        mock_datetime.now.return_value = mock_now
+        mock_datetime.combine = dt_class.combine
+
+        monkeypatch.setattr("tune.local.datetime", mock_datetime)
+        monkeypatch.setattr("tune.local.time", MagicMock())
+
+        pause_between_times(start_time, end_time)
+
+    def test_same_start_end_time(self, monkeypatch):
+        """Test with same start and end time."""
+        start_time = datetime_time(12, 0)
+        end_time = datetime_time(12, 0)
+
+        mock_datetime = MagicMock()
+        mock_datetime.now.return_value.time.return_value = datetime_time(14, 0)
+        monkeypatch.setattr("tune.local.datetime", mock_datetime)
+
+        pause_between_times(start_time, end_time)
+
+    def test_time_range_not_crossing_midnight(self, monkeypatch):
+        """Test with time range not crossing midnight."""
+        from datetime import datetime as dt_class
+
+        start_time = datetime_time(10, 0)
+        end_time = datetime_time(11, 0)
+
+        mock_now = dt_class(2024, 1, 15, 10, 30)
+
+        mock_datetime = MagicMock()
+        mock_datetime.now.return_value = mock_now
+        mock_datetime.combine = dt_class.combine
+
+        monkeypatch.setattr("tune.local.datetime", mock_datetime)
+        monkeypatch.setattr("tune.local.time", MagicMock())
+
+        pause_between_times(start_time, end_time)
