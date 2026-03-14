@@ -844,7 +844,7 @@ def plot_results(
     # First save the landscape:
     save_params = {}
     if optimizer.space.n_dims == 1:
-        fig, ax = plot_objective_1d(
+        partial_dependence_figure, ax = plot_objective_1d(
             result=result_object,
             parameter_name=parameter_names[0],
             confidence=confidence,
@@ -917,17 +917,18 @@ def plot_results(
         full_plotpath_partial_dependence,
     )
     plt.close(partial_dependence_figure)
-    confidence_interval_width_figure.savefig(
-        full_plotpath_confidence_interval_width,
-        dpi=dpi,
-        facecolor="xkcd:dark grey",
-        **save_params,
-    )
-    logger.info(
-        "Saving a confidence interval width plot to %s.",
-        full_plotpath_confidence_interval_width,
-    )
-    plt.close(confidence_interval_width_figure)
+    if optimizer.space.n_dims > 1:
+        confidence_interval_width_figure.savefig(
+            full_plotpath_confidence_interval_width,
+            dpi=dpi,
+            facecolor="xkcd:dark grey",
+            **save_params,
+        )
+        logger.info(
+            "Saving a confidence interval width plot to %s.",
+            full_plotpath_confidence_interval_width,
+        )
+        plt.close(confidence_interval_width_figure)
 
     polynomial_features = PolynomialFeatures(degree=2)
     samples_polynomial_features_transformed = polynomial_features.fit_transform(
