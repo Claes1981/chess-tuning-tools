@@ -726,7 +726,7 @@ def print_results(
         confidence_out = confidence_intervals(
             optimizer=optimizer,
             param_names=parameter_names,
-            hdi_prob=confidence,
+            prob=confidence,
             opt_samples=1000,
             space_samples=5000,
             multimodal=True,
@@ -938,6 +938,7 @@ def plot_results(
     if (
         len(np.unique(np.array(optimizer.Xi), axis=0))
         >= polynomial_features.n_output_features_
+        and optimizer.space.n_dims > 1
     ):
         logger.debug(
             "Starting to compute the next polynomial regression partial dependence plot."
