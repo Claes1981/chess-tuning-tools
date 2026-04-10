@@ -54,11 +54,13 @@ def confidence_intervals(
     threshold=0.01,
 ):
     if param_names is None:
-        param_names = [f"Parameter {i}" for i in range(len(optimizer.space.dimensions))]
+        param_names = [
+            f"Parameter {i}" for i in range(len(optimizer.space.dimensions))
+        ]
     if multimodal:
-        method="multimodal"
+        method = "multimodal"
     else:
-        method=nearest
+        method = nearest
 
     intervals = optimizer.optimum_intervals(
         prob=prob,
