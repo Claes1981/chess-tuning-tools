@@ -1051,142 +1051,150 @@ def plot_results(
     plt.close(fig)
 
     plt.rcdefaults()
-    plt.rcParams["axes.formatter.useoffset"] = False
 
-    timestr = time.strftime("%Y%m%d-%H%M%S")
-    number_of_random_active_subspace_samples = 10000 - len(
-        result_object.x_iters
-    )
-    number_of_input_dimensions = optimizer.space.n_dims
+    if optimizer.space.n_dims > 2:
+        plt.rcParams["axes.formatter.useoffset"] = False
 
-    # Uniformly distributed inputs
-    lb = 0 * np.ones(number_of_input_dimensions)  # lower bounds
-    ub = 1 * np.ones(number_of_input_dimensions)  # upper bounds
-
-    active_subspace_samples_x_raw = inputs_uniform(
-        number_of_random_active_subspace_samples, lb, ub
-    )
-    active_subspace_samples_x_raw = np.append(
-        active_subspace_samples_x_raw,
-        optimizer.space.transform(np.asarray(result_object.x_iters)),
-        axis=0,
-    )
-
-    active_subspaces_input_normalizer = Normalizer(lb, ub)
-    active_subspace_samples_normalized_x = (
-        active_subspaces_input_normalizer.fit_transform(
-            active_subspace_samples_x_raw
+        timestr = time.strftime("%Y%m%d-%H%M%S")
+        number_of_random_active_subspace_samples = 10000 - len(
+            result_object.x_iters
         )
-    )
-    active_subspace_samples_y_values = np.zeros(
-        np.shape(active_subspace_samples_x_raw)[0]
-    )
-    active_subspace_samples_gradients = np.zeros(
-        np.shape(active_subspace_samples_x_raw)
-    )
+        number_of_input_dimensions = optimizer.space.n_dims
 
-    if optimizer.gp.kernel_.k1.k2.nu >= 1.5:
-        for row_number, x_row in enumerate(active_subspace_samples_x_raw):
-            y_row, grad_row = optimizer.gp.predict(
-                np.reshape(x_row, (1, -1)), return_mean_grad=True
+        # Uniformly distributed inputs
+        lb = 0 * np.ones(number_of_input_dimensions)  # lower bounds
+        ub = 1 * np.ones(number_of_input_dimensions)  # upper bounds
+
+        active_subspace_samples_x_raw = inputs_uniform(
+            number_of_random_active_subspace_samples, lb, ub
+        )
+        active_subspace_samples_x_raw = np.append(
+            active_subspace_samples_x_raw,
+            optimizer.space.transform(np.asarray(result_object.x_iters)),
+            axis=0,
+        )
+
+        active_subspaces_input_normalizer = Normalizer(lb, ub)
+        active_subspace_samples_normalized_x = (
+            active_subspaces_input_normalizer.fit_transform(
+                active_subspace_samples_x_raw
             )
-            active_subspace_samples_y_values[row_number] = y_row.item()
-            active_subspace_samples_gradients[row_number] = grad_row
-
-        active_subspaces_object = ActiveSubspaces(
-            dim=2, method="exact", n_boot=1000
         )
-        active_subspaces_object.fit(gradients=active_subspace_samples_gradients)
-    else:
-        for row_number, x_row in enumerate(active_subspace_samples_x_raw):
-            y_row = optimizer.gp.predict(np.reshape(x_row, (1, -1)))
-            active_subspace_samples_y_values[row_number] = y_row.item()
-
-        active_subspaces_object = ActiveSubspaces(
-            dim=2, method="local", n_boot=1000
+        active_subspace_samples_y_values = np.zeros(
+            np.shape(active_subspace_samples_x_raw)[0]
         )
-        active_subspaces_object.fit(
+        active_subspace_samples_gradients = np.zeros(
+            np.shape(active_subspace_samples_x_raw)
+        )
+
+        if optimizer.gp.kernel_.k1.k2.nu >= 1.5:
+            for row_number, x_row in enumerate(active_subspace_samples_x_raw):
+                y_row, grad_row = optimizer.gp.predict(
+                    np.reshape(x_row, (1, -1)), return_mean_grad=True
+                )
+                active_subspace_samples_y_values[row_number] = y_row.item()
+                active_subspace_samples_gradients[row_number] = grad_row
+
+            active_subspaces_object = ActiveSubspaces(
+                dim=2, method="exact", n_boot=1000
+            )
+            active_subspaces_object.fit(
+                gradients=active_subspace_samples_gradients
+            )
+        else:
+            for row_number, x_row in enumerate(active_subspace_samples_x_raw):
+                y_row = optimizer.gp.predict(np.reshape(x_row, (1, -1)))
+                active_subspace_samples_y_values[row_number] = y_row.item()
+
+            active_subspaces_object = ActiveSubspaces(
+                dim=2, method="local", n_boot=1000
+            )
+            active_subspaces_object.fit(
+                inputs=active_subspace_samples_normalized_x,
+                outputs=active_subspace_samples_y_values,
+            )
+
+        plt.style.use("dark_background")
+
+        active_subspace_figure = plt.figure(
+            constrained_layout=True,
+            figsize=(20, 18 + active_subspaces_object.evects.shape[1] * 6),
+        )
+        active_subspace_subfigures = active_subspace_figure.subfigures(
+            nrows=3,
+            ncols=1,
+            wspace=0.07,
+            height_ratios=[1, active_subspaces_object.evects.shape[1], 3],
+        )
+
+        active_subspace_eigenvalues_axes = active_subspace_subfigures[
+            0
+        ].subplots(1, 1)
+        active_subspace_eigenvalues_axes = plot_activesubspace_eigenvalues(
+            active_subspaces_object,
+            active_subspace_figure=active_subspace_figure,
+            active_subspace_eigenvalues_axes=active_subspace_eigenvalues_axes,
+        )
+        logger.debug(
+            "Active subspace eigenvalues: %s",
+            np.squeeze(active_subspaces_object.evals),
+        )
+
+        active_subspace_eigenvectors_axes = active_subspace_subfigures[
+            1
+        ].subplots(active_subspaces_object.evects.shape[1], 1)
+        active_subspace_eigenvectors_axes = plot_activesubspace_eigenvectors(
+            active_subspaces_object,
+            active_subspace_figure=active_subspace_figure,
+            active_subspace_eigenvectors_axes=active_subspace_eigenvectors_axes,
+            n_evects=active_subspaces_object.evects.shape[1],
+            labels=parameter_names,
+        )
+
+        activity_scores_table = PrettyTable()
+        activity_scores_table.add_column("Parameter", parameter_names)
+        activity_scores_table.add_column(
+            "Activity score",
+            np.squeeze(active_subspaces_object.activity_scores),
+        )
+        activity_scores_table.sortby = "Activity score"
+        activity_scores_table.reversesort = True
+        logger.debug(
+            "Active subspace activity scores:\n%s", activity_scores_table
+        )
+        # logger.debug(f"Active subspace activity scores: {np.squeeze(active_subspaces_object.activity_scores)}")
+
+        active_subspace_sufficient_summary_axes = active_subspace_subfigures[
+            2
+        ].subplots(1, 1)
+        active_subspace_sufficient_summary_axes = plot_activesubspace_sufficient_summary(
+            active_subspaces_object=active_subspaces_object,
             inputs=active_subspace_samples_normalized_x,
             outputs=active_subspace_samples_y_values,
+            result_object=result_object,
+            next_point=optimizer._next_x,
+            active_subspace_figure=active_subspace_figure,
+            active_subspace_sufficient_summary_axes=active_subspace_sufficient_summary_axes,
         )
 
-    plt.style.use("dark_background")
+        active_subspace_figure.suptitle("Active subspace")
 
-    active_subspace_figure = plt.figure(
-        constrained_layout=True,
-        figsize=(20, 18 + active_subspaces_object.evects.shape[1] * 6),
-    )
-    active_subspace_subfigures = active_subspace_figure.subfigures(
-        nrows=3,
-        ncols=1,
-        wspace=0.07,
-        height_ratios=[1, active_subspaces_object.evects.shape[1], 3],
-    )
-
-    active_subspace_eigenvalues_axes = active_subspace_subfigures[0].subplots(
-        1, 1
-    )
-    active_subspace_eigenvalues_axes = plot_activesubspace_eigenvalues(
-        active_subspaces_object,
-        active_subspace_figure=active_subspace_figure,
-        active_subspace_eigenvalues_axes=active_subspace_eigenvalues_axes,
-    )
-    logger.debug(
-        "Active subspace eigenvalues: %s",
-        np.squeeze(active_subspaces_object.evals),
-    )
-
-    active_subspace_eigenvectors_axes = active_subspace_subfigures[1].subplots(
-        active_subspaces_object.evects.shape[1], 1
-    )
-    active_subspace_eigenvectors_axes = plot_activesubspace_eigenvectors(
-        active_subspaces_object,
-        active_subspace_figure=active_subspace_figure,
-        active_subspace_eigenvectors_axes=active_subspace_eigenvectors_axes,
-        n_evects=active_subspaces_object.evects.shape[1],
-        labels=parameter_names,
-    )
-
-    activity_scores_table = PrettyTable()
-    activity_scores_table.add_column("Parameter", parameter_names)
-    activity_scores_table.add_column(
-        "Activity score", np.squeeze(active_subspaces_object.activity_scores)
-    )
-    activity_scores_table.sortby = "Activity score"
-    activity_scores_table.reversesort = True
-    logger.debug("Active subspace activity scores:\n%s", activity_scores_table)
-    # logger.debug(f"Active subspace activity scores: {np.squeeze(active_subspaces_object.activity_scores)}")
-
-    active_subspace_sufficient_summary_axes = active_subspace_subfigures[
-        2
-    ].subplots(1, 1)
-    active_subspace_sufficient_summary_axes = plot_activesubspace_sufficient_summary(
-        active_subspaces_object=active_subspaces_object,
-        inputs=active_subspace_samples_normalized_x,
-        outputs=active_subspace_samples_y_values,
-        result_object=result_object,
-        next_point=optimizer._next_x,
-        active_subspace_figure=active_subspace_figure,
-        active_subspace_sufficient_summary_axes=active_subspace_sufficient_summary_axes,
-    )
-
-    active_subspace_figure.suptitle("Active subspace")
-
-    active_subspace_full_plotpath = (
-        plotpath
-        / f"landscapes/active_subspace-{timestr}-{current_iteration}.png"
-    )
-    active_subspace_figure.savefig(
-        active_subspace_full_plotpath,
-        dpi=300,
-        facecolor="xkcd:dark grey",
-        **save_params,
-    )
-    logger.info(
-        "Saving an active subspace plot to %s.", active_subspace_full_plotpath
-    )
-    plt.close(active_subspace_figure)
-    plt.rcdefaults()
+        active_subspace_full_plotpath = (
+            plotpath
+            / f"landscapes/active_subspace-{timestr}-{current_iteration}.png"
+        )
+        active_subspace_figure.savefig(
+            active_subspace_full_plotpath,
+            dpi=300,
+            facecolor="xkcd:dark grey",
+            **save_params,
+        )
+        logger.info(
+            "Saving an active subspace plot to %s.",
+            active_subspace_full_plotpath,
+        )
+        plt.close(active_subspace_figure)
+        plt.rcdefaults()
 
 
 def inputs_uniform(n_samples, lb, ub):
