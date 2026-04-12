@@ -3,18 +3,18 @@
 import os
 import sys
 
-import numpy as np
-
+# Ensure tests directory is in path for imports
 _tests_dir = os.path.dirname(os.path.abspath(__file__))
 if _tests_dir not in sys.path:
     sys.path.insert(0, _tests_dir)
-from conftest import (
+
+from conftest import (  # noqa: E402
     MockGPModel,
     MockPolynomialFeatures,
     MockRegression,
     MockSpace,
 )
-from tune.plots import partial_dependence
+from tune.plots import partial_dependence  # noqa: E402
 
 
 class TestPartialDependence:

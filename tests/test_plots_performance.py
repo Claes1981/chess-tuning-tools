@@ -7,10 +7,12 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
+# Ensure tests directory is in path for imports
 _tests_dir = os.path.dirname(os.path.abspath(__file__))
 if _tests_dir not in sys.path:
     sys.path.insert(0, _tests_dir)
-from tune.plots import plot_performance
+
+from tune.plots import plot_performance  # noqa: E402
 
 
 class TestPlotPerformance:

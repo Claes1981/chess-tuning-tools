@@ -2,13 +2,12 @@
 
 import json
 import tempfile
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 from click.testing import CliRunner
 
-from tune.cli import ACQUISITION_FUNC, cli, run_client, run_server, local
+from tune.cli import ACQUISITION_FUNC, cli
 
 
 @pytest.fixture
@@ -93,7 +92,7 @@ class TestRunClient:
             mock_instance = MagicMock()
             mock_client.return_value = mock_instance
 
-            result = cli_runner.invoke(cli, ["run-client", mock_dbconfig])
+            _ = cli_runner.invoke(cli, ["run-client", mock_dbconfig])
 
             # Exit code may be non-zero if TuningClient.run() raises
             assert mock_client.called
@@ -112,7 +111,7 @@ class TestRunClient:
             mock_instance = MagicMock()
             mock_client.return_value = mock_instance
 
-            result = cli_runner.invoke(
+            _ = cli_runner.invoke(
                 cli, ["run-client", "--verbose", mock_dbconfig]
             )
 
@@ -127,7 +126,7 @@ class TestRunClient:
             with tempfile.NamedTemporaryFile(
                 suffix=".log", delete=False
             ) as log_file:
-                result = cli_runner.invoke(
+                _ = cli_runner.invoke(
                     cli,
                     ["run-client", "--logfile", log_file.name, mock_dbconfig],
                 )
@@ -140,7 +139,7 @@ class TestRunClient:
             mock_instance = MagicMock()
             mock_client.return_value = mock_instance
 
-            result = cli_runner.invoke(
+            _ = cli_runner.invoke(
                 cli, ["run-client", "--terminate-after", "10", mock_dbconfig]
             )
 
@@ -159,7 +158,7 @@ class TestRunClient:
             mock_instance = MagicMock()
             mock_client.return_value = mock_instance
 
-            result = cli_runner.invoke(
+            _ = cli_runner.invoke(
                 cli, ["run-client", "--run-only-once", mock_dbconfig]
             )
 
@@ -178,7 +177,7 @@ class TestRunClient:
             mock_instance = MagicMock()
             mock_client.return_value = mock_instance
 
-            result = cli_runner.invoke(
+            _ = cli_runner.invoke(
                 cli, ["run-client", "--skip-benchmark", mock_dbconfig]
             )
 
@@ -200,7 +199,7 @@ class TestRunClient:
             with tempfile.NamedTemporaryFile(
                 suffix=".json", delete=False
             ) as cc:
-                result = cli_runner.invoke(
+                _ = cli_runner.invoke(
                     cli,
                     ["run-client", "--clientconfig", cc.name, mock_dbconfig],
                 )
@@ -219,7 +218,7 @@ class TestRunClient:
                 with tempfile.NamedTemporaryFile(
                     suffix=".json", delete=False
                 ) as clientconfig:
-                    result = cli_runner.invoke(
+                    _ = cli_runner.invoke(
                         cli,
                         [
                             "run-client",
@@ -258,7 +257,7 @@ class TestRunServer:
             mock_instance = MagicMock()
             mock_server.return_value = mock_instance
 
-            result = cli_runner.invoke(
+            _ = cli_runner.invoke(
                 cli,
                 ["run-server", "run", mock_experiment_file, mock_dbconfig],
             )
@@ -274,7 +273,7 @@ class TestRunServer:
             mock_instance = MagicMock()
             mock_server.return_value = mock_instance
 
-            result = cli_runner.invoke(
+            _ = cli_runner.invoke(
                 cli,
                 [
                     "run-server",
@@ -295,7 +294,7 @@ class TestRunServer:
             mock_instance = MagicMock()
             mock_server.return_value = mock_instance
 
-            result = cli_runner.invoke(
+            _ = cli_runner.invoke(
                 cli,
                 [
                     "run-server",
@@ -335,7 +334,7 @@ class TestRunServer:
             mock_instance = MagicMock()
             mock_server.return_value = mock_instance
 
-            result = cli_runner.invoke(
+            _ = cli_runner.invoke(
                 cli,
                 [
                     "run-server",
@@ -359,7 +358,7 @@ class TestRunServer:
             with tempfile.NamedTemporaryFile(
                 suffix=".log", delete=False
             ) as log_file:
-                result = cli_runner.invoke(
+                _ = cli_runner.invoke(
                     cli,
                     [
                         "run-server",
@@ -384,7 +383,7 @@ class TestRunServer:
             with tempfile.NamedTemporaryFile(
                 suffix=".log", delete=False
             ) as log_file:
-                result = cli_runner.invoke(
+                _ = cli_runner.invoke(
                     cli,
                     [
                         "run-server",
@@ -442,7 +441,7 @@ class TestLocal:
         """Test local with basic options."""
         with patch("tune.cli.json.load") as mock_json_load:
             with patch("tune.cli.load_tuning_config") as mock_load_config:
-                with patch("tune.cli.setup_logger") as mock_setup_logger:
+                with patch("tune.cli.setup_logger"):
                     with patch("tune.cli.initialize_data") as mock_init_data:
                         with patch(
                             "tune.cli.initialize_optimizer"
@@ -472,7 +471,7 @@ class TestLocal:
                                     )
                                     mock_load_points.return_value = []
 
-                                    result = cli_runner.invoke(
+                                    _ = cli_runner.invoke(
                                         cli,
                                         [
                                             "local",
@@ -488,7 +487,7 @@ class TestLocal:
         """Test local with different acquisition functions."""
         with patch("tune.cli.json.load") as mock_json_load:
             with patch("tune.cli.load_tuning_config") as mock_load_config:
-                with patch("tune.cli.setup_logger") as mock_setup_logger:
+                with patch("tune.cli.setup_logger"):
                     with patch("tune.cli.initialize_data") as mock_init_data:
                         with patch(
                             "tune.cli.initialize_optimizer"
@@ -526,7 +525,7 @@ class TestLocal:
                                         "ttei",
                                         "vr",
                                     ]:
-                                        result = cli_runner.invoke(
+                                        _ = cli_runner.invoke(
                                             cli,
                                             [
                                                 "local",
@@ -544,7 +543,7 @@ class TestLocal:
         """Test local with n-points option."""
         with patch("tune.cli.json.load") as mock_json_load:
             with patch("tune.cli.load_tuning_config") as mock_load_config:
-                with patch("tune.cli.setup_logger") as mock_setup_logger:
+                with patch("tune.cli.setup_logger"):
                     with patch("tune.cli.initialize_data") as mock_init_data:
                         with patch(
                             "tune.cli.initialize_optimizer"
@@ -572,7 +571,7 @@ class TestLocal:
                                     )
                                     mock_load_points.return_value = []
 
-                                    result = cli_runner.invoke(
+                                    _ = cli_runner.invoke(
                                         cli,
                                         [
                                             "local",

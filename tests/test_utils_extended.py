@@ -224,7 +224,7 @@ class TestTimeControlBag:
         tc = utils_module.TimeControl.from_string("10+0.1")
         bag = utils_module.TimeControlBag([tc], bag_size=10)
         assert bag.bag == []  # Initially empty
-        result = bag.next_tc()
+        _ = bag.next_tc()
         assert len(bag.bag) < 10  # One was popped
 
     def test_next_tc_returns_different_tcs_with_multiple_options(self):

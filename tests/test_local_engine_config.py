@@ -4,7 +4,6 @@ Tests _construct_engine_conf function with various time controls and options.
 """
 
 import pytest
-from unittest.mock import MagicMock
 
 from tune.local import _construct_engine_conf
 from tune.utils import TimeControl

@@ -13,10 +13,9 @@ import os
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Any, Dict
 
 import pytest
-from skopt.space import Categorical, Integer, Real
+from skopt.space import Integer, Real
 
 from tune.io import (
     InitStrings,

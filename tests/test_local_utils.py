@@ -4,7 +4,6 @@ Tests inputs_uniform, reduce_ranges, load_points_to_evaluate, counts_to_penta,
 setup_logger, and pause_between_times.
 """
 
-import io
 import logging
 import numpy as np
 import os
@@ -12,8 +11,7 @@ import pandas as pd
 import pytest
 import tempfile
 from datetime import time as datetime_time
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from skopt.space import Categorical, Integer, Real, Space
 
@@ -526,7 +524,7 @@ class TestPauseBetweenTimes:
 
     def test_time_in_range_day_boundary(self, monkeypatch, capsys):
         """Test when current time is in pause range (crossing day boundary)."""
-        from datetime import date, datetime as dt_class
+        from datetime import datetime as dt_class
 
         start_time = datetime_time(23, 0)
         end_time = datetime_time(6, 0)

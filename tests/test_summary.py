@@ -3,10 +3,8 @@
 Tests the confidence_intervals function and its helper functions.
 """
 
-import numpy as np
 import pytest
-from unittest.mock import MagicMock, patch
-from scipy.optimize import OptimizeResult
+from unittest.mock import MagicMock
 
 from tune.summary import confidence_intervals
 
@@ -60,7 +58,7 @@ class TestConfidenceIntervals:
         result = confidence_intervals(
             optimizer=mock_optimizer_1d,
             param_names=["param1"],
-            hdi_prob=0.95,
+            prob=0.95,
         )
 
         assert isinstance(result, str)
@@ -74,7 +72,7 @@ class TestConfidenceIntervals:
         result = confidence_intervals(
             optimizer=mock_optimizer_2d,
             param_names=["param1", "param2"],
-            hdi_prob=0.9,
+            prob=0.9,
         )
 
         assert isinstance(result, str)
@@ -123,15 +121,15 @@ class TestConfidenceIntervals:
         assert isinstance(result, str)
 
     def test_different_hdi_prob(self, mock_optimizer_1d):
-        """Test with different HDI probability values."""
-        for hdi_prob in [0.5, 0.9, 0.95, 0.99]:
+        """Test with different probability values."""
+        for prob_value in [0.5, 0.9, 0.95, 0.99]:
             result = confidence_intervals(
                 optimizer=mock_optimizer_1d,
                 param_names=["param1"],
-                hdi_prob=hdi_prob,
+                prob=prob_value,
             )
             assert isinstance(result, str)
-            # Note: hdi_prob is not included in the output string
+            # Note: prob is not included in the output string
             assert "param1" in result
 
     def test_opt_samples_parameter(self, mock_optimizer_1d):
@@ -222,7 +220,7 @@ class TestConfidenceIntervals:
         result = confidence_intervals(
             optimizer=mock_optimizer_1d,
             param_names=["param1"],
-            hdi_prob=0.95,
+            prob=0.95,
         )
 
         # Check that output contains expected sections

@@ -7,11 +7,13 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
+# Ensure tests directory is in path for imports
 _tests_dir = os.path.dirname(os.path.abspath(__file__))
 if _tests_dir not in sys.path:
     sys.path.insert(0, _tests_dir)
-from conftest import MockActiveSubspaces, MockOptimizeResult
-from tune.plots import (
+
+from conftest import MockActiveSubspaces, MockOptimizeResult  # noqa: E402
+from tune.plots import (  # noqa: E402
     plot_activesubspace_eigenvalues,
     plot_activesubspace_eigenvectors,
     plot_activesubspace_sufficient_summary,

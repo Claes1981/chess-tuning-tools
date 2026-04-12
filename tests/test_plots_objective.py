@@ -6,11 +6,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+# Ensure tests directory is in path for imports
 _tests_dir = os.path.dirname(os.path.abspath(__file__))
 if _tests_dir not in sys.path:
     sys.path.insert(0, _tests_dir)
-from conftest import MockOptimizeResult
-from tune.plots import plot_objective_1d
+
+from conftest import MockOptimizeResult  # noqa: E402
+from tune.plots import plot_objective_1d  # noqa: E402
 
 
 class TestPlotObjective1D:

@@ -58,7 +58,7 @@ class TestInitializeOptimizer:
             mock_inst.space.n_dims = 2
             mock_opt.return_value = mock_inst
 
-            optimizer = initialize_optimizer(**configs)
+            _ = initialize_optimizer(**configs)
 
             call_kwargs = mock_opt.call_args.kwargs
             acq_func = call_kwargs["acq_func"]
@@ -74,7 +74,7 @@ class TestInitializeOptimizer:
             mock_inst.space.n_dims = 2
             mock_opt.return_value = mock_inst
 
-            optimizer = initialize_optimizer(**configs)
+            _ = initialize_optimizer(**configs)
 
             call_kwargs = mock_opt.call_args.kwargs
             assert call_kwargs["acq_func_kwargs"]["alpha"] == "inf"
@@ -89,7 +89,7 @@ class TestInitializeOptimizer:
             mock_inst.space.n_dims = 2
             mock_opt.return_value = mock_inst
 
-            optimizer = initialize_optimizer(**configs)
+            _ = initialize_optimizer(**configs)
 
             call_kwargs = mock_opt.call_args.kwargs
             assert call_kwargs["n_points"] == 5000
@@ -104,7 +104,7 @@ class TestInitializeOptimizer:
             mock_inst.space.n_dims = 2
             mock_opt.return_value = mock_inst
 
-            optimizer = initialize_optimizer(**configs)
+            _ = initialize_optimizer(**configs)
 
             call_kwargs = mock_opt.call_args.kwargs
             assert call_kwargs["n_points"] == 5000
@@ -119,7 +119,7 @@ class TestInitializeOptimizer:
             mock_inst.space.n_dims = 2
             mock_opt.return_value = mock_inst
 
-            optimizer = initialize_optimizer(**configs)
+            _ = initialize_optimizer(**configs)
 
             call_kwargs = mock_opt.call_args.kwargs
             assert call_kwargs["n_points"] == 5000
@@ -134,7 +134,7 @@ class TestInitializeOptimizer:
             mock_inst.space.n_dims = 2
             mock_opt.return_value = mock_inst
 
-            optimizer = initialize_optimizer(**configs)
+            _ = initialize_optimizer(**configs)
 
             call_kwargs = mock_opt.call_args.kwargs
             assert call_kwargs["n_points"] == 10000
@@ -169,7 +169,7 @@ class TestInitializeOptimizer:
             mock_dill.load.return_value = old_opt
 
             with patch("builtins.open", MagicMock()):
-                optimizer = initialize_optimizer(**configs)
+                _ = initialize_optimizer(**configs)
 
                 assert old_opt.gp_priors == {"length_scale": "uniform(0, 1)"}
 
@@ -200,7 +200,7 @@ class TestInitializeOptimizer:
             mock_opt.return_value = mock_inst
 
             with patch("builtins.open", MagicMock()):
-                optimizer = initialize_optimizer(**configs)
+                _ = initialize_optimizer(**configs)
 
                 assert mock_inst.gp_priors == {"length_scale": "uniform(0, 1)"}
 
@@ -224,7 +224,7 @@ class TestInitializeOptimizer:
             mock_logger = MagicMock()
             mock_logging.getLogger.return_value = mock_logger
 
-            optimizer = initialize_optimizer(**configs)
+            _ = initialize_optimizer(**configs)
 
             assert mock_logger.debug.call_count > 0
 

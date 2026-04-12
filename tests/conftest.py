@@ -7,7 +7,6 @@ to reduce duplication across test files and improve test organization.
 import os
 import shutil
 from pathlib import Path
-from typing import Any
 from unittest.mock import MagicMock
 
 import numpy as np
@@ -46,7 +45,7 @@ class MockDimension:
             else:
                 idx = np.where(self.categories == x)[0][0]
                 return np.eye(len(self.categories))[idx]
-        return x
+        return np.asarray(x) if not isinstance(x, np.ndarray) else x
 
     def inverse_transform(self, x):
         return x
@@ -71,7 +70,10 @@ class MockSpace:
         return np.random.uniform(0, 1, size=(n_samples, self.n_dims))
 
     def transform(self, X):
-        return np.array(X)
+        X_arr = np.asarray(X)
+        if X_arr.ndim == 1:
+            X_arr = X_arr.reshape(1, -1)
+        return X_arr
 
     def inverse_transform(self, X):
         return X
@@ -272,7 +274,7 @@ def sample_mixed_space():
 @pytest.fixture
 def mock_datetime_module(monkeypatch):
     """Mock datetime module with actual datetime classes."""
-    from datetime import datetime, timedelta, timezone
+    from datetime import datetime, timezone
 
     class MockDatetime(datetime):
         @classmethod

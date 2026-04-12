@@ -8,11 +8,13 @@ import sys
 
 import numpy as np
 
+# Ensure tests directory is in path for imports
 _tests_dir = os.path.dirname(os.path.abspath(__file__))
 if _tests_dir not in sys.path:
     sys.path.insert(0, _tests_dir)
-from conftest import MockDimension
-from tune.plots import _evenly_sample
+
+from conftest import MockDimension  # noqa: E402
+from tune.plots import _evenly_sample  # noqa: E402
 
 
 class TestEvenlySample:
