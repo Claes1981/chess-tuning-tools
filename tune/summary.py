@@ -60,7 +60,7 @@ def confidence_intervals(
     if multimodal:
         method = "multimodal"
     else:
-        method = nearest
+        method = "nearest"
 
     intervals = optimizer.optimum_intervals(
         prob=prob,
