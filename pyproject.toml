@@ -102,6 +102,9 @@ vcs = "git"
 style = "semver"
 format = "0.9.5+{commit}"
 
+[tool.pytest.ini_options]
+addopts = "--cov --cov-report=xml:./coverage.xml --cov-report term-missing"
+
 [build-system]
 requires = ["hatchling>=1.15", "uv-dynamic-versioning"]
 build-backend = "hatchling.build"
